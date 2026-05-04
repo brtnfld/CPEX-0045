@@ -18,6 +18,7 @@
 \usepackage{titlesec}
 \usepackage{longtable}
 \usepackage{array}
+\usepackage{tabularx}
 \usepackage{colortbl}
 \usepackage{parskip}
 \usepackage{microtype}
@@ -352,13 +353,13 @@ interpolation can be defined which only excludes control points internal to the 
   $p$ are specified for solution interpolation; the full element type is used to classify element
   interpolation.}
 \label{tab:spaces}
-\small
+\footnotesize
 \rowcolors{2}{cgnslight!20}{white}
-\begin{tabular}{@{} >{\raggedright}p{0.10\linewidth}
-                    >{\raggedright}p{0.11\linewidth}
-                    >{\raggedright}p{0.20\linewidth}
-                    >{\raggedright}p{0.38\linewidth}
-                    >{\raggedright}p{0.10\linewidth} @{}}
+\begin{tabular}{@{} >{\raggedright\arraybackslash}p{0.09\linewidth}
+                    >{\raggedright\arraybackslash}p{0.10\linewidth}
+                    >{\raggedright\arraybackslash}p{0.20\linewidth}
+                    >{\raggedright\arraybackslash}p{0.40\linewidth}
+                    >{\raggedright\arraybackslash}p{0.09\linewidth} @{}}
 \toprule
 \textbf{Element} & \textbf{Base type} &
   \textbf{Complete} &
@@ -907,18 +908,16 @@ Cardinality       & 0:N \\
 \centering
 \small
 \rowcolors{2}{cgnslight!20}{white}
-\begin{tabular}{@{} >{\raggedright}p{0.22\linewidth}
-                    >{\raggedright}p{0.35\linewidth}
-                    >{\raggedright}p{0.35\linewidth} @{}}
+\begin{tabularx}{\linewidth}{@{} l l c >{\raggedright\arraybackslash}X @{}}
 \toprule
-\textbf{Child name} & \textbf{Properties} & \textbf{Comments} \\
+\textbf{Child name} & \textbf{Data type} & \textbf{Card.} & \textbf{Description} \\
 \midrule
 \texttt{LagrangeControlPoints} &
-  type: \texttt{DataArray\_t}, dtype: \texttt{R8}, dims: [2] &
-  table [\textit{Dimension}][\textit{NumberOfPoints}];
-  dimension = element dimension \\
+  \texttt{R8} &
+  1 &
+  Array of shape [\textit{Dim}][\textit{NPoints}]; \textit{Dim} = element dimension \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \caption{Children of \texttt{ElementInterpolation\_t}.}
 \end{table}
 
@@ -949,23 +948,23 @@ Cardinality & 0:N \\
 \centering
 \small
 \rowcolors{2}{cgnslight!20}{white}
-\begin{tabular}{@{} >{\raggedright}p{0.22\linewidth}
-                    >{\raggedright}p{0.35\linewidth}
-                    >{\raggedright}p{0.35\linewidth} @{}}
+\begin{tabularx}{\linewidth}{@{} l l c >{\raggedright\arraybackslash}X @{}}
 \toprule
-\textbf{Child name} & \textbf{Properties} & \textbf{Comments} \\
+\textbf{Child name} & \textbf{Data type} & \textbf{Card.} & \textbf{Description} \\
 \midrule
 \texttt{InterpolationType} &
-  dtype: \texttt{InterpolationType\_t} &
-  one of \texttt{ParametricLagrange}, \texttt{Parametric\-Monomials\-Pascal},
+  \texttt{InterpolationType\_t} &
+  1 &
+  One of \texttt{ParametricLagrange}, \texttt{ParametricMonomialsPascal},
   \texttt{CartesianMonomialsPascal}, \texttt{IsoParametric} \\
 \addlinespace
 \texttt{LagrangeControlPoints} &
-  type: \texttt{DataArray\_t}, dtype: \texttt{R8}, dims: [2], cardinality: 0:1 &
-  table [\textit{Dimension}][\textit{NumberOfPoints}]; dimension = element
-  dimension, may be incremented by~1 for space-time \\
+  \texttt{R8} &
+  0:1 &
+  Array of shape [\textit{Dim}][\textit{NPoints}]; \textit{Dim} may be
+  incremented by~1 for space-time \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \caption{Children of \texttt{SolutionInterpolation\_t}.}
 \end{table}
 
