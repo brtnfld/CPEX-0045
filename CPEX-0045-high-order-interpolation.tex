@@ -255,6 +255,47 @@ defined.  \texttt{InterpolationType\_t} can take four values:
 \end{quote}
 
 % ─────────────────────────────────────────────────────────────────────────
+\subsubsection{Lagrange Control Point Distribution}
+\label{sec:lagrange-distribution}
+% ─────────────────────────────────────────────────────────────────────────
+
+For \texttt{ParametricLagrange} interpolation to be unambiguous and interoperable, the
+distribution of control points in parametric space must be explicitly recorded.  Without
+this, a writer using Gauss--Lobatto--Legendre (GLL) points and a reader assuming equidistant
+points (or vice-versa) produce $O(1)$ interpolation error --- catastrophic, not a small
+numerical error.
+
+\paragraph{Required attribute: \texttt{LagrangeControlPointDistribution}.}
+A \texttt{DataArray\_t} of \texttt{Character} type, child of \texttt{ElementInterpolation\_t}
+or \texttt{SolutionInterpolation\_t} when \texttt{InterpolationType} is
+\texttt{ParametricLagrange}.  Allowed values:
+
+{\sloppy
+\begin{itemize}
+  \item \textbf{\texttt{GaussLobattoLegendre}} (recommended default): 1D points are roots of
+    $(1-u^2)\,P_p'(u)=0$, where $P_p$ is the Legendre polynomial of degree~$p$; includes
+    endpoints $u_0 = -1$, $u_p = +1$.  Optimal conditioning and quadrature accuracy.
+  \item \textbf{\texttt{Equidistant}}: $u_i = -1 + 2i/p$.  Simple uniform spacing; discouraged
+    for $p>7$ due to poor conditioning of the Vandermonde matrix.
+  \item \textbf{\texttt{GaussLegendre}}: 1D points are roots of $P_p(u)=0$; does \emph{not}
+    include the endpoints.  Rarely used for element interpolation.
+  \item \textbf{\texttt{WarpAndBlend}} (simplices only): specialised distribution for triangles
+    and tetrahedra ensuring well-conditioned Vandermonde matrices~\cite{Warburton06}.
+\end{itemize}
+\par}
+
+\paragraph{Multi-dimensional construction.}
+For tensor-product elements (\texttt{QUAD}, \texttt{HEXA}), the chosen 1D distribution is
+applied independently in each parametric direction.  For simplex elements (\texttt{TRI},
+\texttt{TETRA}), \texttt{WarpAndBlend} or Fekete distributions are required for $p>2$;
+equidistant points may be used at $p=2$ but become unstable at higher orders.
+
+\paragraph{Default behaviour.}
+If \texttt{LagrangeControlPointDistribution} is absent, an implementation \emph{should} assume
+\texttt{GaussLobattoLegendre} but \emph{should} issue a warning to flag the ambiguity.  Strict
+CPEX-0045 conformance requires the attribute to be present.
+
+% ─────────────────────────────────────────────────────────────────────────
 \subsubsection{New \texttt{GridLocation\_t} Value: \texttt{InterpolationPoints}}
 \label{sec:interpolation-points-loc}
 % ─────────────────────────────────────────────────────────────────────────
@@ -580,6 +621,21 @@ Correspondingly, an element-local origin of the time dimension is defined as the
 relevant physical time slab $[T_n, T_{n+1}]$, such that
 $t = T - (T_n + T_{n+1})/2$.''
 \end{quote}
+
+\paragraph{Numerical stability: mandatory normalization.}
+Using element-local but \emph{unnormalized} coordinates in monomials $x^p, y^p, z^p$ at
+high orders causes catastrophic floating-point overflow or underflow when the physical
+element size differs greatly from~1 (e.g.\ kilometres or micrometres).  Implementations
+\emph{must} normalize the local coordinates by a characteristic element length:
+\begin{equation}
+  \xi = x/h^e, \quad \eta = y/h^e, \quad \zeta = z/h^e,
+  \qquad
+  h^e = \max_{i,j \in \{1,\ldots,N_v\}} \|\mathbf{R}_i^\mathrm{vertex} - \mathbf{R}_j^\mathrm{vertex}\|
+\end{equation}
+where the maximum is taken over pairs of principal vertices.  This guarantees
+$\xi, \eta, \zeta \in O([-1, 1])$, well-conditioned Vandermonde matrices, and stable
+reconstruction.  The characteristic length $h^e$ \emph{must} be stored alongside the modal
+coefficients (typically as a per-element scalar) so a reader can recover physical values.
 
 \subsubsection{Cartesian Modal Interpolants}
 
@@ -1212,10 +1268,21 @@ the concatenation of $\texttt{NPoints}$ tuples, each of length \textit{Dim}:
 \paragraph{LagrangeControlPoints (space-time).}
 For \texttt{SolutionInterpolation\_t} with $\texttt{TemporalOrder} > 0$, the array shape becomes
 $[\textit{Dim}+1, \textit{NPoints}_\mathrm{ST}]$ where
-$\textit{NPoints}_\mathrm{ST} = \textit{NPoints}_\mathrm{spatial} \times (\texttt{ot}+1)$.  The
-on-disk byte order is: \emph{all spatial coordinates of all space-time points first}, followed by
-\emph{all temporal coordinates as a contiguous trailing block}.  The temporal coordinates are
-\emph{not} interleaved with the spatial ones.
+$\textit{NPoints}_\mathrm{ST} = \textit{NPoints}_\mathrm{spatial} \times (q+1)$ and
+$q = \texttt{TemporalOrder}$.  Within each coordinate row, the points are ordered
+\emph{time-major}:
+\begin{equation*}
+  \texttt{idx} = t \times N_\mathrm{spatial} + s,
+  \qquad t = 0, \ldots, q,
+  \qquad s = 0, \ldots, N_\mathrm{spatial}-1
+\end{equation*}
+That is, all spatial points at time level $t=0$ are listed first, then all spatial points at
+$t=1$, and so on.  The first \textit{Dim} rows of the $[\textit{Dim}+1, \cdot]$ array store
+$u, v, w$; the last (Dim+1)-th row stores the parametric time $\tau$.  Equivalently, the
+spatial coordinate components $u, v, w$ for all points are written first (the
+\textit{Dim}-fast layout), and the entire temporal $\tau$ array follows as a contiguous
+trailing block.  Solution-data arrays in \texttt{FlowSolution\_t} for space-time interpolation
+follow the same time-major ordering within each element's $N_\mathrm{DOFs/element}$ block.
 
 \paragraph{MonomialCoefficients.}
 A 1D \texttt{R8} array of length $N_\mathrm{modal} = \binom{p+d}{d}$ for purely spatial
@@ -1454,6 +1521,68 @@ Reading back verifies that \texttt{cg\_solution\_interpolation\_points\_read} re
 
 
 %% ═════════════════════════════════════════════════════════════════════════
+\section{Compliance Tests}
+\label{sec:compliance}
+%% ═════════════════════════════════════════════════════════════════════════
+
+A conforming implementation must pass the following objective tests.  These are independent
+of any particular library and can be applied directly to a written file.
+
+\paragraph{Partition of unity (Lagrange).}
+For \texttt{ParametricLagrange} interpolation of any supported element type and order $p$,
+\begin{equation}
+  \sum_{i=1}^{N} \lambda_i(\mathbf{u}) = 1
+  \quad \text{for any } \mathbf{u} \text{ in the parametric domain},
+\end{equation}
+within tolerance $\epsilon = 10^{-12}$.  Reference test points: \texttt{QUAD} $p=2$ at
+$(u,v)=(0.3, -0.7)$; \texttt{HEXA} $p=2$ at $(0.5, -0.5, 0.2)$; \texttt{TRI} $p=2$ at
+$(-0.5, -0.3)$; \texttt{TETRA} $p=2$ at $(-0.6, -0.2, -0.1)$.
+
+\paragraph{Kronecker delta (Lagrange).}
+At each control point $\mathbf{u}_j$,
+\begin{equation}
+  \lambda_i(\mathbf{u}_j) = \delta_{ij}
+\end{equation}
+within tolerance $10^{-12}$ for all $i, j \in \{1, \ldots, N\}$.
+
+\paragraph{Modal coefficient ordering.}
+Represent a known polynomial in the chosen modal basis and verify that the resulting
+coefficient vector matches the expected ordering of Section~\ref{sec:parametric-modal}
+(parametric Pascal traversal) or Section~\ref{sec:cartesian-modal} (Cartesian column-major).
+For example, the polynomial $f(u,v) = u^2 + v$ over a \texttt{QUAD} $p=2$ Cartesian modal
+basis must produce a coefficient vector whose only non-zero entries are
+$c[u^2 v^0] = 1$ and $c[u^0 v^1] = 1$; if the indices of those non-zero entries differ from
+the convention, the implementation is non-compliant.
+
+\paragraph{Geometry reconstruction.}
+For a curved \texttt{QUAD\_9} element with the centre node displaced from its parametric
+midpoint, evaluating the interpolated geometry at $(u,v)=(0,0)$ must reproduce the displaced
+centre coordinates within tolerance $10^{-10}$.
+
+\paragraph{Numerical stability (Cartesian modal).}
+For a \texttt{QUAD} element whose physical extents span large or small scales (e.g.\
+$10^{6}$ or $10^{-6}$ in either coordinate), modal-coefficient writes followed by reads
+must round-trip the data without overflow or precision loss when the implementation applies
+the normalization of Section~\ref{sec:cartesian-modal}.  Failure of this test indicates
+missing or incorrect normalization.
+
+\paragraph{Compliance checklist.}
+\begin{itemize}
+  \item Partition-of-unity test for every supported element type and order.
+  \item Kronecker delta property at every control point.
+  \item Modal-coefficient ordering matches Pascal traversal (parametric) or column-major
+    tensor product (Cartesian).
+  \item Geometry reconstruction within tolerance $10^{-10}$.
+  \item Numerical stability for extreme coordinate scales.
+  \item Time-major ordering for space-time data layout.
+  \item Principal vertices identified per the linear sub-element rule (Cartesian modal only).
+  \item Coordinate normalization applied for Cartesian modal interpolation.
+  \item \texttt{LagrangeControlPointDistribution} attribute present on every
+    \texttt{ParametricLagrange} node.
+\end{itemize}
+
+
+%% ═════════════════════════════════════════════════════════════════════════
 \section{References}
 %% ═════════════════════════════════════════════════════════════════════════
 
@@ -1470,6 +1599,18 @@ Reading back verifies that \texttt{cg\_solution\_interpolation\_points\_read} re
   ``Higher-order Finite Elements for Hybrid Meshes Using New Nodal Pyramidal Elements'',
   \textit{Journal of Scientific Computing}, vol.~42, pp.~345--381, 2010.
   \href{https://doi.org/10.1007/s10915-009-9334-9}{doi:10.1007/s10915-009-9334-9}
+
+\bibitem{Warburton06}
+  T.\ Warburton,
+  ``An explicit construction of interpolation nodes on the simplex'',
+  \textit{Journal of Engineering Mathematics}, vol.~56, no.~3, pp.~247--262, 2006.
+  \href{https://doi.org/10.1007/s10665-006-9086-6}{doi:10.1007/s10665-006-9086-6}
+
+\bibitem{HW08}
+  J.\ S.\ Hesthaven and T.\ Warburton,
+  \textit{Nodal Discontinuous Galerkin Methods: Algorithms, Analysis, and Applications},
+  Springer Texts in Applied Mathematics, vol.~54, Springer, 2008.
+  \href{https://doi.org/10.1007/978-0-387-72067-8}{doi:10.1007/978-0-387-72067-8}
 
 \bibitem{Mathex}
   S.\ Massago, \textit{mathex} library, part of the Small Scientific Library (SSCILIB).
