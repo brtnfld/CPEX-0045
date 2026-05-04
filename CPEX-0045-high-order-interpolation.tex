@@ -349,9 +349,9 @@ interpolation can be defined which only excludes control points internal to the 
 
 \begin{table}[htbp]
 \centering
-\caption{Lagrange functional spaces per element and interpolation type.  The base type and order
-  $p$ are specified for solution interpolation; the full element type is used to classify element
-  interpolation.}
+\caption{Lagrange functional spaces per element and interpolation type.$^{1}$  The base type and
+  order $p$ are specified for solution interpolation; the full element type is used to classify
+  element interpolation.}
 \label{tab:spaces}
 \footnotesize
 \rowcolors{2}{cgnslight!20}{white}
@@ -383,6 +383,10 @@ Pyramid & \texttt{PYRA\_5}  & see~\cite{BCD10} & & \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+{\footnotesize $^{1}$Although for 2D and 3D spaces multi-indices are more convenient, we use
+for simplicity of notation a single compounded index $i=(i,j,k)$. Likewise a compound
+coordinate $\mathbf{u}=(u,v,w)$ is used.}
 
 \noindent The standard spaces used above are:
 
@@ -682,7 +686,8 @@ solution, one needs to use \texttt{PointRange} or \texttt{PointList} to single o
 which will use the specified order.''
 \end{quote}
 
-\begin{sidsnode}{FlowSolution\_t :=}
+\begin{sidsnode}{FlowSolution\_t$<$int CellDimension, int IndexDimension,\\
+\quad\quad int VertexSize[IndexDimension], int CellSize[IndexDimension]$>$ :=}
 List( Descriptor\_t Descriptor1 ... DescriptorN );            \textrm{(o)}\\
 GridLocation\_t GridLocation ;                                 \textrm{(o/d)}\\
 int SpatialOrder;                                              \textrm{(o/d)}\\
