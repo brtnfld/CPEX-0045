@@ -95,7 +95,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\color{cgnsblue} CPEX~0045 --- High-Order Polynomial Interpolation}
-\fancyhead[R]{\small\color{cgnsblue} Version 2.0}
+\fancyhead[R]{\small\color{cgnsblue} Version 3.0}
 \fancyfoot[C]{\small\color{cgnsblue}\thepage}
 \renewcommand{\headrulewidth}{0.5pt}
 \renewcommand{\headrule}{\hbox to\headwidth{\color{cgnsgold}\leaders\hrule height\headrulewidth\hfill}}
@@ -117,7 +117,7 @@
   {\Large\color{cgnsteal} Storing Cell-Wise Polynomial Data and Generalising\\
    the Description of Curved Grid Elements}\\[0.4em]
   {\color{cgnsgold}\rule{0.4\textwidth}{0.8pt}}\\[0.6em]
-  {\large Version 2.0}\\[0.6em]
+  {\large Version 3.0}\\[0.6em]
   \today
 \end{center}
 
@@ -134,7 +134,7 @@ Champion          & Koen Hillewaert \\
 Organization      & Cenaero \\
 E-mail            & \href{mailto:koen.hillewaert@cenaero.be}{koen.hillewaert@cenaero.be} \\
 Date First Posted & Mar.\ 26, 2019 \\
-Date of Revision  & Jun.\ 25, 2019 \\
+Date of Revision  & May\ 4, 2026 \\
 SIDS Status       & accepted; implementation complete (v4.5.2) \\
 Filemap Status    & accepted; implementation complete (v4.5.2) \\
 MLL Status        & accepted; implementation complete (v4.5.2) \\
@@ -619,10 +619,21 @@ same order (cf.\ Figure~\ref{fig:coord-systems}).''
 \end{quote}
 
 \begin{sidsnode}{ElementInterpolation\_t :=}
-ElementType\_t Element;                               \textrm{(r)}\\
-DataArray\_t<Float,DataSize[]> LagrangeControlPoints; \textrm{(o)}\\
+ElementType\_t Element;                                  \textrm{(r)}\\
+DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
+DataArray\_t<Float,DataSize[]> MonomialCoefficients;     \textrm{(o)}\\
 \};
 \end{sidsnode}
+
+The interpolation type is not stored explicitly as a child node; it is inferred from
+which optional children are present:
+\begin{itemize}
+  \item \texttt{LagrangeControlPoints} present $\Rightarrow$ \texttt{ParametricLagrange}
+  \item \texttt{MonomialCoefficients} present $\Rightarrow$ \texttt{ParametricMonomialsPascal}
+  \item neither present $\Rightarrow$ \texttt{IsoParametric} (element's own coordinates used)
+\end{itemize}
+\texttt{CartesianMonomialsPascal} applies to \emph{solution} interpolation only and cannot
+be attached to an \texttt{ElementInterpolation\_t} node.
 
 \begin{quote}
 ``\textbf{Limitations}: The current proposal maintains \texttt{ElementType\_t} to describe both
@@ -654,11 +665,12 @@ are stored in a \texttt{SolutionInterpolation\_t} leaf attached to the correspon
 \end{quote}
 
 \begin{sidsnode}{SolutionInterpolation\_t :=}
-ElementType\_t Element;                               \textrm{(r)}\\
-Integer SpatialOrder;                                 \textrm{(r)}\\
-Integer TemporalOrder;                                \textrm{(o/d)}\\
-InterpolationType\_t InterpolationName;               \textrm{(r)}\\
-DataArray\_t<Float,DataSize[]> LagrangeControlPoints; \textrm{(o)}\\
+ElementType\_t Element;                                  \textrm{(r)}\\
+Integer SpatialOrder;                                    \textrm{(r)}\\
+Integer TemporalOrder;                                   \textrm{(o/d)}\\
+InterpolationType\_t InterpolationName;                  \textrm{(r)}\\
+DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
+DataArray\_t<Float,DataSize[]> MonomialCoefficients;     \textrm{(o)}\\
 \};
 \end{sidsnode}
 
@@ -708,6 +720,13 @@ List( UserDefinedData\_t UserDefinedData1 ... UserDefinedDataN ); \textrm{(o)}\\
 for \texttt{TemporalOrder} is~0.''
 \end{quote}
 
+\noindent\textbf{Implementation note:} Although the SIDS prose above lists
+\texttt{SpatialOrder} and \texttt{TemporalOrder} as scalar fields of \texttt{FlowSolution\_t},
+the normative on-disk encoding stores them as a single \texttt{IndexArray\_t} child node named
+\texttt{InterpolationOrders} of dimension~2, with values \texttt{[spatialOrder, temporalOrder]}.
+This is the form described in Section~\ref{sec:filemap} and implemented by
+\texttt{cg\_sol\_interpolation\_order\_read/write}.
+
 
 %% ═════════════════════════════════════════════════════════════════════════
 \section{Extensions to the Mid-Level Library}
@@ -725,9 +744,14 @@ for \texttt{TemporalOrder} is~0.''
 \midrule
 ierr = cg\_element\_lagrange\_interpolation\_size(ElementType\_t t, cgsize\_t *sz) & r{-}{-} \\
 ierr = cg\_solution\_lagrange\_interpolation\_size(ElementType\_t t, int os, int ot, cgsize\_t *sz) & r{-}{-} \\
+ierr = cg\_element\_monomial\_size(ElementType\_t t, cgsize\_t *sz) & r{-}{-} \\
+ierr = cg\_solution\_monomial\_size(ElementType\_t t, int os, int ot, cgsize\_t *sz) & r{-}{-} \\
+\addlinespace
+ierr = cg\_element\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t t, int *cnt) & r{-}{-} \\
+ierr = cg\_solution\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t t, int os, int ot, int *cnt) & r{-}{-} \\
 \bottomrule
 \end{tabular}
-\caption{Helper functions for computing Lagrange interpolation space cardinalities.}
+\caption{Helper functions: interpolation space sizes and family query counts.}
 \label{tab:helper-funcs}
 \end{table}
 
@@ -739,17 +763,20 @@ ierr = cg\_solution\_lagrange\_interpolation\_size(ElementType\_t t, int os, int
 \toprule
 \textbf{Parameter} & \textbf{Description} \\
 \midrule
-\texttt{t}  & Element type \\
-\texttt{os} & Spatial interpolation order \\
-\texttt{ot} & Temporal interpolation order \\
-\texttt{sz} & Output: cardinality of the interpolation space \\
+\texttt{t}   & Element type \\
+\texttt{os}  & Spatial interpolation order \\
+\texttt{ot}  & Temporal interpolation order \\
+\texttt{sz}  & Output: cardinality of the interpolation space \\
+\texttt{cnt} & Output: number of matching interpolation nodes in the family \\
 \bottomrule
 \end{tabular}
 \caption{Input/output parameters for helper functions.}
 \end{table}
 
-These functions return the cardinality of the Lagrange interpolation space for a given element
-type and interpolation orders.
+The \texttt{*\_size} functions return the cardinality of the Lagrange or monomial interpolation
+space for a given element type and orders.  The \texttt{*\_count} functions query a family to
+count how many \texttt{ElementInterpolation\_t} or \texttt{SolutionInterpolation\_t} nodes of a
+given type (and order) are already present.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Reading and Writing Interpolation Characteristics via the Family Interface}
@@ -777,6 +804,11 @@ type and interpolation orders.
 \texttt{cg\_solution\_interpolation\_points\_read(fn, bn, fam, sn, *pu, *pv, *pw, *pt)} & r{-}{-} \\
 \texttt{cg\_solution\_interpolation\_write(fn, bn, fam, name, et, os, ot, it, *sn)} & {-}wm \\
 \texttt{cg\_solution\_interpolation\_points\_write(fn, bn, fam, sn, *pu, *pv, *pw, *pt)} & {-}wm \\
+\addlinespace
+\texttt{cg\_element\_interpolation\_coefficients\_read(fn, bn, fam, en, *coeff)} & r{-}{-} \\
+\texttt{cg\_element\_interpolation\_coefficients\_write(fn, bn, fam, en, *coeff)} & {-}wm \\
+\texttt{cg\_solution\_interpolation\_coefficients\_read(fn, bn, fam, sn, *coeff)} & r{-}{-} \\
+\texttt{cg\_solution\_interpolation\_coefficients\_write(fn, bn, fam, sn, *coeff)} & {-}wm \\
 \bottomrule
 \end{tabular}
 \caption{Family-level interpolation API functions.}
@@ -804,7 +836,8 @@ type and interpolation orders.
 \texttt{pu}   & Control points --- $u$-coordinate & out \\
 \texttt{pv}   & Control points --- $v$-coordinate (\texttt{NULL} for 1D) & out \\
 \texttt{pw}   & Control points --- $w$-coordinate (\texttt{NULL} for 1D/2D) & out \\
-\texttt{pt}   & Control points --- time coordinate (\texttt{NULL} if $q=0$) & out \\
+\texttt{pt}    & Control points --- time coordinate (\texttt{NULL} if $q=0$) & out \\
+\texttt{coeff} & Monomial coefficients array (size from \texttt{cg\_*\_monomial\_size}) & in/out \\
 \bottomrule
 \end{tabular}
 \caption{Input/output parameters for family-level API.}
@@ -919,8 +952,16 @@ Cardinality       & 0:N \\
 \midrule
 \texttt{LagrangeControlPoints} &
   \texttt{R8} &
-  1 &
-  Array of shape [\textit{Dim}][\textit{NPoints}]; \textit{Dim} = element dimension \\
+  0:1 &
+  Array of shape [\textit{Dim}][\textit{NPoints}]; \textit{Dim} = element dimension.
+  Present for \texttt{ParametricLagrange}. \\
+\addlinespace
+\texttt{MonomialCoefficients} &
+  \texttt{R8} &
+  0:1 &
+  Array of monomial coefficients; size from
+  \texttt{cg\_element\_monomial\_size}.
+  Present for \texttt{ParametricMonomialsPascal}. \\
 \bottomrule
 \end{tabularx}
 \caption{Children of \texttt{ElementInterpolation\_t}.}
@@ -967,7 +1008,16 @@ Cardinality & 0:N \\
   \texttt{R8} &
   0:1 &
   Array of shape [\textit{Dim}][\textit{NPoints}]; \textit{Dim} may be
-  incremented by~1 for space-time \\
+  incremented by~1 for space-time.
+  Present for \texttt{ParametricLagrange}. \\
+\addlinespace
+\texttt{MonomialCoefficients} &
+  \texttt{R8} &
+  0:1 &
+  Array of monomial coefficients; size from
+  \texttt{cg\_solution\_monomial\_size}.
+  Present for \texttt{ParametricMonomialsPascal} or
+  \texttt{CartesianMonomialsPascal}. \\
 \bottomrule
 \end{tabularx}
 \caption{Children of \texttt{SolutionInterpolation\_t}.}
@@ -997,6 +1047,92 @@ Cardinality        & 0:1 \\
 \end{tabular}
 \caption{New \texttt{InterpolationOrders} child of \texttt{FlowSolution\_t}.}
 \end{table}
+
+
+%% ═════════════════════════════════════════════════════════════════════════
+\section{Variable-Order Configurations and IsoParametric Solutions}
+\label{sec:variable-order}
+%% ═════════════════════════════════════════════════════════════════════════
+
+This section describes the three usage patterns that arise when different cells or different
+field variables require different polynomial orders, and the use of \texttt{IsoParametric}
+for solution interpolation.
+
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{Variable Order Per Cell (Disjoint \texttt{PointRange})}
+% ─────────────────────────────────────────────────────────────────────────
+
+When different subsets of cells use different polynomial orders, create one
+\texttt{FlowSolution\_t} block per subset using \texttt{cg\_sol\_ptset\_write} with
+non-overlapping \texttt{PointRange} intervals, each annotated with
+\texttt{cg\_sol\_interpolation\_order\_write}:
+
+\begin{lstlisting}[language=C,basicstyle=\ttfamily\small]
+/* Cells 1..4 at order 2, cells 5..8 at order 3 */
+cgsize_t range_lo[2]={1,1}, range_hi[2]={4,1};
+cg_sol_ptset_write(fn,B,Z,"FS_p2",CellCenter,PointRange,2,range_lo,&S1);
+cg_sol_interpolation_order_write(fn,B,Z,S1, 2,0);
+
+cgsize_t range_lo2[2]={5,1}, range_hi2[2]={8,1};
+cg_sol_ptset_write(fn,B,Z,"FS_p3",CellCenter,PointRange,2,range_lo2,&S2);
+cg_sol_interpolation_order_write(fn,B,Z,S2, 3,0);
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{Variable Order Per Cell (\texttt{PointList})}
+% ─────────────────────────────────────────────────────────────────────────
+
+Non-contiguous subsets require \texttt{PointList} instead of \texttt{PointRange}:
+
+\begin{lstlisting}[language=C,basicstyle=\ttfamily\small]
+cgsize_t odd[4]  = {1,3,5,7};
+cgsize_t even[4] = {2,4,6,8};
+cg_sol_ptset_write(fn,B,Z,"FS_Odd", CellCenter,PointList,4,odd, &S1);
+cg_sol_interpolation_order_write(fn,B,Z,S1, 2,0);
+cg_sol_ptset_write(fn,B,Z,"FS_Even",CellCenter,PointList,4,even,&S2);
+cg_sol_interpolation_order_write(fn,B,Z,S2, 3,0);
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{Variable Order Per Field Variable}
+% ─────────────────────────────────────────────────────────────────────────
+
+When different physical fields use different polynomial orders over the \emph{same} set of
+cells, create one \texttt{FlowSolution\_t} per field variable with the same \texttt{PointRange}
+but distinct interpolation orders:
+
+\begin{lstlisting}[language=C,basicstyle=\ttfamily\small]
+cgsize_t all[2] = {1, N_ELEM};
+/* Density at order 2 */
+cg_sol_ptset_write(fn,B,Z,"FS_Density",CellCenter,PointRange,2,all,&S1);
+cg_sol_interpolation_order_write(fn,B,Z,S1, 2,0);
+cg_field_write(fn,B,Z,S1,RealDouble,"Density",density,&fld);
+
+/* VelocityX at order 3 */
+cg_sol_ptset_write(fn,B,Z,"FS_VelocityX",CellCenter,PointRange,2,all,&S2);
+cg_sol_interpolation_order_write(fn,B,Z,S2, 3,0);
+cg_field_write(fn,B,Z,S2,RealDouble,"VelocityX",velocity,&fld);
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{\texttt{IsoParametric} for \texttt{SolutionInterpolation\_t}}
+% ─────────────────────────────────────────────────────────────────────────
+
+When \texttt{InterpolationName} is set to \texttt{IsoParametric}, the solution uses the
+same interpolation basis as the mesh (i.e.\ the \texttt{ElementInterpolation\_t} defined for
+the same element type in the family).  No \texttt{LagrangeControlPoints} or
+\texttt{MonomialCoefficients} child is stored.  The corresponding
+\texttt{ElementInterpolation\_t} must exist in the family.
+
+\begin{lstlisting}[language=C,basicstyle=\ttfamily\small]
+int sn;
+cg_solution_interpolation_write(fn,bn,fam,"QUAD4_IsoParam",
+    QUAD_4, /*os=*/1, /*ot=*/0, IsoParametric, &sn);
+/* No cg_solution_interpolation_points_write call needed */
+\end{lstlisting}
+
+Reading back verifies that \texttt{cg\_solution\_interpolation\_points\_read} returns
+\texttt{CG\_NODE\_NOT\_FOUND} for an \texttt{IsoParametric} node.
 
 
 %% ═════════════════════════════════════════════════════════════════════════
