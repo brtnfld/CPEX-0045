@@ -415,6 +415,25 @@ For space-time function spaces (e.g.\ ALE meshes), the complete functional space
 %
 where $p$ and $q$ are the spatial and temporal orders respectively.
 
+\paragraph{Prism (\texttt{PENTA\_6}) ordering convention.}
+The prism space $\Ptp(u,v)\otimes\Lsp(w)$ is a tensor product of a triangle in $(u,v)$ and a
+line in $w$.  The implementation requires the line direction $w$ to vary \emph{slowest} when
+enumerating control points:  for each line node along $w$ ($w$-major), enumerate the
+$(p+1)(p+2)/2$ triangle nodes in $(u,v)$.  This is \emph{not} a simple 3D tensor product like
+\texttt{HEXA}.
+
+\paragraph{Pyramid (\texttt{PYRA\_5}) cardinality.}
+Following Bergot--Cohen--Duruflé~\cite{BCD10}, the cardinality of the pyramid functional space
+at order $p$ is
+\begin{equation}
+  N_\mathrm{PYRA}(p) = \frac{(p+1)(p+2)(2p+3)}{6},
+\end{equation}
+giving $5$, $14$, $30$, $55$ for $p=1,2,3,4$ respectively.  These are the values returned by
+\texttt{cg\_element\_lagrange\_interpolation\_size} and consume the corresponding
+\texttt{ElementType\_t} tags \texttt{PYRA\_5}, \texttt{PYRA\_14}, \texttt{PYRA\_30},
+\texttt{PYRA\_55}.  The control-point layout convention is the user's responsibility; the
+library does not provide a built-in pyramid layout helper.
+
 % ─────────────────────────────────────────────────────────────────────────
 \subsubsection{Parametric Modal Interpolation}
 \label{sec:parametric-modal}
@@ -425,8 +444,19 @@ where $p$ and $q$ are the spatial and temporal orders respectively.
 \end{quote}
 
 For solutions, modal interpolation is also allowed.  The interpolation functions are based on an
-ordered set of monomials spanning the Pascal spaces.  According to the underlying dimension these
-are given by:
+ordered set of monomials spanning the Pascal spaces.  The cardinality of the modal basis is the
+same for every element shape of a given dimension --- the binomial coefficient
+\begin{equation}
+  N_\mathrm{modal} = \binom{p+d}{d}, \qquad d = \text{element dimension}, \quad p = \text{spatial order}
+\end{equation}
+For space-time interpolation the cardinality is multiplied by $(q+1)$ where $q$ is the temporal
+order.  Consequently a \texttt{QUAD\_9} element used with order-2 modal interpolation stores
+$\binom{4}{2} = 6$ monomial coefficients (not 9 --- 9 is the Lagrange-basis cardinality of the
+tensor-product space $\Qtp$).  The helper functions \texttt{cg\_element\_monomial\_size} and
+\texttt{cg\_solution\_monomial\_size} return $N_\mathrm{modal}$ for any supported element type
+and order combination.
+
+According to the underlying dimension the monomials are given by:
 
 \begin{itemize}
   \item 1D: the monomials $1, u, u^2, u^3, \ldots, u^p$
@@ -642,6 +672,12 @@ choice is motivated by maintaining the \texttt{ElementConnectivity\_t} leaf in i
 and the fact that currently there is no real need for higher geometric orders.''
 \end{quote}
 
+\paragraph{Uniqueness.}
+At most one \texttt{ElementInterpolation\_t} per exact \texttt{ElementType\_t} tag is permitted
+within a family.  Tags differing only in geometric order are considered distinct; for example a
+single family may carry separate \texttt{QUAD\_4} and \texttt{QUAD\_9} \texttt{ElementInterpolation}
+nodes.  The constraint is enforced both on write and on read.
+
 % ─────────────────────────────────────────────────────────────────────────
 \subsubsection{Changes in Section~7.3 (\texttt{Elements\_t})}
 % ─────────────────────────────────────────────────────────────────────────
@@ -673,6 +709,13 @@ DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
 DataArray\_t<Float,DataSize[]> MonomialCoefficients;     \textrm{(o)}\\
 \};
 \end{sidsnode}
+
+\paragraph{Uniqueness and lookup.}
+At most one \texttt{SolutionInterpolation\_t} per (basic-element-type, \texttt{SpatialOrder},
+\texttt{TemporalOrder}) triplet is permitted within a family.  Lookup is bidirectional with
+fallback: a query for triplet $(\texttt{TETRA\_10}, 2, 0)$ first searches for an exact
+\texttt{TETRA\_10} match and, if absent, falls back to the basic-element tag \texttt{TETRA\_4}.
+This permits a single basis description to cover all geometric orders of the same element family.
 
 \begin{quote}
 ``The relevant \texttt{SolutionInterpolation\_t} block will be found using the pair composed by
@@ -857,6 +900,23 @@ given type (and order) are already present.
 \end{itemize}
 \end{quote}
 
+\paragraph{IsoParametric mesh interpolation.}
+\texttt{cg\_element\_isoparametric\_write} is a convenience writer that creates an
+\texttt{ElementInterpolation\_t} node with neither \texttt{LagrangeControlPoints} nor
+\texttt{MonomialCoefficients}.  The interpolation type is implicitly
+\texttt{IsoParametric}: the element's own connectivity table coordinates are reused, and no
+control-point write call follows.  The corresponding read function
+\texttt{cg\_element\_interpolation\_points\_read} returns \texttt{CG\_NODE\_NOT\_FOUND} on such
+nodes.
+
+\paragraph{Modal coefficient access.}
+\texttt{cg\_element\_interpolation\_coefficients\_\{read,write\}} and the matching
+\texttt{cg\_solution\_interpolation\_coefficients\_\{read,write\}} pair operate on the
+\texttt{MonomialCoefficients} child.  The expected array length is given by
+\texttt{cg\_element\_monomial\_size} or \texttt{cg\_solution\_monomial\_size}.  These functions
+must not be called on a node whose interpolation type is \texttt{ParametricLagrange} or
+\texttt{IsoParametric}.
+
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Accessing Data in the \texttt{FlowSolution\_t} Node}
 \label{sec:sol-api}
@@ -916,9 +976,21 @@ The cardinality of the interpolation functions is to be determined first by acce
 description of the interpolation.''
 \end{quote}
 
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{Fortran Bindings}
+% ─────────────────────────────────────────────────────────────────────────
+
+All CPEX-0045 functions are exposed to Fortran via Fortran~2003 \texttt{BIND(C)} interfaces in
+\texttt{cgns\_f.F90}, with the conventional \texttt{\_f} suffix
+(e.g.\ \texttt{cg\_solution\_interpolation\_write\_f}).  Argument types follow the standard CGNS
+Fortran conventions: \texttt{integer(cgsize\_t)} for index sizes, \texttt{integer(c\_int)} for
+indices and enumerations, and \texttt{real(c\_double)} for control point and coefficient arrays.
+A representative Fortran usage example is provided in \texttt{src/tests/test\_high\_orderf.F90}.
+
 
 %% ═════════════════════════════════════════════════════════════════════════
 \section{Extension to the SIDS File Mapping}
+\label{sec:filemap}
 %% ═════════════════════════════════════════════════════════════════════════
 
 \subsection{\texttt{ElementInterpolation\_t}: Child Node of \texttt{Family\_t}}
@@ -1047,6 +1119,188 @@ Cardinality        & 0:1 \\
 \end{tabular}
 \caption{New \texttt{InterpolationOrders} child of \texttt{FlowSolution\_t}.}
 \end{table}
+
+
+%% ═════════════════════════════════════════════════════════════════════════
+\section{Implementation Specification}
+\label{sec:impl-spec}
+%% ═════════════════════════════════════════════════════════════════════════
+
+This section consolidates the formal constraints, on-disk encodings, error semantics, and
+default values that a conforming implementation must observe.  It applies to both readers and
+writers.
+
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{Polynomial Order Limits}
+% ─────────────────────────────────────────────────────────────────────────
+
+\begin{itemize}
+  \item \textbf{Geometric order} (encoded via \texttt{ElementType\_t}): bounded by the available
+    high-order tags, currently up to fourth order (e.g.\ \texttt{HEXA\_125}, \texttt{TETRA\_35}).
+  \item \textbf{Solution spatial order}: integer in $[1, 1000]$.  Order $0$ is reserved as a
+    sentinel for ``no high-order solution'' and is rejected by the strict CPEX-0045 validation.
+  \item \textbf{Solution temporal order}: integer $\ge 0$.
+  \item \textbf{Recommended ranges} (warning thresholds in \texttt{cgnscheck}): spatial
+    $[1,100]$, temporal $[0,10]$.  Values outside these ranges are accepted but flagged for
+    human review.
+  \item \textbf{Constraint}: \texttt{TemporalOrder} $> 0$ requires \texttt{SpatialOrder} $\ge 1$.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{On-Disk Layout of Control Points and Coefficients}
+\label{sec:on-disk-layout}
+% ─────────────────────────────────────────────────────────────────────────
+
+\paragraph{LagrangeControlPoints (purely spatial).}
+The data array is stored as a 2D \texttt{R8} array with shape
+$[\textit{Dim}, \textit{NPoints}]$ in CGNS (Fortran-style) ordering, i.e.\ \textit{Dim} is the
+fast-varying axis and \textit{NPoints} the slow-varying axis.  Equivalently, the byte stream is
+the concatenation of $\texttt{NPoints}$ tuples, each of length \textit{Dim}:
+\begin{equation*}
+  (u_0, v_0, w_0,\; u_1, v_1, w_1,\; \ldots,\; u_{N-1}, v_{N-1}, w_{N-1})
+\end{equation*}
+
+\paragraph{LagrangeControlPoints (space-time).}
+For \texttt{SolutionInterpolation\_t} with $\texttt{TemporalOrder} > 0$, the array shape becomes
+$[\textit{Dim}+1, \textit{NPoints}_\mathrm{ST}]$ where
+$\textit{NPoints}_\mathrm{ST} = \textit{NPoints}_\mathrm{spatial} \times (\texttt{ot}+1)$.  The
+on-disk byte order is: \emph{all spatial coordinates of all space-time points first}, followed by
+\emph{all temporal coordinates as a contiguous trailing block}.  The temporal coordinates are
+\emph{not} interleaved with the spatial ones.
+
+\paragraph{MonomialCoefficients.}
+A 1D \texttt{R8} array of length $N_\mathrm{modal} = \binom{p+d}{d}$ for purely spatial
+interpolation, or $N_\mathrm{modal}\times(q+1)$ for space-time, where $d$ is the element
+dimension, $p$ is the spatial order, and $q$ is the temporal order.  The Pascal-traversal order
+is given by the loops in Section~\ref{sec:parametric-modal} and is a writer convention; the
+library does not validate ordering.
+
+\paragraph{InterpolationOrders.}
+A 1D \texttt{IndexArray\_t} (data type \texttt{I4}) of length~2, child of
+\texttt{FlowSolution\_t}, holding $[\texttt{spatialOrder}, \texttt{temporalOrder}]$.  Recognized
+only for \texttt{Unstructured} zones.
+
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{Validation Requirements (Reader)}
+% ─────────────────────────────────────────────────────────────────────────
+
+A conforming reader must reject:
+\begin{itemize}
+  \item \texttt{ElementInterpolation\_t} payloads that are not \texttt{I4} scalar (the
+    \texttt{ElementType\_t} value);
+  \item \texttt{SolutionInterpolation\_t} payloads that are not \texttt{I4}, dimension~1, with
+    \texttt{dim\_vals[0] = 3} (the triple
+    $[\textit{ElementType}, \textit{SpatialOrder}, \textit{TemporalOrder}]$);
+  \item \texttt{LagrangeControlPoints} children whose data type is not \texttt{R8} or whose
+    array dimension is not~2;
+  \item \texttt{MonomialCoefficients} children whose data type is not \texttt{R8} or whose
+    array dimension is not~1;
+  \item \texttt{DataArray\_t} children of \texttt{ElementInterpolation\_t} or
+    \texttt{SolutionInterpolation\_t} whose name is anything other than
+    \texttt{LagrangeControlPoints} or \texttt{MonomialCoefficients};
+  \item \texttt{SolutionInterpolation\_t} nodes that do not contain exactly one
+    \texttt{InterpolationType\_t} child named \texttt{InterpolationType};
+  \item Duplicate \texttt{ElementInterpolation\_t} nodes (same \texttt{ElementType\_t} tag) or
+    duplicate \texttt{SolutionInterpolation\_t} nodes (same basic-type, \texttt{os},
+    \texttt{ot}) within a family.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{Cross-Validation Rules (Writer)}
+% ─────────────────────────────────────────────────────────────────────────
+
+{\sloppy
+\begin{itemize}
+  \item \texttt{cg\_solution\_interpolation\_points\_write} must be rejected when the
+    parent \texttt{SolutionInterpolation\_t} has \texttt{InterpolationType} of
+    \texttt{ParametricMonomialsPascal} or \texttt{CartesianMonomialsPascal} (modal nodes do not
+    carry Lagrange points; coefficients must be written instead).
+  \item \texttt{cg\_element\_isoparametric\_write} must not be followed by
+    \texttt{cg\_element\_interpolation\_points\_write} or
+    \texttt{cg\_element\_interpolation\_coefficients\_write} on the same node.
+  \item Re-writing an existing \texttt{LagrangeControlPoints} or \texttt{MonomialCoefficients}
+    array requires the file to be opened in \texttt{CG\_MODE\_MODIFY}; in
+    \texttt{CG\_MODE\_WRITE} the second write must be rejected.
+  \item \texttt{cg\_sol\_interpolation\_order\_write} must reject grid locations other than
+    \texttt{InterpolationPoints} or \texttt{CellCenter}, and must require an existing
+    \texttt{PointRange} or \texttt{PointList} on the parent \texttt{FlowSolution\_t} when
+    \texttt{GridLocation} = \texttt{CellCenter}.
+\end{itemize}
+\par}
+
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{Error-Code Semantics}
+% ─────────────────────────────────────────────────────────────────────────
+
+\begin{table}[htbp]
+\centering
+\small
+\rowcolors{2}{cgnslight!20}{white}
+\begin{tabularx}{\linewidth}{@{} l >{\raggedright\arraybackslash}X @{}}
+\toprule
+\textbf{Code} & \textbf{Meaning} \\
+\midrule
+\texttt{CG\_OK}              & Operation succeeded. \\
+\texttt{CG\_NODE\_NOT\_FOUND} & Returned by \texttt{cg\_element\_interpolation\_points\_read} and
+  \texttt{cg\_solution\_interpolation\_points\_read} when the corresponding node has no
+  \texttt{LagrangeControlPoints} child (i.e.\ the interpolation type is \texttt{IsoParametric}
+  or modal); also returned by \texttt{cg\_sol\_interpolation\_order\_read} when the
+  \texttt{FlowSolution\_t} has no \texttt{InterpolationOrders} child.  Callers must treat this
+  as a normal control-flow signal, not an error. \\
+\texttt{CG\_ERROR}           & Validation failure or I/O error.  Use \texttt{cg\_get\_error()}
+  to retrieve the diagnostic message string. \\
+\bottomrule
+\end{tabularx}
+\caption{Error-code semantics for CPEX-0045 functions.}
+\end{table}
+
+\paragraph{Detecting interpolation type at runtime.}
+For \texttt{ElementInterpolation\_t}, call \texttt{cg\_element\_interpolation\_type\_read}; the
+returned value is one of \texttt{ParametricLagrange}, \texttt{ParametricMonomialsPascal}, or
+\texttt{IsoParametric}.  \texttt{CartesianMonomialsPascal} is never returned for mesh
+interpolation.  For \texttt{SolutionInterpolation\_t}, the type is the \texttt{InterpolationType}
+child read by \texttt{cg\_solution\_interpolation\_read}.
+
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{Default Values}
+% ─────────────────────────────────────────────────────────────────────────
+
+\begin{itemize}
+  \item \texttt{SolutionInterpolation\_t}: \texttt{SpatialOrder} is required (no default);
+    \texttt{TemporalOrder} defaults to~0.
+  \item \texttt{FlowSolution\_t.InterpolationOrders}: when the child is absent
+    \texttt{cg\_sol\_interpolation\_order\_read} returns \texttt{CG\_NODE\_NOT\_FOUND} with
+    output values \texttt{(0, 0)}.  Such a \texttt{FlowSolution\_t} is treated as a standard
+    (non-high-order) solution.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{Coordinate-System Conventions}
+% ─────────────────────────────────────────────────────────────────────────
+
+The natural parametric domains for the supported elements (illustrated in
+Figure~\ref{fig:coord-systems}) are conventional:
+\begin{itemize}
+  \item Tensor-product elements (\texttt{BAR}, \texttt{QUAD}, \texttt{HEXA}): unit cube
+    $[-1, 1]^d$.
+  \item Simplex elements (\texttt{TRI}, \texttt{TETRA}): unit simplex $\{u_i \ge 0,\;
+    \sum u_i \le 1\}$.
+  \item Prism (\texttt{PENTA}): triangular cross-section in $(u,v) \in \{u,v \ge 0,\;
+    u+v \le 1\}$ extruded along $w \in [-1, 1]$.
+  \item Pyramid (\texttt{PYRA}): see~\cite{BCD10}.
+\end{itemize}
+The library does \emph{not} enforce these ranges on user-supplied control points; any
+\texttt{double} value is accepted.  Conformance with the conventional domain is the writer's
+responsibility.
+
+% ─────────────────────────────────────────────────────────────────────────
+\subsection{Scope of \texttt{InterpolationPoints} Grid Location}
+% ─────────────────────────────────────────────────────────────────────────
+
+{\sloppy
+\texttt{GridLocation\_t = InterpolationPoints} is valid only on \texttt{FlowSolution\_t} nodes.
+\texttt{ArbitraryGridMotion\_t} and \texttt{DiscreteData\_t} nodes must not use this location.
+\par}
 
 
 %% ═════════════════════════════════════════════════════════════════════════
