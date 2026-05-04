@@ -255,6 +255,46 @@ defined.  \texttt{InterpolationType\_t} can take four values:
 \end{quote}
 
 % ─────────────────────────────────────────────────────────────────────────
+\subsubsection{New \texttt{GridLocation\_t} Value: \texttt{InterpolationPoints}}
+\label{sec:interpolation-points-loc}
+% ─────────────────────────────────────────────────────────────────────────
+
+CPEX-0045 adds a new \texttt{GridLocation\_t} enumeration value:
+{\sloppy
+\begin{itemize}
+  \item \textbf{\texttt{InterpolationPoints}} (enum value $9$): the
+    \texttt{FlowSolution\_t} data is stored at the control points (Lagrange) or as
+    coefficients (modal) defined by the associated \texttt{SolutionInterpolation\_t} node in
+    the family.  The \texttt{DataArray\_t} size for each field is
+    $N_\mathrm{elements} \times N_\mathrm{DOFs/element}$, where
+    $N_\mathrm{DOFs/element}$ depends on the interpolation type and orders.
+    Coefficients for all DOFs of element~0 are stored contiguously, followed by all DOFs of
+    element~1, and so on.
+\end{itemize}
+\par}
+
+\paragraph{Mandatory for high-order solutions.}
+For uniform-order high-order solutions covering all elements of an unstructured zone,
+\texttt{GridLocation = InterpolationPoints} is mandatory.  Reusing
+\texttt{GridLocation = CellCenter} for high-order data is incorrect: \texttt{CellCenter}
+mandates an array of size equal to the number of cells, which contradicts the
+$N_\mathrm{elements} \times N_\mathrm{DOFs/element}$ requirement of high-order data and will
+cause failures in standard CGNS readers.
+
+\paragraph{When \texttt{CellCenter} is still appropriate.}
+\texttt{CellCenter} combined with \texttt{PointRange} or \texttt{PointList} remains valid for
+\emph{variable-order} configurations (Section~\ref{sec:variable-order}), where each
+\texttt{FlowSolution\_t} block describes a subset of cells at a specific order and the
+solution values are interpreted per the block's \texttt{InterpolationOrders} child.
+
+\paragraph{Discontinuous vs.\ continuous methods.}
+Discontinuous Galerkin (DG) methods, where each element carries its own independent DOFs,
+always use \texttt{InterpolationPoints}.  Continuous Galerkin (CG) methods that share DOFs
+across element boundaries are implementation-defined: some codes still use
+\texttt{InterpolationPoints} with duplicated boundary values, others use
+\texttt{Vertex} with a global DOF numbering.
+
+% ─────────────────────────────────────────────────────────────────────────
 \subsection{High-Order Parametric Interpolation}
 \label{sec:parametric}
 % ─────────────────────────────────────────────────────────────────────────
@@ -763,12 +803,21 @@ List( UserDefinedData\_t UserDefinedData1 ... UserDefinedDataN ); \textrm{(o)}\\
 for \texttt{TemporalOrder} is~0.''
 \end{quote}
 
-\noindent\textbf{Implementation note:} Although the SIDS prose above lists
-\texttt{SpatialOrder} and \texttt{TemporalOrder} as scalar fields of \texttt{FlowSolution\_t},
-the normative on-disk encoding stores them as a single \texttt{IndexArray\_t} child node named
-\texttt{InterpolationOrders} of dimension~2, with values \texttt{[spatialOrder, temporalOrder]}.
-This is the form described in Section~\ref{sec:filemap} and implemented by
+\noindent\textbf{Implementation note 1 --- Storage of orders.}
+Although the SIDS prose above lists \texttt{SpatialOrder} and \texttt{TemporalOrder} as scalar
+fields of \texttt{FlowSolution\_t}, the normative on-disk encoding stores them as a single
+\texttt{IndexArray\_t} child node named \texttt{InterpolationOrders} of dimension~2, with values
+\texttt{[spatialOrder, temporalOrder]}.  This is the form described in
+Section~\ref{sec:filemap} and implemented by
 \texttt{cg\_sol\_interpolation\_order\_read/write}.
+
+\noindent\textbf{Implementation note 2 --- Grid location convention.}
+For high-order solutions covering an entire zone (the standard case), the
+\texttt{GridLocation} field is \texttt{InterpolationPoints}
+(see~Section~\ref{sec:interpolation-points-loc}).  For variable-order configurations using
+\texttt{PointRange} or \texttt{PointList} subsets, \texttt{GridLocation = CellCenter} is used
+and the per-subset orders are recorded in the \texttt{InterpolationOrders} child of each
+\texttt{FlowSolution\_t} block.
 
 
 %% ═════════════════════════════════════════════════════════════════════════
@@ -1179,6 +1228,21 @@ library does not validate ordering.
 A 1D \texttt{IndexArray\_t} (data type \texttt{I4}) of length~2, child of
 \texttt{FlowSolution\_t}, holding $[\texttt{spatialOrder}, \texttt{temporalOrder}]$.  Recognized
 only for \texttt{Unstructured} zones.
+
+\paragraph{High-order \texttt{FlowSolution\_t} field arrays.}
+When \texttt{GridLocation = InterpolationPoints}, each field \texttt{DataArray\_t} child of
+\texttt{FlowSolution\_t} has length
+$N_\mathrm{elements} \times N_\mathrm{DOFs/element}$.
+Within the array, all DOFs of element~0 are stored contiguously, followed by all DOFs of
+element~1, and so on:
+\begin{equation*}
+  \text{array index} \;=\; e \times N_\mathrm{DOFs} + \mathit{local\_dof\_index}
+\end{equation*}
+where $e$ is the 0-based element index and $\mathit{local\_dof\_index}$ runs from $0$ to
+$N_\mathrm{DOFs}-1$ in the ordering established by the associated
+\texttt{SolutionInterpolation\_t} (Lagrange control points listed in
+\texttt{LagrangeControlPoints}, or modal coefficients in the Pascal traversal of
+Section~\ref{sec:parametric-modal}).
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Validation Requirements (Reader)}
