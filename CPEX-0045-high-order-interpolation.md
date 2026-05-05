@@ -574,7 +574,11 @@ dedicated lists of `ElementInterpolation_t` and
 `SolutionInterpolation_t` leaves within `Family_t`.
 :::
 
-[]{style="background-color: cgnslight!50"}\
+::: {style="background-color: cgnslight!50"}
+**`Family_t :=`**
+:::
+
+\
 
 > List( Descriptor_t Descriptor1 \... DescriptorN ); [(o)]{.roman}\
 > FamilyBC_t FamilyBC ; [(o)]{.roman}\
@@ -599,7 +603,11 @@ the corresponding linear element, in the same order
 reference="fig:coord-systems"}).
 :::
 
-[]{style="background-color: cgnslight!50"}\
+::: {style="background-color: cgnslight!50"}
+**`ElementInterpolation_t :=`**
+:::
+
+\
 
 > ElementType_t Element; [(r)]{.roman}\
 > DataArray_t\<Float,DataSize\[\]\> LagrangeControlPoints;
@@ -656,7 +664,11 @@ element type and order are stored in a `SolutionInterpolation_t` leaf
 attached to the corresponding Family.
 :::
 
-[]{style="background-color: cgnslight!50"}\
+::: {style="background-color: cgnslight!50"}
+**`SolutionInterpolation_t :=`**
+:::
+
+\
 
 > ElementType_t Element; [(r)]{.roman}\
 > Integer SpatialOrder; [(r)]{.roman}\
@@ -701,7 +713,12 @@ one needs to use `PointRange` or `PointList` to single out the elements
 which will use the specified order.
 :::
 
-[]{style="background-color: cgnslight!50"}\
+::: {style="background-color: cgnslight!50"}
+**`FlowSolution_t`$<$`int CellDimension, int IndexDimension,`\
+`int VertexSize[IndexDimension], int CellSize[IndexDimension]`$>$` :=`**
+:::
+
+\
 
 > List( Descriptor_t Descriptor1 \... DescriptorN ); [(o)]{.roman}\
 > GridLocation_t GridLocation ; [(o/d)]{.roman}\
@@ -1022,11 +1039,13 @@ tuples, each of length *Dim*: $$\begin{equation*}
 #### LagrangeControlPoints (space-time).
 
 For `SolutionInterpolation_t` with $\texttt{TemporalOrder} > 0$, the
-array shape becomes $[\textit{Dim}+1, \textit{NPoints}_\mathrm{ST}]$
+array shape becomes $[\textit{Dim}+1,\, \textit{NPoints}_\mathrm{ST}]$
 where
 $\textit{NPoints}_\mathrm{ST} = \textit{NPoints}_\mathrm{spatial} \times (q+1)$
 and $q = \texttt{TemporalOrder}$. Within each coordinate row, the points
-are ordered *time-major*: $$\begin{equation*}
+are ordered *time-major*:
+
+$$\begin{equation*}
   \texttt{idx} = t \times N_\mathrm{spatial} + s,
   \qquad t = 0, \ldots, q,
   \qquad s = 0, \ldots, N_\mathrm{spatial}-1

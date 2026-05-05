@@ -90,8 +90,8 @@
 %% ── SIDS-style node definition environment ──────────────────────────────
 \newenvironment{sidsnode}[1]{%
   \par\vspace{0.8em}%
-  \noindent\colorbox{cgnslight!50}{\makebox[\dimexpr\linewidth-2\fboxsep][l]{%
-    \texttt{\textbf{\color{cgnsblue}#1}}}}\\[0.3em]%
+  \noindent\colorbox{cgnslight!50}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+    \raggedright\texttt{\textbf{\color{cgnsblue}#1}}}}\\[0.3em]%
   \begin{quote}\ttfamily
 }{%
   \end{quote}\vspace{0.4em}%
@@ -157,7 +157,7 @@ MLL Status        & accepted; implementation complete (v5.0) \\
 
 \vspace{1.5em}
 
-\noindent\fbox{\parbox{\linewidth}{%
+\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
 \textbf{Editorial convention.}~Passages set in the callout shown below
 reproduce text \emph{verbatim} or \emph{near-verbatim} from CPEX-0045~v2
 (K.~Hillewaert, Cenaero).  Longer technical passages---function-space
@@ -1304,11 +1304,13 @@ the concatenation of $\texttt{NPoints}$ tuples, each of length \textit{Dim}:
 \end{equation*}
 
 \paragraph{LagrangeControlPoints (space-time).}
+\begin{sloppypar}
 For \texttt{SolutionInterpolation\_t} with $\texttt{TemporalOrder} > 0$, the array shape becomes
-$[\textit{Dim}+1, \textit{NPoints}_\mathrm{ST}]$ where
-$\textit{NPoints}_\mathrm{ST} = \textit{NPoints}_\mathrm{spatial} \times (q+1)$ and
-$q = \texttt{TemporalOrder}$.  Within each coordinate row, the points are ordered
+$[\textit{Dim}+1,\, \textit{NPoints}_\mathrm{ST}]$ where
+$\textit{NPoints}_\mathrm{ST} = \textit{NPoints}_\mathrm{spatial} \times (q+1)$
+and $q = \texttt{TemporalOrder}$.  Within each coordinate row, the points are ordered
 \emph{time-major}:
+\end{sloppypar}
 \begin{equation*}
   \texttt{idx} = t \times N_\mathrm{spatial} + s,
   \qquad t = 0, \ldots, q,
