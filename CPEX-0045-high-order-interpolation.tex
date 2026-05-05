@@ -27,6 +27,7 @@
 \usepackage{needspace}
 \usepackage[right,running]{lineno}
 \usepackage{subcaption}
+\usepackage{mdframed}
 
 %% ── Suppress lineno inside code listings ────────────────────────────────
 \makeatletter
@@ -72,6 +73,20 @@
   belowskip=1em,
   tabsize=4,
 }
+
+%% ── v2 verbatim-quotation environment ───────────────────────────────────
+%% Indented passages reproduced verbatim from CPEX-0045 v2 are wrapped in
+%% this environment so they are visually distinct from the v3 commentary.
+\mdfdefinestyle{v2quotestyle}{
+  linecolor=cgnsblue,
+  linewidth=2pt,
+  topline=false, bottomline=false, rightline=false,
+  backgroundcolor=cgnslight!40,
+  innertopmargin=6pt, innerbottommargin=6pt,
+  innerleftmargin=10pt, innerrightmargin=10pt,
+  skipabove=0.6em, skipbelow=0.6em
+}
+\newmdenv[style=v2quotestyle]{v2quote}
 
 %% ── SIDS-style node definition environment ──────────────────────────────
 \newenvironment{sidsnode}[1]{%
@@ -144,12 +159,16 @@ MLL Status        & accepted; implementation complete (v5.0) \\
 \vspace{1.5em}
 
 \noindent\fbox{\parbox{\linewidth}{%
-\textbf{Editorial convention.}~Indented passages set in \emph{quotation marks}
-(``\dots'')\ in the sections that follow reproduce text \emph{verbatim} from
-CPEX-0045~v2 (K.~Hillewaert, Cenaero).  The surrounding prose is v3
-commentary that formalises, extends, or clarifies the v2 wording.  This
-preserves the original proposal language for traceability while letting v3
-add the implementation specification adopted in CGNS~v5.0.%
+\textbf{Editorial convention.}~Passages set in the tinted callout shown
+below reproduce text \emph{verbatim} from CPEX-0045~v2 (K.~Hillewaert,
+Cenaero).  The surrounding prose is v3 commentary that formalises,
+extends, or clarifies the v2 wording.  This preserves the original
+proposal language for traceability while letting v3 add the
+implementation specification adopted in CGNS~v5.0.
+
+\begin{v2quote}
+Sample: text in this style is verbatim from CPEX-0045 v2.
+\end{v2quote}
 }}
 
 \vspace{1.5em}
@@ -217,8 +236,8 @@ order, and time-dependent interpolants.
 In the remainder of this section we introduce the different paragraphs (with numbering to be
 adapted) that should be added to the new section.
 
-\begin{quote}
-``The CGNS standard allows the user to specify their own interpolation approach for both elements
+\begin{v2quote}
+The CGNS standard allows the user to specify their own interpolation approach for both elements
 and solution.  The basic principles are:
 \begin{enumerate}
   \item The element coordinate system per element type is a fixed convention.
@@ -239,16 +258,16 @@ and solution.  The basic principles are:
     solution, unless explicitly specified that way.
   \item In addition to the spatial coordinates, time can also be used as an independent variable.
 \end{enumerate}
-The following sections describe how interpolations are specified.''
-\end{quote}
+The following sections describe how interpolations are specified.
+\end{v2quote}
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsubsection{Interpolation Type Enumeration: \texttt{InterpolationType\_t}}
 \label{sec:interpolation-type}
 % ─────────────────────────────────────────────────────────────────────────
 
-\begin{quote}
-``\texttt{InterpolationType\_t} specifies how the high-order interpolants for the solution are
+\begin{v2quote}
+\texttt{InterpolationType\_t} specifies how the high-order interpolants for the solution are
 defined.  \texttt{InterpolationType\_t} can take four values:
 
 \begin{itemize}
@@ -261,9 +280,9 @@ defined.  \texttt{InterpolationType\_t} can take four values:
     in a Cartesian coordinate system, centred on the element and parallel to the main axes.  The
     interpolation functions are based on monomials according to the classical Pascal sets.
   \item \textbf{\texttt{IsoParametric}} corresponds to using the same interpolation functions for
-    the solution as for the mesh.''
+    the solution as for the mesh.
 \end{itemize}
-\end{quote}
+\end{v2quote}
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsubsection{Lagrange Control Point Distribution}
@@ -351,23 +370,23 @@ across element boundaries are implementation-defined: some codes still use
 \label{sec:parametric}
 % ─────────────────────────────────────────────────────────────────────────
 
-\begin{quote}
-``\textbf{Scope}: The parametric interpolation conventions can be used for specifying both curved
-elements (thereby superseding the standard conventions) and the solution.''
-\end{quote}
+\begin{v2quote}
+\textbf{Scope}: The parametric interpolation conventions can be used for specifying both curved
+elements (thereby superseding the standard conventions) and the solution.
+\end{v2quote}
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsubsection{Standard Coordinate Systems for Parametric Interpolation}
 \label{sec:coord-systems}
 % ─────────────────────────────────────────────────────────────────────────
 
-\begin{quote}
-``The parametric coordinate system is defined per element following Figure~\ref{fig:coord-systems}.
+\begin{v2quote}
+The parametric coordinate system is defined per element following Figure~\ref{fig:coord-systems}.
 
 For space-time computations the coordinate system is extended with one dimension, by the tensor
 product of the spatial coordinate system with the parameter interval $[-1,1]$ in parametric time
-$\tau$.  The latter corresponds to the physical time slab $[T_n, T_{n+1}]$.''
-\end{quote}
+$\tau$.  The latter corresponds to the physical time slab $[T_n, T_{n+1}]$.
+\end{v2quote}
 
 \begin{figure}[htbp]
   \centering
@@ -405,8 +424,8 @@ $\tau$.  The latter corresponds to the physical time slab $[T_n, T_{n+1}]$.''
 \label{sec:lagrange}
 % ─────────────────────────────────────────────────────────────────────────
 
-\begin{quote}
-``\textbf{Scope}: Both solution and element shape can be specified using this formulation.  For
+\begin{v2quote}
+\textbf{Scope}: Both solution and element shape can be specified using this formulation.  For
 elements, this convention allows redefinition of the position and order of the control points with
 respect to the standard definitions for each \texttt{ElementType\_t} described in section~3.3.
 The standard definition continues to be used when no interpolation is explicitly introduced.
@@ -436,8 +455,8 @@ $p$, which support the Lagrange-type interpolation, are listed in Table~\ref{tab
 to the standard ``complete'' element, also incomplete, or so-called serendipity elements are
 supported in higher dimensions.  A first type of serendipity element only specifies control
 points on the edges.  In three-dimensional elements of sufficient order, a second serendipity
-interpolation can be defined which only excludes control points internal to the element.''
-\end{quote}
+interpolation can be defined which only excludes control points internal to the element.
+\end{v2quote}
 
 \begin{table}[htbp]
 \centering
@@ -531,9 +550,9 @@ library does not provide a built-in pyramid layout helper.
 \label{sec:parametric-modal}
 % ─────────────────────────────────────────────────────────────────────────
 
-\begin{quote}
-``\textbf{Scope}: This type of interpolation only applies to solutions.''
-\end{quote}
+\begin{v2quote}
+\textbf{Scope}: This type of interpolation only applies to solutions.
+\end{v2quote}
 
 For solutions, modal interpolation is also allowed.  The interpolation functions are based on an
 ordered set of monomials spanning the Pascal spaces.  The cardinality of the modal basis is the
@@ -598,24 +617,24 @@ for (int h=0; h<=q; h++)
 \end{lstlisting}
 \end{itemize}
 
-\begin{quote}
-``Note that this space-time formulation reverts to purely spatial interpolation --- including the
-ordering --- for the (default) temporal order $q=0$.''
-\end{quote}
+\begin{v2quote}
+Note that this space-time formulation reverts to purely spatial interpolation --- including the
+ordering --- for the (default) temporal order $q=0$.
+\end{v2quote}
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Cartesian Modal Interpolation}
 \label{sec:cartesian-modal}
 % ─────────────────────────────────────────────────────────────────────────
 
-\begin{quote}
-``\textbf{Scope}: Cartesian modal interpolation only applies to solutions.''
-\end{quote}
+\begin{v2quote}
+\textbf{Scope}: Cartesian modal interpolation only applies to solutions.
+\end{v2quote}
 
 \subsubsection{Computation of the Element Coordinate System}
 
-\begin{quote}
-``We specify a local Cartesian coordinate system per element based upon the (simplified) barycenter.
+\begin{v2quote}
+We specify a local Cartesian coordinate system per element based upon the (simplified) barycenter.
 Say we note the global coordinates $\mathbf{R} = X\mathbf{e}_x + Y\mathbf{e}_y + Z\mathbf{e}_z$.
 We proceed by first computing the element barycenter $\mathbf{R}_e$ as the arithmetic mean of the
 locations of the principal vertices, i.e.\ the nodes corresponding to those of the associated
@@ -630,8 +649,8 @@ we then use the notation $\mathbf{r} = x\mathbf{e}_x + y\mathbf{e}_y + z\mathbf{
 
 Correspondingly, an element-local origin of the time dimension is defined as the mid-point of the
 relevant physical time slab $[T_n, T_{n+1}]$, such that
-$t = T - (T_n + T_{n+1})/2$.''
-\end{quote}
+$t = T - (T_n + T_{n+1})/2$.
+\end{v2quote}
 
 \paragraph{Numerical stability: mandatory normalization.}
 Using element-local but \emph{unnormalized} coordinates in monomials $x^p, y^p, z^p$ at
@@ -650,13 +669,13 @@ coefficients (typically as a per-element scalar) so a reader can recover physica
 
 \subsubsection{Cartesian Modal Interpolants}
 
-\begin{quote}
-``The interpolation space for Cartesian modal interpolations follows the same approach as for
+\begin{v2quote}
+The interpolation space for Cartesian modal interpolations follows the same approach as for
 parametric modal interpolation and is based on ordered sets of monomials spanning the standard
 Pascal spaces.  Here these are monomials in the element-local Cartesian coordinates $x, y, z$
 and (physical) time $t$, rather than coordinates in parametric space and time.  The ordered sets
 of monomials for a purely spatial interpolation are thus given by:
-\end{quote}
+\end{v2quote}
 
 \begin{itemize}
   \item 1D: the monomials $1, x, x^2, x^3, \ldots, x^p$
@@ -725,12 +744,12 @@ for (int h=0; h<=q; h++)
 \subsubsection{Modification of Section~12.6 (\texttt{Family\_t})}
 % ─────────────────────────────────────────────────────────────────────────
 
-\begin{quote}
-``On a case-by-case basis, i.e.\ per element type and interpolation order, one can provide
+\begin{v2quote}
+On a case-by-case basis, i.e.\ per element type and interpolation order, one can provide
 alternative mesh and solution interpolants in a dedicated family to the zones in question.  This
 is implemented using dedicated lists of \texttt{ElementInterpolation\_t} and
-\texttt{SolutionInterpolation\_t} leaves within \texttt{Family\_t}.''
-\end{quote}
+\texttt{SolutionInterpolation\_t} leaves within \texttt{Family\_t}.
+\end{v2quote}
 
 \begin{sidsnode}{Family\_t :=}
 List( Descriptor\_t Descriptor1 ... DescriptorN );          \textrm{(o)}\\
@@ -746,14 +765,14 @@ List( SolutionInterpolation\_t SolInterp1  ... SolInterpN);  \textrm{(o)}\\
 \label{sec:element-interpolation}
 % ─────────────────────────────────────────────────────────────────────────
 
-\begin{quote}
-``The \texttt{ElementInterpolation\_t} specifies the geometric interpolation of an element by
+\begin{v2quote}
+The \texttt{ElementInterpolation\_t} specifies the geometric interpolation of an element by
 listing an alternative set of Lagrange high-order control points in parametric space following
 the element conventions for the coordinate system.  In the absence of such a block for a given
 \texttt{ElementType\_t}, the standard described in section~3.3 is followed.  It is assumed that
 the first points correspond to the principal vertices of the corresponding linear element, in the
-same order (cf.\ Figure~\ref{fig:coord-systems}).''
-\end{quote}
+same order (cf.\ Figure~\ref{fig:coord-systems}).
+\end{v2quote}
 
 \begin{sidsnode}{ElementInterpolation\_t :=}
 ElementType\_t Element;                                  \textrm{(r)}\\
@@ -772,12 +791,12 @@ which optional children are present:
 \texttt{CartesianMonomialsPascal} applies to \emph{solution} interpolation only and cannot
 be attached to an \texttt{ElementInterpolation\_t} node.
 
-\begin{quote}
-``\textbf{Limitations}: The current proposal maintains \texttt{ElementType\_t} to describe both
+\begin{v2quote}
+\textbf{Limitations}: The current proposal maintains \texttt{ElementType\_t} to describe both
 element type and geometric order, meaning we cannot go beyond 4th-order interpolation.  This
 choice is motivated by maintaining the \texttt{ElementConnectivity\_t} leaf in its current shape
-and the fact that currently there is no real need for higher geometric orders.''
-\end{quote}
+and the fact that currently there is no real need for higher geometric orders.
+\end{v2quote}
 
 \paragraph{Uniqueness.}
 At most one \texttt{ElementInterpolation\_t} per exact \texttt{ElementType\_t} tag is permitted
@@ -789,23 +808,23 @@ nodes.  The constraint is enforced both on write and on read.
 \subsubsection{Changes in Section~7.3 (\texttt{Elements\_t})}
 % ─────────────────────────────────────────────────────────────────────────
 
-\begin{quote}
-``In case an alternative location for the element control points is specified, the actual elements
+\begin{v2quote}
+In case an alternative location for the element control points is specified, the actual elements
 are defined as before by listing the indices in the coordinate table, with the notable change that
 the order will correspond to the control point coordinates specified in the corresponding
 \texttt{ElementInterpolation\_t} block.  If a specific element type is not found among these
-leaves, the standard convention is applied.''
-\end{quote}
+leaves, the standard convention is applied.
+\end{v2quote}
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsubsection{\texttt{SolutionInterpolation\_t} --- New SIDS Section~12.11}
 \label{sec:solution-interpolation}
 % ─────────────────────────────────────────────────────────────────────────
 
-\begin{quote}
-``The interpolation functions associated to the interpolation on a given element type and order
-are stored in a \texttt{SolutionInterpolation\_t} leaf attached to the corresponding Family.''
-\end{quote}
+\begin{v2quote}
+The interpolation functions associated to the interpolation on a given element type and order
+are stored in a \texttt{SolutionInterpolation\_t} leaf attached to the corresponding Family.
+\end{v2quote}
 
 \begin{sidsnode}{SolutionInterpolation\_t :=}
 ElementType\_t Element;                                  \textrm{(r)}\\
@@ -824,29 +843,29 @@ fallback: a query for triplet $(\texttt{TETRA\_10}, 2, 0)$ first searches for an
 \texttt{TETRA\_10} match and, if absent, falls back to the basic-element tag \texttt{TETRA\_4}.
 This permits a single basis description to cover all geometric orders of the same element family.
 
-\begin{quote}
-``The relevant \texttt{SolutionInterpolation\_t} block will be found using the pair composed by
+\begin{v2quote}
+The relevant \texttt{SolutionInterpolation\_t} block will be found using the pair composed by
 the (basic) element type and interpolation order.  The former corresponds to either the actual
 element tag or, if the corresponding \texttt{SolutionInterpolation\_t} block is absent, the type
 of the corresponding linear element.  For instance, the interpolation functions for the 2nd-order
 solution on a 4th-order tetrahedron will be associated to element tag \texttt{TETRA\_35} or
 \texttt{TETRA\_4}.  Finally, if \texttt{InterpolationName} is not specified, standard
-interpolation (i.e.\ constant per element) applies.''
-\end{quote}
+interpolation (i.e.\ constant per element) applies.
+\end{v2quote}
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsubsection{Addition to Section~7.7 (\texttt{FlowSolution\_t})}
 \label{sec:flowsolution}
 % ─────────────────────────────────────────────────────────────────────────
 
-\begin{quote}
-``In case variable high-order solutions are stored, a separate solution block per interpolation
+\begin{v2quote}
+In case variable high-order solutions are stored, a separate solution block per interpolation
 order in space (and time) should be stored.  The interpolation orders attached to the zone are
 indicated by the integers \texttt{SpatialOrder} and \texttt{TemporalOrder}.  The location of
 the solution is then supposed to be \texttt{CellCenter}, and in case of a variable-order
 solution, one needs to use \texttt{PointRange} or \texttt{PointList} to single out the elements
-which will use the specified order.''
-\end{quote}
+which will use the specified order.
+\end{v2quote}
 
 \begin{sidsnode}{FlowSolution\_t$<$int CellDimension, int IndexDimension,\\
 \quad\quad int VertexSize[IndexDimension], int CellSize[IndexDimension]$>$ :=}
@@ -865,10 +884,10 @@ List( UserDefinedData\_t UserDefinedData1 ... UserDefinedDataN ); \textrm{(o)}\\
 \};
 \end{sidsnode}
 
-\begin{quote}
-``The default value for \texttt{SpatialOrder} depends on the type of interpolation; the default
-for \texttt{TemporalOrder} is~0.''
-\end{quote}
+\begin{v2quote}
+The default value for \texttt{SpatialOrder} depends on the type of interpolation; the default
+for \texttt{TemporalOrder} is~0.
+\end{v2quote}
 
 \noindent\textbf{Implementation note 1 --- Storage of orders.}
 Although the SIDS prose above lists \texttt{SpatialOrder} and \texttt{TemporalOrder} as scalar
@@ -1002,8 +1021,8 @@ given type (and order) are already present.
 \caption{Input/output parameters for family-level API.}
 \end{table}
 
-\begin{quote}
-``The family contains the set of interpolation bases:
+\begin{v2quote}
+The family contains the set of interpolation bases:
 \begin{itemize}
   \item for elements as a function of the element type \texttt{ElementType\_t};
   \item for the solution as a function of the combination \texttt{ElementType\_t} and two
@@ -1012,9 +1031,9 @@ given type (and order) are already present.
     type always refers back to the baseline element, i.e.\ the solution interpolation basis for
     the triplets (\texttt{TETRA\_4},4,0) and (\texttt{TETRA\_10},4,0) are the same;
   \item the number of coordinates of the control points is defined by the dimension associated
-    to the element type.''
+    to the element type.
 \end{itemize}
-\end{quote}
+\end{v2quote}
 
 \paragraph{IsoParametric mesh interpolation.}
 \texttt{cg\_element\_isoparametric\_write} is a convenience writer that creates an
@@ -1081,16 +1100,16 @@ must not be called on a node whose interpolation type is \texttt{ParametricLagra
 \caption{Input/output parameters for FlowSolution-level API.}
 \end{table}
 
-\begin{quote}
-``The interpolation order is assigned per solution block within an unstructured zone, whereas the
+\begin{v2quote}
+The interpolation order is assigned per solution block within an unstructured zone, whereas the
 details concerning the interpolation functions are encoded in the family attached to the zone.
 In this case, the solution is supposed to be attached to \texttt{CellCenter}; the values are
 the expansion weights in the basis.  The specific interpolation basis is defined through the
 combination of the element type and the interpolation orders.
 
 The cardinality of the interpolation functions is to be determined first by accessing the
-description of the interpolation.''
-\end{quote}
+description of the interpolation.
+\end{v2quote}
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Fortran Bindings}
