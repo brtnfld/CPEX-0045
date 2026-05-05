@@ -24,6 +24,104 @@ Version 3.0\
   **MLL Status**          accepted; implementation complete (v5.0)
   ----------------------- ----------------------------------------------------------------
 
+::: center
+**Amendment to Approved Proposal**\
+CPEX-0045 v2 was previously approved by the CGNS Steering Committee.
+This document (v3) is submitted as a revision to that approved proposal.
+The committee is asked to evaluate only the *delta* described below.
+Passages reproduced from v2 are marked throughout with a blue left-rule
+callout.
+:::
+
+- Two new SIDS node types: `ElementInterpolation_t` and
+  `SolutionInterpolation_t`, both children of `Family_t`.
+
+- `InterpolationType_t` enum with four values: `ParametricLagrange`,
+  `ParametricMonomialsPascal`, `CartesianMonomialsPascal`,
+  `IsoParametric`.
+
+- Support for purely spatial and space-time interpolation via
+  `SpatialOrder` and `TemporalOrder` fields.
+
+- High-order solution data stored in existing `FlowSolution_t` nodes;
+  polynomial orders recorded per solution block.
+
+- Scope restricted to unstructured mesh computations.
+
+Each item is labelled [**\[NEW\]**]{style="color: newgreen"} (genuinely
+new; requires committee vote) or
+[**\[CLARIFICATION\]**]{style="color: clarifybrown"} (formalises v2
+intent; no semantic change to the approved standard).
+
+*SIDS changes:*
+
+1.  [**\[NEW\]**]{style="color: newgreen"}
+    **`LagrangeControlPointDistribution_t` enum.** Records the
+    parametric-space distribution of Lagrange control points. Values:
+    `GaussLobattoLegendre`, `Equidistant`, `GaussLegendre`,
+    `WarpAndBlend`. Stored as an optional named child of
+    `ElementInterpolation_t` or `SolutionInterpolation_t`; required for
+    `ParametricLagrange`. *Rationale:* a reader cannot reconstruct basis
+    functions from control-point positions alone without this
+    information.
+
+2.  [**\[CLARIFICATION\]**]{style="color: clarifybrown"}
+    **`GridLocation = InterpolationPoints`.** Designates
+    `InterpolationPoints` as the required `GridLocation` for whole-zone
+    high-order `FlowSolution_t` nodes. `CellCenter` with
+    `PointRange`/`PointList` remains the convention for variable-order
+    (p-adaptive) subsets, as implied by v2.
+
+3.  [**\[CLARIFICATION\]**]{style="color: clarifybrown"}
+    **`InterpolationOrders` encoding.** Formalises the on-disk
+    representation of `SpatialOrder` and `TemporalOrder` as a 2-element
+    `IndexArray_t` child of `FlowSolution_t`. Information content is
+    identical to v2.
+
+4.  [**\[NEW\]**]{style="color: newgreen"} **Mandatory coordinate
+    normalisation for Cartesian modal.** Requires normalisation by the
+    maximum inter-vertex distance $h^e$, which must be stored alongside
+    modal coefficients. *Rationale:* high-order monomials in
+    un-normalised physical coordinates cause catastrophic floating-point
+    overflow at large or small element sizes.
+
+*New normative sections (no equivalent in v2):*
+
+- [**\[NEW\]**]{style="color: newgreen"} **Mid-Level Library API** ---
+  complete C and Fortran 2003 read/write interface for all CPEX-0045
+  node types, including `LagrangeControlPointDistribution` accessors.
+
+- [**\[NEW\]**]{style="color: newgreen"} **SIDS File Mapping** --- exact
+  on-disk array shapes, data types, and DOF-ordering conventions.
+
+- [**\[NEW\]**]{style="color: newgreen"} **Implementation
+  Specification** --- polynomial order limits, validation requirements,
+  error-code semantics, and default values.
+
+*Implementation evidence:* All v3 additions are implemented in the CGNS
+library branch `CPEX45_high_order_wip`: C API (`cgnslib.c/h`), internal
+readers (`cgns_internals.c`), Fortran bindings (`cgns_f.F90`), and
+`cgnscheck` validation. C and Fortran test programs pass.
+
+*Deferred to a future CPEX:* explicit symbolic representation of
+individual interpolation functions (noted as a potential extension in
+v2).
+
+::: motionbox
+**Motion.** The CGNS Steering Committee moves to adopt **CPEX-0045
+version 3.0** (2026-05-05) as an amendment to the previously approved
+v2, incorporating: (1) the `LagrangeControlPointDistribution_t` enum and
+its associated child node; (2) `GridLocation = InterpolationPoints` for
+whole-zone high-order solutions; (3) the `InterpolationOrders` child of
+`FlowSolution_t` as the normative on-disk encoding; (4) mandatory
+coordinate normalisation for Cartesian modal interpolation; and (5) the
+Mid-Level Library API, SIDS File Mapping, and Implementation
+Specification sections as normative components of the standard.
+
+**Moved by:** **Seconded by:**\
+**Vote:**  For: Against: Abstain: **Result:**
+:::
+
 # Motivation and Scope
 
 The aim is to cater for the large diversity of high-order methods by

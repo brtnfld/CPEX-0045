@@ -43,6 +43,8 @@
 \definecolor{cgnsteal}{HTML}{2E7D8C}
 \definecolor{cgnslight}{HTML}{D6EAF0}
 \definecolor{cgnsgold}{HTML}{C78C1C}
+\definecolor{newgreen}{HTML}{1A5E20}
+\definecolor{clarifybrown}{HTML}{5D4037}
 
 %% ── Hyperlink style ──────────────────────────────────────────────────────
 \hypersetup{
@@ -86,6 +88,21 @@
   skipabove=0.6em, skipbelow=0.6em
 }
 \newmdenv[style=v2quotestyle]{v2quote}
+
+%% ── Motion box environment ───────────────────────────────────────────────
+\mdfdefinestyle{motionstyle}{
+  linecolor=cgnsgold,
+  linewidth=2pt,
+  innertopmargin=10pt, innerbottommargin=10pt,
+  innerleftmargin=14pt, innerrightmargin=14pt,
+  skipabove=1em, skipbelow=1em,
+  backgroundcolor=cgnslight!20,
+}
+\newmdenv[style=motionstyle]{motionbox}
+
+%% ── Amendment change-type labels ─────────────────────────────────────────
+\newcommand{\NEW}{\textcolor{newgreen}{\textbf{[NEW]}}}
+\newcommand{\CLARIFY}{\textcolor{clarifybrown}{\textbf{[CLARIFICATION]}}}
 
 %% ── SIDS-style node definition environment ──────────────────────────────
 \newenvironment{sidsnode}[1]{%
@@ -173,7 +190,125 @@ Sample: text in this style is verbatim or near-verbatim from CPEX-0045 v2.
 \end{v2quote}
 }}
 
-\vspace{1.5em}
+\newpage
+
+%% ── Amendment Preamble ──────────────────────────────────────────────────
+\nolinenumbers
+{\sloppy
+
+\begin{center}
+  {\large\bfseries\color{cgnsblue} Amendment to Approved Proposal}\\[0.3em]
+  {\normalsize\color{cgnsteal}
+   CPEX-0045 v2 was previously approved by the CGNS Steering Committee.
+   This document (v3) is submitted as a revision to that approved proposal.
+   The committee is asked to evaluate only the \emph{delta} described below.
+   Passages reproduced from v2 are marked throughout with a blue left-rule callout.}
+\end{center}
+
+\medskip
+
+\noindent{\bfseries\color{cgnsblue} What v2 Established}\nopagebreak
+\begin{itemize}[nosep,leftmargin=1.5em]
+  \item Two new SIDS node types: \texttt{ElementInterpolation\_t} and
+    \texttt{SolutionInterpolation\_t}, both children of \texttt{Family\_t}.
+  \item \texttt{InterpolationType\_t} enum with four values:
+    \texttt{ParametricLagrange}, \texttt{ParametricMonomialsPascal},
+    \texttt{CartesianMonomialsPascal}, \texttt{IsoParametric}.
+  \item Support for purely spatial and space-time interpolation via
+    \texttt{SpatialOrder} and \texttt{TemporalOrder} fields.
+  \item High-order solution data stored in existing \texttt{FlowSolution\_t}
+    nodes; polynomial orders recorded per solution block.
+  \item Scope restricted to unstructured mesh computations.
+\end{itemize}
+
+\medskip
+
+\noindent{\bfseries\color{cgnsblue} Changes from v2 to v3}\nopagebreak
+
+\noindent Each item is labelled \NEW{} (genuinely new; requires committee vote)
+or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard).
+
+\vspace{0.4em}
+\noindent\textit{SIDS changes:}
+\begin{enumerate}[nosep,leftmargin=1.5em]
+  \item \NEW{} \textbf{\texttt{LagrangeControlPointDistribution\_t} enum.}
+    Records the parametric-space distribution of Lagrange control points.
+    Values: \texttt{GaussLobattoLegendre}, \texttt{Equidistant},
+    \texttt{GaussLegendre}, \texttt{WarpAndBlend}.
+    Stored as an optional named child of \texttt{ElementInterpolation\_t}
+    or \texttt{SolutionInterpolation\_t}; required for
+    \texttt{ParametricLagrange}.
+    \textit{Rationale:} a reader cannot reconstruct basis functions from
+    control-point positions alone without this information.
+
+  \item \CLARIFY{} \textbf{\texttt{GridLocation = InterpolationPoints}.}
+    Designates \texttt{InterpolationPoints} as the required
+    \texttt{GridLocation} for whole-zone high-order \texttt{FlowSolution\_t}
+    nodes. \texttt{CellCenter} with \texttt{PointRange}/\texttt{PointList}
+    remains the convention for variable-order (p-adaptive) subsets, as
+    implied by v2.
+
+  \item \CLARIFY{} \textbf{\texttt{InterpolationOrders} encoding.}
+    Formalises the on-disk representation of \texttt{SpatialOrder} and
+    \texttt{TemporalOrder} as a 2-element \texttt{IndexArray\_t} child of
+    \texttt{FlowSolution\_t}.  Information content is identical to v2.
+
+  \item \NEW{} \textbf{Mandatory coordinate normalisation for Cartesian modal.}
+    Requires normalisation by the maximum inter-vertex distance $h^e$, which
+    must be stored alongside modal coefficients.
+    \textit{Rationale:} high-order monomials in un-normalised physical
+    coordinates cause catastrophic floating-point overflow at large or small
+    element sizes.
+\end{enumerate}
+
+\vspace{0.4em}
+\noindent\textit{New normative sections (no equivalent in v2):}
+\begin{itemize}[nosep,leftmargin=1.5em]
+  \item \NEW{} \textbf{Mid-Level Library API} --- complete C and Fortran~2003
+    read/write interface for all CPEX-0045 node types, including
+    \texttt{LagrangeControlPointDistribution} accessors.
+  \item \NEW{} \textbf{SIDS File Mapping} --- exact on-disk array shapes,
+    data types, and DOF-ordering conventions.
+  \item \NEW{} \textbf{Implementation Specification} --- polynomial order
+    limits, validation requirements, error-code semantics, and default values.
+\end{itemize}
+
+\vspace{0.4em}
+\noindent\textit{Implementation evidence:}
+All v3 additions are implemented in the CGNS library branch
+\texttt{CPEX45\_high\_order\_wip}: C API (\texttt{cgnslib.c/h}), internal
+readers (\texttt{cgns\_internals.c}), Fortran bindings (\texttt{cgns\_f.F90}),
+and \texttt{cgnscheck} validation. C and Fortran test programs pass.
+
+\vspace{0.4em}
+\noindent\textit{Deferred to a future CPEX:} explicit symbolic representation
+of individual interpolation functions (noted as a potential extension in v2).
+
+\bigskip
+
+\begin{motionbox}
+\textbf{Motion.}
+The CGNS Steering Committee moves to adopt \textbf{CPEX-0045 version 3.0}
+(\today) as an amendment to the previously approved v2, incorporating:
+(1)~the \texttt{LagrangeControlPointDistribution\_t} enum and its associated
+child node; (2)~\texttt{GridLocation = InterpolationPoints} for whole-zone
+high-order solutions; (3)~the \texttt{InterpolationOrders} child of
+\texttt{FlowSolution\_t} as the normative on-disk encoding; (4)~mandatory
+coordinate normalisation for Cartesian modal interpolation; and (5)~the
+Mid-Level Library API, SIDS File Mapping, and Implementation Specification
+sections as normative components of the standard.
+
+\medskip
+\noindent\textbf{Moved by:}\quad\underline{\hspace{5.8cm}}
+\quad\textbf{Seconded by:}\quad\underline{\hspace{5cm}}\\[0.9em]
+\noindent\textbf{Vote:}~~For:\underline{\hspace{1.4cm}}
+Against:\underline{\hspace{1.4cm}}
+Abstain:\underline{\hspace{1.4cm}}
+\quad\textbf{Result:}\underline{\hspace{4.5cm}}
+\end{motionbox}
+
+}% end \sloppy group
+\linenumbers
 
 \tableofcontents
 \newpage
