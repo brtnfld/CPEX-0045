@@ -317,6 +317,7 @@ Abstain:\underline{\hspace{1.4cm}}
 \section{Motivation and Scope}
 %% ═════════════════════════════════════════════════════════════════════════
 
+\begin{v2quote}
 The aim is to cater for the large diversity of high-order methods by including a specification of
 the interpolation spaces for solutions in the file, fixing the bare essentials: the coordinate
 system.  The choice of Lagrangian interpolation spaces is applicable to the mesh as well as the
@@ -345,18 +346,21 @@ nodal interpolations are supported.
 There is clear potential for future extension via an explicit specification of mathematical
 expressions of the individual interpolation functions.  This will increase the flexibility for
 modal interpolation approaches.
+\end{v2quote}
 
 
 %% ═════════════════════════════════════════════════════════════════════════
 \section{Rationale}
 %% ═════════════════════════════════════════════════════════════════════════
 
+\begin{v2quote}
 This proposal lifts the limitation of fixing the interpolation functions implicitly by imposing
 the position of Lagrange control points as proposed for geometric interpolation/curved elements in
 CPEX~0036 and CPEX~0038.  Instead, the description of the functional space and its interpolant is
 integrated as metadata in the CGNS file in order to allow high flexibility as to the choice of
 interpolants or even coordinates, an automatic procedure to allow for very high interpolation
 order, and time-dependent interpolants.
+\end{v2quote}
 
 
 %% ═════════════════════════════════════════════════════════════════════════
@@ -365,6 +369,7 @@ order, and time-dependent interpolants.
 
 \subsection{Conventions}
 
+\begin{v2quote}
 \textbf{Modifications to the SIDS:}
 \begin{itemize}
   \item addition of a new section~3.4: \emph{High-order interpolation}.
@@ -372,6 +377,7 @@ order, and time-dependent interpolants.
 
 In the remainder of this section we introduce the different paragraphs (with numbering to be
 adapted) that should be added to the new section.
+\end{v2quote}
 
 \begin{v2quote}
 The CGNS standard allows the user to specify their own interpolation approach for both elements
