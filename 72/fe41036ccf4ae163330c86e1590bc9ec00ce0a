@@ -1,0 +1,23 @@
+CPEX-0045-high-order-interpolation.tex
+  244c8892564447ee 883,893
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "72fe41036ccf4ae163330c86e1590bc9ec00ce0a",
+  "prompts": {
+    "244c8892564447ee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e574c0cd-a2a2-4367-8113-0e73014b76bd",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "M. Scot Breitenfeld",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 0,
+      "accepted_lines": 1807,
+      "overriden_lines": 0
+    }
+  }
+}
