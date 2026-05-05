@@ -158,15 +158,18 @@ MLL Status        & accepted; implementation complete (v5.0) \\
 \vspace{1.5em}
 
 \noindent\fbox{\parbox{\linewidth}{%
-\textbf{Editorial convention.}~Passages set in the tinted callout shown
-below reproduce text \emph{verbatim} from CPEX-0045~v2 (K.~Hillewaert,
-Cenaero).  The surrounding prose is v3 commentary that formalises,
-extends, or clarifies the v2 wording.  This preserves the original
-proposal language for traceability while letting v3 add the
-implementation specification adopted in CGNS~v5.0.
+\textbf{Editorial convention.}~Passages set in the callout shown below
+reproduce text \emph{verbatim} or \emph{near-verbatim} from CPEX-0045~v2
+(K.~Hillewaert, Cenaero).  Longer technical passages---function-space
+definitions, pseudo-code listings, and key equations---are marked even
+when the wording is only lightly adapted from v2.  Shorter paraphrased
+phrases drawn from v2 that are woven into v3 commentary are not
+individually marked.  The surrounding prose (unmarked) is v3 content
+that formalises, extends, or clarifies the v2 material, and includes
+the implementation specification adopted in CGNS~v5.0.
 
 \begin{v2quote}
-Sample: text in this style is verbatim from CPEX-0045 v2.
+Sample: text in this style is verbatim or near-verbatim from CPEX-0045 v2.
 \end{v2quote}
 }}
 
@@ -498,6 +501,7 @@ Pyramid & \texttt{PYRA\_5}  & see~\cite{BCD10} & & \\
 for simplicity of notation a single compounded index $i=(i,j,k)$. Likewise a compound
 coordinate $\mathbf{u}=(u,v,w)$ is used.}
 
+\begin{v2quote}
 \noindent The standard spaces used above are:
 
 \begin{itemize}
@@ -524,6 +528,7 @@ For space-time function spaces (e.g.\ ALE meshes), the complete functional space
 \end{equation}
 %
 where $p$ and $q$ are the spatial and temporal orders respectively.
+\end{v2quote}
 
 \paragraph{Prism (\texttt{PENTA\_6}) ordering convention.}
 The prism space $\Ptp(u,v)\otimes\Lsp(w)$ is a tensor product of a triangle in $(u,v)$ and a
@@ -553,6 +558,7 @@ library does not provide a built-in pyramid layout helper.
 \textbf{Scope}: This type of interpolation only applies to solutions.
 \end{v2quote}
 
+\begin{v2quote}
 For solutions, modal interpolation is also allowed.  The interpolation functions are based on an
 ordered set of monomials spanning the Pascal spaces.  The cardinality of the modal basis is the
 same for every element shape of a given dimension --- the binomial coefficient
@@ -615,6 +621,7 @@ for (int h=0; h<=q; h++)
                 f[idx++] = tau^h * u^(i-j-k) * v^k * w^j;
 \end{lstlisting}
 \end{itemize}
+\end{v2quote}
 
 \begin{v2quote}
 Note that this space-time formulation reverts to purely spatial interpolation --- including the
@@ -676,6 +683,7 @@ and (physical) time $t$, rather than coordinates in parametric space and time.  
 of monomials for a purely spatial interpolation are thus given by:
 \end{v2quote}
 
+\begin{v2quote}
 \begin{itemize}
   \item 1D: the monomials $1, x, x^2, x^3, \ldots, x^p$
 
@@ -722,6 +730,7 @@ for (int h=0; h<=q; h++)
                 f[idx++] = t^h * x^(i-j-k) * y^k * z^j;
 \end{lstlisting}
 \end{itemize}
+\end{v2quote}
 
 
 %% ═════════════════════════════════════════════════════════════════════════
