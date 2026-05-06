@@ -533,21 +533,24 @@ According to the underlying dimension the monomials are given by:
   for (int i=0; i\<=p; i++) for (int j=0; j\<=i; j++) for (int k=0;
   k\<=i-j; k++) f\[idx++\] = $u^{(i-j-k)} v^k w^j$;
 
-The above covers purely spatial interpolation. For space-time function
-spaces the complete functional spaces are given by multiplying by
-monomials in (parametric) time $\tau$:
+The above covers the purely spatial interpolation. In case the function
+space is defined in space-time (e.g. for ALE meshes), the complete
+functional spaces are given by
 
-- 1D in space plus time:
+- 1D in space plus time: the spatial monomials multiplied by monomials
+  in (parametric) time $\tau$, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) f\[idx++\] =
   $\tau^h u^i$;
 
-- 2D in space plus time:
+- 2D in space plus time: The spatial Pascal triangle multiplied by
+  monomials in (parametric) time $\tau$, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) f\[idx++\] = $\tau^h u^{(i-j)} v^j$;
 
-- 3D in space plus time:
+- 3D: the spatial Pascal tetrahedron multiplied by monomials in
+  (parametric) time $\tau$, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) for (int k=0; k\<=i-j; k++) f\[idx++\] =
@@ -629,20 +632,24 @@ are thus given by:
   for (int i=0; i\<=p; i++) for (int j=0; j\<=i; j++) for (int k=0;
   k\<=i-j; k++) f\[idx++\] = $x^{(i-j-k)} y^k z^j$;
 
-A space-time interpolation can be obtained by multiplying with temporal
-monomials:
+Again, a space-time interpolation can be obtained by multiplying with
+temporal monomials, which yields the following sets of (ordered)
+monomials
 
-- 1D in space plus time:
+- 1D in space plus time: the spatial monomials multiplied by monomials
+  in (parametric) time, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) f\[idx++\] =
   $t^h x^i$;
 
-- 2D in space plus time:
+- 2D in space plus time: The spatial Pascal triangle multiplied by
+  monomials in (parametric) time, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) f\[idx++\] = $t^h x^{(i-j)} y^j$;
 
-- 3D in space plus time:
+- 3D: the spatial Pascal tetrahedron multiplied by monomials in
+  (parametric) time, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) for (int k=0; k\<=i-j; k++) f\[idx++\] =
