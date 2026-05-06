@@ -118,7 +118,8 @@ coordinate normalisation for Cartesian modal interpolation; and (5) the
 Mid-Level Library API, SIDS File Mapping, and Implementation
 Specification sections as normative components of the standard.
 
-**Moved by:** **Seconded by:**\
+**Moved by:**\
+**Seconded by:**\
 **Vote:**  For: Against: Abstain: **Result:**
 :::
 
@@ -323,15 +324,6 @@ high-order data and will cause failures in standard CGNS readers.
 reference="sec:variable-order"}), where each `FlowSolution_t` block
 describes a subset of cells at a specific order and the solution values
 are interpreted per the block's `InterpolationOrders` child.
-
-#### Discontinuous vs. continuous methods.
-
-Discontinuous Galerkin (DG) methods, where each element carries its own
-independent DOFs, always use `InterpolationPoints`. Continuous Galerkin
-(CG) methods that share DOFs across element boundaries are
-implementation-defined: some codes still use `InterpolationPoints` with
-duplicated boundary values, others use `Vertex` with a global DOF
-numbering.
 
 ## High-Order Parametric Interpolation {#sec:parametric}
 

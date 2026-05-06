@@ -312,7 +312,7 @@ Mid-Level Library API, SIDS File Mapping, and Implementation Specification
 sections as normative components of the standard.
 
 \medskip
-\noindent\textbf{Moved by:}\quad\underline{\hspace{5.8cm}}
+\noindent\textbf{Moved by:}\quad\underline{\hspace{5.8cm}}\\[0.9em]
 \quad\textbf{Seconded by:}\quad\underline{\hspace{5cm}}\\[0.9em]
 \noindent\textbf{Vote:}~~For:\underline{\hspace{1.4cm}}
 Against:\underline{\hspace{1.4cm}}
@@ -514,12 +514,6 @@ cause failures in standard CGNS readers.
 \texttt{FlowSolution\_t} block describes a subset of cells at a specific order and the
 solution values are interpreted per the block's \texttt{InterpolationOrders} child.
 
-\paragraph{Discontinuous vs.\ continuous methods.}
-Discontinuous Galerkin (DG) methods, where each element carries its own independent DOFs,
-always use \texttt{InterpolationPoints}.  Continuous Galerkin (CG) methods that share DOFs
-across element boundaries are implementation-defined: some codes still use
-\texttt{InterpolationPoints} with duplicated boundary values, others use
-\texttt{Vertex} with a global DOF numbering.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{High-Order Parametric Interpolation}
