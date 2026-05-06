@@ -388,9 +388,10 @@ corresponds to the physical time slab $[T_n, T_{n+1}]$.
 **Scope**: Both solution and element shape can be specified using this
 formulation. For elements, this convention allows redefinition of the
 position and order of the control points with respect to the standard
-definitions for each `ElementType_t` described in section 3.3. The
-standard definition continues to be used when no interpolation is
-explicitly introduced.
+definitions for each `ElementType_t` described in
+Section [3.2.1](#sec:coord-systems){reference-type="ref"
+reference="sec:coord-systems"}. The standard definition continues to be
+used when no interpolation is explicitly introduced.
 
 Lagrange interpolants require, next to the specification of control
 point locations, also the specification of the standard function space
@@ -444,14 +445,10 @@ control points internal to the element.
   Pyramid       `PYRA_5`    see [@BCD10]                                                                                                                                   
   ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  : Lagrange functional spaces per element and interpolation type.$^{1}$
-  The base type and order $p$ are specified for solution interpolation;
-  the full element type is used to classify element interpolation.
+  : Lagrange functional spaces per element and interpolation type. The
+  base type and order $p$ are specified for solution interpolation; the
+  full element type is used to classify element interpolation.
 :::
-
-$^{1}$Although for 2D and 3D spaces multi-indices are more convenient,
-we use for simplicity of notation a single compounded index $i=(i,j,k)$.
-Likewise a compound coordinate $\mathbf{u}=(u,v,w)$ is used.
 
 ::: v2quote
 In which we use direct sums $\oplus$ and products $\otimes$ of the
@@ -703,9 +700,11 @@ The `ElementInterpolation_t` specifies the geometric interpolation of an
 element by listing an alternative set of Lagrange high-order control
 points in parametric space following the element conventions for the
 coordinate system. In the absence of such a block for a given
-`ElementType_t`, the standard described in section 3.3 is followed. It
-is assumed that the first points correspond to the principal vertices of
-the corresponding linear element, in the same order
+`ElementType_t`, the standard described in
+Section [3.2.1](#sec:coord-systems){reference-type="ref"
+reference="sec:coord-systems"} is followed. It is assumed that the first
+points correspond to the principal vertices of the corresponding linear
+element, in the same order
 (cf. Figure [1](#fig:coord-systems){reference-type="ref"
 reference="fig:coord-systems"}).
 :::

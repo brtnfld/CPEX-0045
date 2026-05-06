@@ -533,29 +533,29 @@ $\tau$.  The latter corresponds to the physical time slab $[T_n, T_{n+1}]$.
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{subfigure}[b]{0.40\textwidth}
     \includegraphics[width=\textwidth]{figures/coord-tri.jpg}
     \caption{TRI}
   \end{subfigure}\hfill
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{subfigure}[b]{0.40\textwidth}
     \includegraphics[width=\textwidth]{figures/coord-quad.jpg}
     \caption{QUAD}
   \end{subfigure}
-  \par\vspace{0.8em}
-  \begin{subfigure}[b]{0.45\textwidth}
+  \par\vspace{0.3em}
+  \begin{subfigure}[b]{0.40\textwidth}
     \includegraphics[width=\textwidth]{figures/coord-tetra.jpg}
     \caption{TETRA}
   \end{subfigure}\hfill
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{subfigure}[b]{0.40\textwidth}
     \includegraphics[width=\textwidth]{figures/coord-hexa.jpg}
     \caption{HEXA}
   \end{subfigure}
-  \par\vspace{0.8em}
-  \begin{subfigure}[b]{0.45\textwidth}
+  \par\vspace{0.3em}
+  \begin{subfigure}[b]{0.40\textwidth}
     \includegraphics[width=\textwidth]{figures/coord-penta.jpg}
     \caption{PENTA}
   \end{subfigure}\hfill
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{subfigure}[b]{0.40\textwidth}
     \includegraphics[width=\textwidth]{figures/coord-pyra.jpg}
     \caption{PYRA}
   \end{subfigure}
@@ -579,7 +579,7 @@ specification of the standard function space $\mathcal{V}$.  Its cardinality $N$
 number of control points that need to be specified.
 
 We denote the Lagrange interpolant corresponding to control point $\mathbf{u}_i$ as
-$\lambda_i$$^{1}$.  Furthermore, we need an arbitrary set of base functions for $\mathcal{V}$, such
+$\lambda_i$\stepcounter{footnote}\footnotemark[{\value{footnote}}].  Furthermore, we need an arbitrary set of base functions for $\mathcal{V}$, such
 that $\mathcal{V} = \mathrm{span}(\psi_j,\; j = 0\ldots N-1)$.  The Lagrange interpolants are
 then found as a linear combination of the base functions
 %
@@ -601,10 +601,13 @@ supported in higher dimensions.  A first type of serendipity element only specif
 points on the edges.  In three-dimensional elements of sufficient order, a second serendipity
 interpolation can be defined which only excludes control points internal to the element.
 \end{v2quote}
+\footnotetext{Although for 2D and 3D spaces multi-indices are more convenient, we use
+for simplicity of notation a single compounded index $i=(i,j,k)$. Likewise a compound
+coordinate $\mathbf{u}=(u,v,w)$ is used.}
 
 \begin{table}[htbp]
 \centering
-\caption{Lagrange functional spaces per element and interpolation type.$^{1}$  The base type and
+\caption{Lagrange functional spaces per element and interpolation type.\textsuperscript{\thefootnote}  The base type and
   order $p$ are specified for solution interpolation; the full element type is used to classify
   element interpolation.}
 \label{tab:spaces}
@@ -638,10 +641,6 @@ Pyramid & \texttt{PYRA\_5}  & see~\cite{BCD10} & & \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-{\footnotesize $^{1}$Although for 2D and 3D spaces multi-indices are more convenient, we use
-for simplicity of notation a single compounded index $i=(i,j,k)$. Likewise a compound
-coordinate $\mathbf{u}=(u,v,w)$ is used.}
 
 \begin{v2quote}
 \noindent In which we use direct sums $\oplus$ and products $\otimes$ of the following standard spaces:
