@@ -124,6 +124,7 @@ Specification sections as normative components of the standard.
 
 # Motivation and Scope
 
+::: v2quote
 The aim is to cater for the large diversity of high-order methods by
 including a specification of the interpolation spaces for solutions in
 the file, fixing the bare essentials: the coordinate system. The choice
@@ -158,9 +159,11 @@ There is clear potential for future extension via an explicit
 specification of mathematical expressions of the individual
 interpolation functions. This will increase the flexibility for modal
 interpolation approaches.
+:::
 
 # Rationale
 
+::: v2quote
 This proposal lifts the limitation of fixing the interpolation functions
 implicitly by imposing the position of Lagrange control points as
 proposed for geometric interpolation/curved elements in CPEX 0036 and
@@ -169,17 +172,20 @@ interpolant is integrated as metadata in the CGNS file in order to allow
 high flexibility as to the choice of interpolants or even coordinates,
 an automatic procedure to allow for very high interpolation order, and
 time-dependent interpolants.
+:::
 
 # Extension of the SIDS
 
 ## Conventions
 
+::: v2quote
 **Modifications to the SIDS:**
 
 - addition of a new section 3.4: *High-order interpolation*.
 
 In the remainder of this section we introduce the different paragraphs
 (with numbering to be adapted) that should be added to the new section.
+:::
 
 ::: v2quote
 The CGNS standard allows the user to specify their own interpolation
@@ -350,28 +356,28 @@ corresponds to the physical time slab $[T_n, T_{n+1}]$.
 
 <figure id="fig:coord-systems" data-latex-placement="htbp">
 <figure>
-<img src="figures/coord-bar.jpg" />
-<figcaption>BAR</figcaption>
+<img src="figures/coord-tri.jpg" />
+<figcaption>TRI</figcaption>
 </figure>
 <figure>
 <img src="figures/coord-quad.jpg" />
 <figcaption>QUAD</figcaption>
 </figure>
 <figure>
-<img src="figures/coord-hexa.jpg" />
-<figcaption>HEXA</figcaption>
-</figure>
-<figure>
-<img src="figures/coord-tri.jpg" />
-<figcaption>TRI</figcaption>
-</figure>
-<figure>
 <img src="figures/coord-tetra.jpg" />
 <figcaption>TETRA</figcaption>
 </figure>
 <figure>
+<img src="figures/coord-hexa.jpg" />
+<figcaption>HEXA</figcaption>
+</figure>
+<figure>
 <img src="figures/coord-penta.jpg" />
 <figcaption>PENTA</figcaption>
+</figure>
+<figure>
+<img src="figures/coord-pyra.jpg" />
+<figcaption>PYRA</figcaption>
 </figure>
 <figcaption>Parametric coordinate systems per element type.</figcaption>
 </figure>
@@ -448,7 +454,8 @@ we use for simplicity of notation a single compounded index $i=(i,j,k)$.
 Likewise a compound coordinate $\mathbf{u}=(u,v,w)$ is used.
 
 ::: v2quote
-The standard spaces used above are:
+In which we use direct sums $\oplus$ and products $\otimes$ of the
+following standard spaces:
 
 - The linear space:
   $\mathcal{L}_p(u) = \mathrm{span}\{u^i,\; 0 \le i \le p\}$
@@ -647,6 +654,7 @@ monomials:
 
 ## Overriding the Element Definition and Solution Interpolation {#sec:override}
 
+::: v2quote
 **Modifications to the SIDS:**
 
 - include list of solution/element interpolants in section 12.6
@@ -661,6 +669,7 @@ monomials:
 - generalisation of section 7.7 `FlowSolution_t` and example in 7.8;
 
 - renumber sections 12.10 `UserDefinedData_t` and 12.11 `Gravity_t`.
+:::
 
 ### Modification of Section 12.6 (`Family_t`)
 
@@ -1436,8 +1445,6 @@ or incorrect normalization.
 
 - `LagrangeControlPointDistribution` attribute present on every
   `ParametricLagrange` node.
-
-# References
 
 ::: thebibliography
 9

@@ -571,7 +571,7 @@ $\tau$.  The latter corresponds to the physical time slab $[T_n, T_{n+1}]$.
 \begin{v2quote}
 \textbf{Scope}: Both solution and element shape can be specified using this formulation.  For
 elements, this convention allows redefinition of the position and order of the control points with
-respect to the standard definitions for each \texttt{ElementType\_t} described in section~3.3.
+respect to the standard definitions for each \texttt{ElementType\_t} described in Section~\ref{sec:coord-systems}.
 The standard definition continues to be used when no interpolation is explicitly introduced.
 
 Lagrange interpolants require, next to the specification of control point locations, also the
@@ -921,7 +921,7 @@ List( SolutionInterpolation\_t SolInterp1  ... SolInterpN);  \textrm{(o)}\\
 The \texttt{ElementInterpolation\_t} specifies the geometric interpolation of an element by
 listing an alternative set of Lagrange high-order control points in parametric space following
 the element conventions for the coordinate system.  In the absence of such a block for a given
-\texttt{ElementType\_t}, the standard described in section~3.3 is followed.  It is assumed that
+\texttt{ElementType\_t}, the standard described in Section~\ref{sec:coord-systems} is followed.  It is assumed that
 the first points correspond to the principal vertices of the corresponding linear element, in the
 same order (cf.\ Figure~\ref{fig:coord-systems}).
 \end{v2quote}
