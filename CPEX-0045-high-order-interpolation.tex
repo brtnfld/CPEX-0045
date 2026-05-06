@@ -69,6 +69,7 @@
   numberstyle=\tiny\color{cgnsblue!50},
   numbersep=6pt,
   showstringspaces=false,
+  mathescape=true,
   xleftmargin=1em,
   xrightmargin=1em,
   aboveskip=1em,
@@ -722,7 +723,7 @@ According to the underlying dimension the monomials are given by:
 \begin{lstlisting}[language=C,numbers=none]
 for (int i=0; i<=p; i++)
     for (int j=0; j<=i; j++)
-        f[idx++] = u^(i-j) * v^j;
+        f[idx++] = $u^{i-j} v^j$;
 \end{lstlisting}
 
   \item 3D --- Pascal tetrahedron ordered as:
@@ -730,7 +731,7 @@ for (int i=0; i<=p; i++)
 for (int i=0; i<=p; i++)
     for (int j=0; j<=i; j++)
         for (int k=0; k<=i-j; k++)
-            f[idx++] = u^(i-j-k) * v^k * w^j;
+            f[idx++] = $u^{i-j-k} v^k w^j$;
 \end{lstlisting}
 \end{itemize}
 
@@ -742,7 +743,7 @@ functional spaces are given by multiplying by monomials in (parametric) time $\t
 \begin{lstlisting}[language=C,numbers=none]
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
-        f[idx++] = tau^h * u^i;
+        f[idx++] = $\tau^h u^i$;
 \end{lstlisting}
 
   \item 2D in space plus time:
@@ -750,7 +751,7 @@ for (int h=0; h<=q; h++)
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
         for (int j=0; j<=i; j++)
-            f[idx++] = tau^h * u^(i-j) * v^j;
+            f[idx++] = $\tau^h u^{i-j} v^j$;
 \end{lstlisting}
 
   \item 3D in space plus time:
@@ -759,7 +760,7 @@ for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
         for (int j=0; j<=i; j++)
             for (int k=0; k<=i-j; k++)
-                f[idx++] = tau^h * u^(i-j-k) * v^k * w^j;
+                f[idx++] = $\tau^h u^{i-j-k} v^k w^j$;
 \end{lstlisting}
 \end{itemize}
 \end{v2quote}
@@ -832,7 +833,7 @@ of monomials for a purely spatial interpolation are thus given by:
 \begin{lstlisting}[language=C,numbers=none]
 for (int i=0; i<=p; i++)
     for (int j=0; j<=i; j++)
-        f[idx++] = x^(i-j) * y^j;
+        f[idx++] = $x^{i-j} y^j$;
 \end{lstlisting}
 
   \item 3D --- Pascal tetrahedron ordered as:
@@ -840,7 +841,7 @@ for (int i=0; i<=p; i++)
 for (int i=0; i<=p; i++)
     for (int j=0; j<=i; j++)
         for (int k=0; k<=i-j; k++)
-            f[idx++] = x^(i-j-k) * y^k * z^j;
+            f[idx++] = $x^{i-j-k} y^k z^j$;
 \end{lstlisting}
 \end{itemize}
 
@@ -851,7 +852,7 @@ A space-time interpolation can be obtained by multiplying with temporal monomial
 \begin{lstlisting}[language=C,numbers=none]
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
-        f[idx++] = t^h * x^i;
+        f[idx++] = $t^h x^i$;
 \end{lstlisting}
 
   \item 2D in space plus time:
@@ -859,7 +860,7 @@ for (int h=0; h<=q; h++)
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
         for (int j=0; j<=i; j++)
-            f[idx++] = t^h * x^(i-j) * y^j;
+            f[idx++] = $t^h x^{i-j} y^j$;
 \end{lstlisting}
 
   \item 3D in space plus time:
@@ -868,7 +869,7 @@ for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
         for (int j=0; j<=i; j++)
             for (int k=0; k<=i-j; k++)
-                f[idx++] = t^h * x^(i-j-k) * y^k * z^j;
+                f[idx++] = $t^h x^{i-j-k} y^k z^j$;
 \end{lstlisting}
 \end{itemize}
 \end{v2quote}

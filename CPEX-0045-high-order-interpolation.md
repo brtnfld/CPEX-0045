@@ -526,12 +526,12 @@ According to the underlying dimension the monomials are given by:
 - 2D --- Pascal triangle ordered as:
 
   for (int i=0; i\<=p; i++) for (int j=0; j\<=i; j++) f\[idx++\] =
-  u\^(i-j) \* v\^j;
+  $u^{i-j} v^j$;
 
 - 3D --- Pascal tetrahedron ordered as:
 
   for (int i=0; i\<=p; i++) for (int j=0; j\<=i; j++) for (int k=0;
-  k\<=i-j; k++) f\[idx++\] = u\^(i-j-k) \* v\^k \* w\^j;
+  k\<=i-j; k++) f\[idx++\] = $u^{i-j-k} v^k w^j$;
 
 The above covers purely spatial interpolation. For space-time function
 spaces the complete functional spaces are given by multiplying by
@@ -540,18 +540,18 @@ monomials in (parametric) time $\tau$:
 - 1D in space plus time:
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) f\[idx++\] =
-  tau\^h \* u\^i;
+  $\tau^h u^i$;
 
 - 2D in space plus time:
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
-  j\<=i; j++) f\[idx++\] = tau\^h \* u\^(i-j) \* v\^j;
+  j\<=i; j++) f\[idx++\] = $\tau^h u^{i-j} v^j$;
 
 - 3D in space plus time:
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
-  j\<=i; j++) for (int k=0; k\<=i-j; k++) f\[idx++\] = tau\^h \*
-  u\^(i-j-k) \* v\^k \* w\^j;
+  j\<=i; j++) for (int k=0; k\<=i-j; k++) f\[idx++\] =
+  $\tau^h u^{i-j-k} v^k w^j$;
 :::
 
 ::: v2quote
@@ -622,31 +622,31 @@ are thus given by:
 - 2D --- Pascal triangle ordered as:
 
   for (int i=0; i\<=p; i++) for (int j=0; j\<=i; j++) f\[idx++\] =
-  x\^(i-j) \* y\^j;
+  $x^{i-j} y^j$;
 
 - 3D --- Pascal tetrahedron ordered as:
 
   for (int i=0; i\<=p; i++) for (int j=0; j\<=i; j++) for (int k=0;
-  k\<=i-j; k++) f\[idx++\] = x\^(i-j-k) \* y\^k \* z\^j;
+  k\<=i-j; k++) f\[idx++\] = $x^{i-j-k} y^k z^j$;
 
 A space-time interpolation can be obtained by multiplying with temporal
 monomials:
 
 - 1D in space plus time:
 
-  for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) f\[idx++\] = t\^h
-  \* x\^i;
+  for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) f\[idx++\] =
+  $t^h x^i$;
 
 - 2D in space plus time:
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
-  j\<=i; j++) f\[idx++\] = t\^h \* x\^(i-j) \* y\^j;
+  j\<=i; j++) f\[idx++\] = $t^h x^{i-j} y^j$;
 
 - 3D in space plus time:
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
-  j\<=i; j++) for (int k=0; k\<=i-j; k++) f\[idx++\] = t\^h \*
-  x\^(i-j-k) \* y\^k \* z\^j;
+  j\<=i; j++) for (int k=0; k\<=i-j; k++) f\[idx++\] =
+  $t^h x^{i-j-k} y^k z^j$;
 :::
 
 ## Overriding the Element Definition and Solution Interpolation {#sec:override}
