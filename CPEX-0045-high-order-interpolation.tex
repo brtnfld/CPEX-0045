@@ -911,8 +911,8 @@ is implemented using dedicated lists of \texttt{ElementInterpolation\_t} and
 List( Descriptor\_t Descriptor1 ... DescriptorN );          \textrm{(o)}\\
 FamilyBC\_t FamilyBC ;                                       \textrm{(o)}\\
 ...\\
-List( ElementInterpolation\_t  ElemInterp1 ... ElemInterpN); \textrm{(o)}\\
-List( SolutionInterpolation\_t SolInterp1  ... SolInterpN);  \textrm{(o)}\\
+\textbf{List( ElementInterpolation\_t  ElemInterp1 ... ElemInterpN); \textrm{(o)}\\
+List( SolutionInterpolation\_t SolInterp1  ... SolInterpN);  \textrm{(o)}\\}
 \};
 \end{sidsnode}
 
@@ -984,8 +984,8 @@ are stored in a \texttt{SolutionInterpolation\_t} leaf attached to the correspon
 
 \begin{sidsnode}{SolutionInterpolation\_t :=}
 ElementType\_t Element;                                  \textrm{(r)}\\
-Integer SpatialOrder;                                    \textrm{(r)}\\
-Integer TemporalOrder;                                   \textrm{(o/d)}\\
+\textbf{Integer SpatialOrder;                                    \textrm{(r)}\\
+Integer TemporalOrder;                                   \textrm{(o/d)}\\}
 InterpolationType\_t InterpolationName;                  \textrm{(r)}\\
 DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
 DataArray\_t<Float,DataSize[]> MonomialCoefficients;     \textrm{(o)}\\
