@@ -1315,11 +1315,11 @@ A representative Fortran usage example is provided in \texttt{src/tests/test\_hi
 \hline
 \quad\quad\begin{tabular}[t]{@{}l@{}}
   name = LagrangeControlPoints \\
-  type = Descriptor\_t \\
+  type = DataArray\_t \\
   datatype = \texttt{R8} \\
   dims = [2] \\
   data = \textless{}point locations\textgreater{} \\
-  cardinality = 1:1 \\
+  cardinality = 0:1 \\
   parameters: Dimension, NumberOfPoints
 \end{tabular}
 &
@@ -1387,7 +1387,7 @@ Present when interpolation type is \texttt{ParametricLagrange}. \\
 \hline
 \quad\quad\begin{tabular}[t]{@{}l@{}}
   name = LagrangeControlPoints \\
-  type = Descriptor\_t \\
+  type = DataArray\_t \\
   datatype = \texttt{R8} \\
   dims = [2] \\
   data = \textless{}point locations\textgreater{} \\

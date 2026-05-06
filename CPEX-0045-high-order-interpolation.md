@@ -1066,11 +1066,11 @@ example is provided in `src/tests/test_high_orderf.F90`.
 
   ---------------------------------------
   name = LagrangeControlPoints
-  type = Descriptor_t
+  type = DataArray_t
   datatype = `R8`
   dims = \[2\]
   data = \<point locations\>
-  cardinality = 1:1
+  cardinality = 0:1
   parameters: Dimension, NumberOfPoints
   ---------------------------------------
 
@@ -1124,7 +1124,7 @@ Present when interpolation type is `ParametricLagrange`.\
 
   ---------------------------------------
   name = LagrangeControlPoints
-  type = Descriptor_t
+  type = DataArray_t
   datatype = `R8`
   dims = \[2\]
   data = \<point locations\>
