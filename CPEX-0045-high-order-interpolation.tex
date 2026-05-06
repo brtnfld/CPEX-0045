@@ -1149,6 +1149,11 @@ given type (and order) are already present.
 \texttt{cg\_element\_interpolation\_coefficients\_write(fn, bn, fam, en, *coeff)} & {-}wm \\
 \texttt{cg\_solution\_interpolation\_coefficients\_read(fn, bn, fam, sn, *coeff)} & r{-}{-} \\
 \texttt{cg\_solution\_interpolation\_coefficients\_write(fn, bn, fam, sn, *coeff)} & {-}wm \\
+\addlinespace
+\texttt{cg\_element\_interpolation\_distribution\_read(fn, bn, fam, en, *dist)} & r{-}{-} \\
+\texttt{cg\_element\_interpolation\_distribution\_write(fn, bn, fam, en, dist)} & {-}wm \\
+\texttt{cg\_solution\_interpolation\_distribution\_read(fn, bn, fam, sn, *dist)} & r{-}{-} \\
+\texttt{cg\_solution\_interpolation\_distribution\_write(fn, bn, fam, sn, dist)} & {-}wm \\
 \bottomrule
 \end{tabular}
 \caption{Family-level interpolation API functions.}
@@ -1178,6 +1183,7 @@ given type (and order) are already present.
 \texttt{pw}   & Control points --- $w$-coordinate (\texttt{NULL} for 1D/2D) & out \\
 \texttt{pt}    & Control points --- time coordinate (\texttt{NULL} if $q=0$) & out \\
 \texttt{coeff} & Monomial coefficients array (size from \texttt{cg\_*\_monomial\_size}) & in/out \\
+\texttt{dist} & Lagrange control point distribution (\texttt{LagrangeControlPointDistribution\_t}) & in/out \\
 \bottomrule
 \end{tabular}
 \caption{Input/output parameters for family-level API.}
@@ -1336,6 +1342,15 @@ dimension corresponds to that of the element \\
 size from \texttt{cg\_element\_monomial\_size}.\newline\newline
 Present for \texttt{ParametricMonomialsPascal}. \\
 \hline
+\quad\quad\begin{tabular}[t]{@{}l@{}}
+  name = LagrangeControlPointDistribution \\
+  datatype = \texttt{C1} \\
+  cardinality = 0:1
+\end{tabular}
+&
+Name of the distribution (e.g., \texttt{GaussLobattoLegendre}).\newline\newline
+Present when interpolation type is \texttt{ParametricLagrange}. \\
+\hline
 \end{tabularx}
 \captionof{table}{Node structure for \texttt{ElementInterpolation\_t}.}
 \end{v2quote}
@@ -1398,6 +1413,15 @@ dimension corresponds to element and can be incremented by~1 for space-time \\
 &
 size from \texttt{cg\_solution\_monomial\_size}.\newline\newline
 Present for \texttt{ParametricMonomialsPascal} or \texttt{CartesianMonomialsPascal}. \\
+\hline
+\quad\quad\begin{tabular}[t]{@{}l@{}}
+  name = LagrangeControlPointDistribution \\
+  datatype = \texttt{C1} \\
+  cardinality = 0:1
+\end{tabular}
+&
+Name of the distribution (e.g., \texttt{GaussLobattoLegendre}).\newline\newline
+Present when interpolation type is \texttt{ParametricLagrange}. \\
 \hline
 \end{tabularx}
 \captionof{table}{Node structure for \texttt{SolutionInterpolation\_t}.}

@@ -944,27 +944,32 @@ type (and order) are already present.
   `cg_element_interpolation_coefficients_write(fn, bn, fam, en, *coeff)`              -wm
   `cg_solution_interpolation_coefficients_read(fn, bn, fam, sn, *coeff)`              r--
   `cg_solution_interpolation_coefficients_write(fn, bn, fam, sn, *coeff)`             -wm
+  `cg_element_interpolation_distribution_read(fn, bn, fam, en, *dist)`                r--
+  `cg_element_interpolation_distribution_write(fn, bn, fam, en, dist)`                -wm
+  `cg_solution_interpolation_distribution_read(fn, bn, fam, sn, *dist)`               r--
+  `cg_solution_interpolation_distribution_write(fn, bn, fam, sn, dist)`               -wm
 
   : Family-level interpolation API functions.
 :::
 
-  **Param**   **Description**                                                 **I/O**
-  ----------- -------------------------------------------------------------- ---------
-  `fn`        CGNS file index number                                            in
-  `bn`        Base index number                                                 in
-  `fam`       Family index number                                               in
-  `ne`        Number of element interpolation blocks                          in/out
-  `en`        Element interpolation index number                                in
-  `ns`        Number of solution interpolation blocks                         in/out
-  `sn`        Solution interpolation index number                               in
-  `os`        Spatial interpolation order                                       in
-  `ot`        Temporal interpolation order                                      in
-  `it`        Interpolation type (`InterpolationType_t`)                      in/out
-  `pu`        Control points --- $u$-coordinate                                 out
-  `pv`        Control points --- $v$-coordinate (`NULL` for 1D)                 out
-  `pw`        Control points --- $w$-coordinate (`NULL` for 1D/2D)              out
-  `pt`        Control points --- time coordinate (`NULL` if $q=0$)              out
-  `coeff`     Monomial coefficients array (size from `cg_*_monomial_size`)    in/out
+  **Param**   **Description**                                                               **I/O**
+  ----------- ---------------------------------------------------------------------------- ---------
+  `fn`        CGNS file index number                                                          in
+  `bn`        Base index number                                                               in
+  `fam`       Family index number                                                             in
+  `ne`        Number of element interpolation blocks                                        in/out
+  `en`        Element interpolation index number                                              in
+  `ns`        Number of solution interpolation blocks                                       in/out
+  `sn`        Solution interpolation index number                                             in
+  `os`        Spatial interpolation order                                                     in
+  `ot`        Temporal interpolation order                                                    in
+  `it`        Interpolation type (`InterpolationType_t`)                                    in/out
+  `pu`        Control points --- $u$-coordinate                                               out
+  `pv`        Control points --- $v$-coordinate (`NULL` for 1D)                               out
+  `pw`        Control points --- $w$-coordinate (`NULL` for 1D/2D)                            out
+  `pt`        Control points --- time coordinate (`NULL` if $q=0$)                            out
+  `coeff`     Monomial coefficients array (size from `cg_*_monomial_size`)                  in/out
+  `dist`      Lagrange control point distribution (`LagrangeControlPointDistribution_t`)    in/out
 
   : Input/output parameters for family-level API.
 
@@ -1091,6 +1096,16 @@ dimension corresponds to that of the element\
 & size from `cg_element_monomial_size`.\
 \
 Present for `ParametricMonomialsPascal`.\
+
+  -----------------------------------------
+  name = LagrangeControlPointDistribution
+  datatype = `C1`
+  cardinality = 0:1
+  -----------------------------------------
+
+& Name of the distribution (e.g., `GaussLobattoLegendre`).\
+\
+Present when interpolation type is `ParametricLagrange`.\
 :::
 ::::
 
@@ -1140,6 +1155,16 @@ space-time\
 & size from `cg_solution_monomial_size`.\
 \
 Present for `ParametricMonomialsPascal` or `CartesianMonomialsPascal`.\
+
+  -----------------------------------------
+  name = LagrangeControlPointDistribution
+  datatype = `C1`
+  cardinality = 0:1
+  -----------------------------------------
+
+& Name of the distribution (e.g., `GaussLobattoLegendre`).\
+\
+Present when interpolation type is `ParametricLagrange`.\
 :::
 ::::
 
