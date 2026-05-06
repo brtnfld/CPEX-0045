@@ -538,19 +538,19 @@ space is defined in space-time (e.g. for ALE meshes), the complete
 functional spaces are given by
 
 - 1D in space plus time: the spatial monomials multiplied by monomials
-  in (parametric) time $\tau$, ordered in the following way
+  in (parametric) time $\tau$, ordered in the following way\
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) f\[idx++\] =
   $\tau^h u^i$;
 
 - 2D in space plus time: The spatial Pascal triangle multiplied by
-  monomials in (parametric) time $\tau$, ordered in the following way
+  monomials in (parametric) time $\tau$, ordered in the following way\
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) f\[idx++\] = $\tau^h u^{(i-j)} v^j$;
 
 - 3D: the spatial Pascal tetrahedron multiplied by monomials in
-  (parametric) time $\tau$, ordered in the following way
+  (parametric) time $\tau$, ordered in the following way\
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) for (int k=0; k\<=i-j; k++) f\[idx++\] =
@@ -637,19 +637,19 @@ temporal monomials, which yields the following sets of (ordered)
 monomials
 
 - 1D in space plus time: the spatial monomials multiplied by monomials
-  in (parametric) time, ordered in the following way
+  in (parametric) time, ordered in the following way\
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) f\[idx++\] =
   $t^h x^i$;
 
 - 2D in space plus time: The spatial Pascal triangle multiplied by
-  monomials in (parametric) time, ordered in the following way
+  monomials in (parametric) time, ordered in the following way\
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) f\[idx++\] = $t^h x^{(i-j)} y^j$;
 
 - 3D: the spatial Pascal tetrahedron multiplied by monomials in
-  (parametric) time, ordered in the following way
+  (parametric) time, ordered in the following way\
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) for (int k=0; k\<=i-j; k++) f\[idx++\] =
