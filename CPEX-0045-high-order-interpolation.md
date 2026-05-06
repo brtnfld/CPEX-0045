@@ -1057,6 +1057,7 @@ example is provided in `src/tests/test_high_orderf.F90`.
 
 ## `ElementInterpolation_t`: Child Node of `Family_t`
 
+:::: v2quote
 ::: tabularx
 \|N\|M\|\
 \
@@ -1074,8 +1075,6 @@ example is provided in `src/tests/test_high_orderf.F90`.
   parameters: Dimension, NumberOfPoints
   ---------------------------------------
 
-  : Node structure for `ElementInterpolation_t`.
-
 & table \[Dimension\]\[NumberOfPoints\]\
 \
 dimension corresponds to that of the element\
@@ -1087,15 +1086,15 @@ dimension corresponds to that of the element\
   cardinality = 0:1
   ----------------------------------
 
-  : Node structure for `ElementInterpolation_t`.
-
 & size from `cg_element_monomial_size`.\
 \
 Present for `ParametricMonomialsPascal`.\
 :::
+::::
 
 ## `SolutionInterpolation_t`: Child Node of `Family_t`
 
+:::: v2quote
 ::: tabularx
 \|N\|M\|\
 \
@@ -1108,8 +1107,6 @@ Present for `ParametricMonomialsPascal`.\
   datatype = **`InterpolationType_t`**
   data = \<choice for interpolation type\>
   ------------------------------------------
-
-  : Node structure for `SolutionInterpolation_t`.
 
 & `ParametricLagrange`,\
 `ParametricMonomialsPascal`,\
@@ -1126,8 +1123,6 @@ Present for `ParametricMonomialsPascal`.\
   parameters: Dimension, NumberOfPoints
   ---------------------------------------
 
-  : Node structure for `SolutionInterpolation_t`.
-
 & table \[Dimension\]\[NumberOfPoints\]\
 \
 dimension corresponds to element and can be incremented by 1 for
@@ -1140,23 +1135,24 @@ space-time\
   cardinality = 0:1
   ----------------------------------
 
-  : Node structure for `SolutionInterpolation_t`.
-
 & size from `cg_solution_monomial_size`.\
 \
 Present for `ParametricMonomialsPascal` or `CartesianMonomialsPascal`.\
 :::
+::::
 
 ## `FlowSolution_t`: Added Child Node
 
 A single child node is added to `FlowSolution_t`:
 
+:::: v2quote
 ::: tabularx
 \|N\|M\|\
 \
 \
 \
 :::
+::::
 
 # Implementation Specification {#sec:impl-spec}
 
