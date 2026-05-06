@@ -712,6 +712,7 @@ library does not provide a built-in pyramid layout helper.
 \textbf{Scope}: This type of interpolation only applies to solutions.
 \end{v2quote}
 
+\nolinenumbers
 \begin{v2quote}
 For solutions, modal interpolation is also allowed.  The interpolation functions are based on an
 ordered set of monomials spanning the Pascal spaces.  The cardinality of the modal basis is the
@@ -725,7 +726,9 @@ $\binom{4}{2} = 6$ monomial coefficients (not 9 --- 9 is the Lagrange-basis card
 tensor-product space $\Qtp$).  The helper functions \texttt{cg\_element\_monomial\_size} and
 \texttt{cg\_solution\_monomial\_size} return $N_\mathrm{modal}$ for any supported element type
 and order combination.
+\end{v2quote}
 
+\begin{v2quote}
 According to the underlying dimension the monomials are given by:
 \begin{itemize}
   \item 1D: the monomials $1, u, u^2, u^3, \ldots, u^p$
@@ -772,6 +775,7 @@ for (int h=0; h<=q; h++)
 \end{lstlisting}
 \end{itemize}
 \end{v2quote}
+\linenumbers
 
 \begin{v2quote}
 Note that this space-time formulation reverts to purely spatial interpolation --- including the

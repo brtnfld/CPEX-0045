@@ -8,7 +8,7 @@ the Description of Curved Grid Elements\
 
 \
 Version 3.0\
-2026-05-05
+2026-05-06
 :::
 
   ----------------------- ----------------------------------------------------------------
@@ -109,7 +109,7 @@ v2).
 
 ::: motionbox
 **Motion.** The CGNS Steering Committee moves to adopt **CPEX-0045
-version 3.0** (2026-05-05) as an amendment to the previously approved
+version 3.0** (2026-05-06) as an amendment to the previously approved
 v2, incorporating: (1) the `LagrangeControlPointDistribution_t` enum and
 its associated child node; (2) `GridLocation = InterpolationPoints` for
 whole-zone high-order solutions; (3) the `InterpolationOrders` child of
@@ -518,7 +518,9 @@ Lagrange-basis cardinality of the tensor-product space
 $\mathcal{Q}^{2}_p$). The helper functions `cg_element_monomial_size`
 and `cg_solution_monomial_size` return $N_\mathrm{modal}$ for any
 supported element type and order combination.
+:::
 
+::: v2quote
 According to the underlying dimension the monomials are given by:
 
 - 1D: the monomials $1, u, u^2, u^3, \ldots, u^p$
