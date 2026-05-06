@@ -619,12 +619,12 @@ are thus given by:
 - 2D --- Pascal triangle ordered as:
 
   for (int i=0; i\<=p; i++) for (int j=0; j\<=i; j++) f\[idx++\] =
-  $x^{(i-j)} y^j$;
+  $x^{(i-j)} y^j$
 
 - 3D --- Pascal tetrahedron ordered as:
 
   for (int i=0; i\<=p; i++) for (int j=0; j\<=i; j++) for (int k=0;
-  k\<=i-j; k++) f\[idx++\] = $x^{(i-j-k)} y^k z^j$;
+  k\<=i-j; k++) f\[idx++\] = $x^{(i-j-k)} y^k z^j$
 
 Again, a space-time interpolation can be obtained by multiplying with
 temporal monomials, which yields the following sets of (ordered)
@@ -634,20 +634,20 @@ monomials
   in (parametric) time, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) f\[idx++\] =
-  $t^h x^i$;
+  $t^h x^i$
 
 - 2D in space plus time: the spatial Pascal triangle multiplied by
   monomials in (parametric) time, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
-  j\<=i; j++) f\[idx++\] = $t^h x^{(i-j)} y^j$;
+  j\<=i; j++) f\[idx++\] = $t^h x^{(i-j)} y^j$
 
 - 3D: the spatial Pascal tetrahedron multiplied by monomials in
   (parametric) time, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) for (int k=0; k\<=i-j; k++) f\[idx++\] =
-  $t^h x^{(i-j-k)} y^k z^j$;
+  $t^h x^{(i-j-k)} y^k z^j$
 :::
 
 ## Overriding the Element Definition and Solution Interpolation {#sec:override}
@@ -688,10 +688,10 @@ dedicated lists of `ElementInterpolation_t` and
 > List( Descriptor_t Descriptor1 \... DescriptorN ); [(o)]{.roman}\
 > FamilyBC_t FamilyBC ; [(o)]{.roman}\
 > \...\
-> List( ElementInterpolation_t ElemInterp1 \... ElemInterpN);
+> **List( ElementInterpolation_t ElemInterp1 \... ElemInterpN);
 > [(o)]{.roman}\
 > List( SolutionInterpolation_t SolInterp1 \... SolInterpN);
-> [(o)]{.roman}\
+> [(o)]{.roman}\**
 > };
 
 ### `ElementInterpolation_t` --- New SIDS Section 12.10 {#sec:element-interpolation}
@@ -778,8 +778,8 @@ attached to the corresponding Family.
 \
 
 > ElementType_t Element; [(r)]{.roman}\
-> Integer SpatialOrder; [(r)]{.roman}\
-> Integer TemporalOrder; [(o/d)]{.roman}\
+> **Integer SpatialOrder; [(r)]{.roman}\
+> Integer TemporalOrder; [(o/d)]{.roman}\**
 > InterpolationType_t InterpolationName; [(r)]{.roman}\
 > DataArray_t\<Float,DataSize\[\]\> LagrangeControlPoints;
 > [(o)]{.roman}\

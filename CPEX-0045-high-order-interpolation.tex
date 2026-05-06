@@ -838,14 +838,14 @@ of monomials for a purely spatial interpolation are thus given by:
 \begin{lstlisting}[language=C,numbers=none]
 for (int i=0; i<=p; i++)
     for (int j=0; j<=i; j++)
-        f[idx++] = $x^{(i-j)} y^j$;
+        f[idx++] = $x^{(i-j)} y^j$
 \end{lstlisting}
   \item 3D --- Pascal tetrahedron ordered as:
 \begin{lstlisting}[language=C,numbers=none]
 for (int i=0; i<=p; i++)
     for (int j=0; j<=i; j++)
         for (int k=0; k<=i-j; k++)
-            f[idx++] = $x^{(i-j-k)} y^k z^j$;
+            f[idx++] = $x^{(i-j-k)} y^k z^j$
 \end{lstlisting}
 \end{itemize}
 Again, a space-time interpolation can be obtained by multiplying with temporal monomials,
@@ -856,7 +856,7 @@ which yields the following sets of (ordered) monomials
 \begin{lstlisting}[language=C,numbers=none]
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
-        f[idx++] = $t^h x^i$;
+        f[idx++] = $t^h x^i$
 \end{lstlisting}
   \item 2D in space plus time: the spatial Pascal triangle multiplied by monomials in
     (parametric) time, ordered in the following way
@@ -864,7 +864,7 @@ for (int h=0; h<=q; h++)
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
         for (int j=0; j<=i; j++)
-            f[idx++] = $t^h x^{(i-j)} y^j$;
+            f[idx++] = $t^h x^{(i-j)} y^j$
 \end{lstlisting}
   \item 3D: the spatial Pascal tetrahedron multiplied by monomials in (parametric) time,
     ordered in the following way
@@ -873,7 +873,7 @@ for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
         for (int j=0; j<=i; j++)
             for (int k=0; k<=i-j; k++)
-                f[idx++] = $t^h x^{(i-j-k)} y^k z^j$;
+                f[idx++] = $t^h x^{(i-j-k)} y^k z^j$
 \end{lstlisting}
 \end{itemize}
 \end{v2quote}
