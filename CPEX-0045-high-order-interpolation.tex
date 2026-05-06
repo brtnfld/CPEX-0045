@@ -34,8 +34,8 @@
 \let\cgns@orig@lstlisting\lstlisting
 \let\cgns@endorig@lstlisting\endlstlisting
 \renewenvironment{lstlisting}
-  {\par\needspace{5\baselineskip}\nolinenumbers\cgns@orig@lstlisting}
-  {\cgns@endorig@lstlisting\par\linenumbers}
+  {\par\vspace{-\parskip}\needspace{5\baselineskip}\nolinenumbers\cgns@orig@lstlisting}
+  {\cgns@endorig@lstlisting\par\vspace{-\parskip}\linenumbers}
 \makeatother
 
 %% ── Color palette ───────────────────────────────────────────────────────
@@ -844,10 +844,8 @@ for (int i=0; i<=p; i++)
             f[idx++] = $x^{(i-j-k)} y^k z^j$;
 \end{lstlisting}
 \end{itemize}
-
 Again, a space-time interpolation can be obtained by multiplying with temporal monomials,
 which yields the following sets of (ordered) monomials
-
 \begin{itemize}
   \item 1D in space plus time: the spatial monomials multiplied by monomials in (parametric)
     time, ordered in the following way\\[0.3em]
