@@ -533,24 +533,24 @@ According to the underlying dimension the monomials are given by:
   for (int i=0; i\<=p; i++) for (int j=0; j\<=i; j++) for (int k=0;
   k\<=i-j; k++) f\[idx++\] = $u^{(i-j-k)} v^k w^j$;
 
-The above covers the purely spatial interpolation. In case the function
-space is defined in space-time (e.g. for ALE meshes), the complete
+The above covers purely spatial interpolation. In case the function
+space is defined in space-time (eg. for ALE meshes), the complete
 functional spaces are given by
 
 - 1D in space plus time: the spatial monomials multiplied by monomials
-  in (parametric) time $\tau$, ordered in the following way\
+  in (parametric) time $\tau$, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) f\[idx++\] =
   $\tau^h u^i$;
 
-- 2D in space plus time: The spatial Pascal triangle multiplied by
-  monomials in (parametric) time $\tau$, ordered in the following way\
+- 2D in space plus time: the spatial Pascal triangle multiplied by
+  monomials in (parametric) time $\tau$, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) f\[idx++\] = $\tau^h u^{(i-j)} v^j$;
 
 - 3D: the spatial Pascal tetrahedron multiplied by monomials in
-  (parametric) time $\tau$, ordered in the following way\
+  (parametric) time $\tau$, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) for (int k=0; k\<=i-j; k++) f\[idx++\] =
@@ -579,9 +579,9 @@ by first computing the element barycenter $\mathbf{R}_e$ as the
 arithmetic mean of the locations of the principal vertices, i.e. the
 nodes corresponding to those of the associated linear element:
 $$\begin{equation}
-  \mathbf{R}_e = \frac{1}{N_\mathrm{lin}} \sum_{i=1}^{N_\mathrm{lin}} \mathbf{R}_i
+  \mathbf{R}^e = \frac{1}{N} \sum_{i=1}^{N} \mathbf{R}_i^e
 \end{equation}$$ The element local coordinates are then defined as
-$\mathbf{r} = \mathbf{R} - \mathbf{R}_e$; we then use the notation
+$\mathbf{r} = \mathbf{R} - \mathbf{R}^e$; we then use the notation
 $\mathbf{r} = x\mathbf{e}_x + y\mathbf{e}_y + z\mathbf{e}_z$.
 
 Correspondingly, an element-local origin of the time dimension is
@@ -637,19 +637,19 @@ temporal monomials, which yields the following sets of (ordered)
 monomials
 
 - 1D in space plus time: the spatial monomials multiplied by monomials
-  in (parametric) time, ordered in the following way\
+  in (parametric) time, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) f\[idx++\] =
   $t^h x^i$;
 
-- 2D in space plus time: The spatial Pascal triangle multiplied by
-  monomials in (parametric) time, ordered in the following way\
+- 2D in space plus time: the spatial Pascal triangle multiplied by
+  monomials in (parametric) time, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) f\[idx++\] = $t^h x^{(i-j)} y^j$;
 
 - 3D: the spatial Pascal tetrahedron multiplied by monomials in
-  (parametric) time, ordered in the following way\
+  (parametric) time, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) for (int k=0; k\<=i-j; k++) f\[idx++\] =
@@ -709,11 +709,11 @@ points in parametric space following the element conventions for the
 coordinate system. In the absence of such a block for a given
 `ElementType_t`, the standard described in
 Section [3.2.1](#sec:coord-systems){reference-type="ref"
-reference="sec:coord-systems"} is followed. It is assumed that the first
-points correspond to the principal vertices of the corresponding linear
-element, in the same order
+reference="sec:coord-systems"} is followed. **It is assumed that the
+first points correspond to the principal vertices of the corresponding
+linear element, in the same order
 (cf. Figure [1](#fig:coord-systems){reference-type="ref"
-reference="fig:coord-systems"}).
+reference="fig:coord-systems"}).**
 :::
 
 ::: {style="background-color: cgnslight!50"}
@@ -1057,61 +1057,106 @@ example is provided in `src/tests/test_high_orderf.F90`.
 
 ## `ElementInterpolation_t`: Child Node of `Family_t`
 
-  **Property**   **Value**
-  -------------- --------------------------
-  Parent         `Family_t`
-  Name           \<user defined\>
-  Label          `ElementInterpolation_t`
-  Data type      `I4`
-  Data           \<element type\>
-  Cardinality    0:N
+::: tabularx
+\|N\|M\|\
+\
+\
+\
+**Children** & **Comments**\
 
-  : Node properties for `ElementInterpolation_t`.
+  ---------------------------------------
+  name = LagrangeControlPoints
+  type = Descriptor_t
+  datatype = `R8`
+  dims = \[2\]
+  data = \<point locations\>
+  cardinality = 1:1
+  parameters: Dimension, NumberOfPoints
+  ---------------------------------------
 
-  **Child name**            **Data type**    **Card.**  **Description**
-  ------------------------- --------------- ----------- ----------------------------------------------------------------------------------------------------------------
-  `LagrangeControlPoints`   `R8`                0:1     Array of shape \[*Dim*\]\[*NPoints*\]; *Dim* = element dimension. Present for `ParametricLagrange`.
-  `MonomialCoefficients`    `R8`                0:1     Array of monomial coefficients; size from `cg_element_monomial_size`. Present for `ParametricMonomialsPascal`.
+  : Node structure for `ElementInterpolation_t`.
 
-  : Children of `ElementInterpolation_t`.
+& table \[Dimension\]\[NumberOfPoints\]\
+\
+dimension corresponds to that of the element\
+
+  ----------------------------------
+  name = MonomialCoefficients
+  datatype = `R8`
+  data = \<monomial coefficients\>
+  cardinality = 0:1
+  ----------------------------------
+
+  : Node structure for `ElementInterpolation_t`.
+
+& size from `cg_element_monomial_size`.\
+\
+Present for `ParametricMonomialsPascal`.\
+:::
 
 ## `SolutionInterpolation_t`: Child Node of `Family_t`
 
-  **Property**   **Value**
-  -------------- -------------------------------------------------
-  Parent         `Family_t`
-  Name           \<user defined\>
-  Label          `SolutionInterpolation_t`
-  Data type      `I4`
-  Dimensions     3
-  Data           \<element type, spatial order, temporal order\>
-  Cardinality    0:N
+::: tabularx
+\|N\|M\|\
+\
+\
+\
+**Children** & **Comments**\
 
-  : Node properties for `SolutionInterpolation_t`.
+  ------------------------------------------
+  name = InterpolationType
+  datatype = **`InterpolationType_t`**
+  data = \<choice for interpolation type\>
+  ------------------------------------------
 
-  **Child name**            **Data type**            **Card.**  **Description**
-  ------------------------- ----------------------- ----------- -----------------------------------------------------------------------------------------------------------------------------------------------
-  `InterpolationType`       `InterpolationType_t`        1      One of `ParametricLagrange`, `ParametricMonomialsPascal`, `CartesianMonomialsPascal`, `IsoParametric`
-  `LagrangeControlPoints`   `R8`                        0:1     Array of shape \[*Dim*\]\[*NPoints*\]; *Dim* may be incremented by 1 for space-time. Present for `ParametricLagrange`.
-  `MonomialCoefficients`    `R8`                        0:1     Array of monomial coefficients; size from `cg_solution_monomial_size`. Present for `ParametricMonomialsPascal` or `CartesianMonomialsPascal`.
+  : Node structure for `SolutionInterpolation_t`.
 
-  : Children of `SolutionInterpolation_t`.
+& `ParametricLagrange`,\
+`ParametricMonomialsPascal`,\
+`CartesianMonomialsPascal` or\
+`IsoParametric`\
+
+  ---------------------------------------
+  name = LagrangeControlPoints
+  type = Descriptor_t
+  datatype = `R8`
+  dims = \[2\]
+  data = \<point locations\>
+  cardinality = 0:1
+  parameters: Dimension, NumberOfPoints
+  ---------------------------------------
+
+  : Node structure for `SolutionInterpolation_t`.
+
+& table \[Dimension\]\[NumberOfPoints\]\
+\
+dimension corresponds to element and can be incremented by 1 for
+space-time\
+
+  ----------------------------------
+  name = MonomialCoefficients
+  datatype = `R8`
+  data = \<monomial coefficients\>
+  cardinality = 0:1
+  ----------------------------------
+
+  : Node structure for `SolutionInterpolation_t`.
+
+& size from `cg_solution_monomial_size`.\
+\
+Present for `ParametricMonomialsPascal` or `CartesianMonomialsPascal`.\
+:::
 
 ## `FlowSolution_t`: Added Child Node
 
 A single child node is added to `FlowSolution_t`:
 
-  **Property**       **Value**
-  ------------------ -----------------------------------
-  Name               `InterpolationOrders`
-  Label              `IndexArray_t`
-  Data type          `I4`
-  Dimensions         1
-  Dimension values   2
-  Data               \<spatial order, temporal order\>
-  Cardinality        0:1
-
-  : New `InterpolationOrders` child of `FlowSolution_t`.
+::: tabularx
+\|N\|M\|\
+\
+\
+\
+:::
 
 # Implementation Specification {#sec:impl-spec}
 

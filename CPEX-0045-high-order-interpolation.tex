@@ -20,6 +20,7 @@
 \usepackage{array}
 \usepackage{tabularx}
 \usepackage{colortbl}
+\usepackage{float}
 \usepackage{parskip}
 \usepackage{microtype}
 \usepackage{hyphenat}
@@ -45,6 +46,17 @@
 \definecolor{cgnsgold}{HTML}{C78C1C}
 \definecolor{newgreen}{HTML}{1A5E20}
 \definecolor{clarifybrown}{HTML}{5D4037}
+\definecolor{cgnssalmon}{HTML}{F4B8B8}
+
+%% ── Node-description table helpers (section 5) ──────────────────────────
+% Two column types: N (wide, ~65%) and M (narrow, ~35%)
+\newcolumntype{N}{>{\hsize=1.3\hsize\raggedright\arraybackslash}X}
+\newcolumntype{M}{>{\hsize=0.7\hsize\raggedright\arraybackslash}X}
+% Full-width spanning row inside |N|M| tabularx
+\newcommand{\nfullrow}[1]{%
+  \multicolumn{2}{|>{\hsize=\dimexpr2\hsize+2\tabcolsep+\arrayrulewidth\relax%
+    \linewidth=\hsize\raggedright\arraybackslash}X|}{#1}%
+}
 
 %% ── Hyperlink style ──────────────────────────────────────────────────────
 \hypersetup{
@@ -717,14 +729,12 @@ and order combination.
 According to the underlying dimension the monomials are given by:
 \begin{itemize}
   \item 1D: the monomials $1, u, u^2, u^3, \ldots, u^p$
-
   \item 2D --- Pascal triangle ordered as:
 \begin{lstlisting}[language=C,numbers=none]
 for (int i=0; i<=p; i++)
     for (int j=0; j<=i; j++)
         f[idx++] = $u^{(i-j)} v^j$;
 \end{lstlisting}
-
   \item 3D --- Pascal tetrahedron ordered as:
 \begin{lstlisting}[language=C,numbers=none]
 for (int i=0; i<=p; i++)
@@ -733,28 +743,26 @@ for (int i=0; i<=p; i++)
             f[idx++] = $u^{(i-j-k)} v^k w^j$;
 \end{lstlisting}
 \end{itemize}
-The above covers the purely spatial interpolation.  In case the function space is defined in
-space-time (e.g.\ for ALE meshes), the complete functional spaces are given by
+The above covers purely spatial interpolation. In case the function space is defined in
+space-time (eg. for ALE meshes), the complete functional spaces are given by
 \begin{itemize}
   \item 1D in space plus time: the spatial monomials multiplied by monomials in (parametric)
-    time $\tau$, ordered in the following way\\[0.3em]
+    time $\tau$, ordered in the following way
 \begin{lstlisting}[language=C,numbers=none]
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
         f[idx++] = $\tau^h u^i$;
 \end{lstlisting}
-
-  \item 2D in space plus time: The spatial Pascal triangle multiplied by monomials in
-    (parametric) time $\tau$, ordered in the following way\\[0.3em]
+  \item 2D in space plus time: the spatial Pascal triangle multiplied by monomials in
+    (parametric) time $\tau$, ordered in the following way
 \begin{lstlisting}[language=C,numbers=none]
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
         for (int j=0; j<=i; j++)
             f[idx++] = $\tau^h u^{(i-j)} v^j$;
 \end{lstlisting}
-
   \item 3D: the spatial Pascal tetrahedron multiplied by monomials in (parametric) time
-    $\tau$, ordered in the following way\\[0.3em]
+    $\tau$, ordered in the following way
 \begin{lstlisting}[language=C,numbers=none]
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
@@ -789,10 +797,10 @@ locations of the principal vertices, i.e.\ the nodes corresponding to those of t
 linear element:
 %
 \begin{equation}
-  \mathbf{R}_e = \frac{1}{N_\mathrm{lin}} \sum_{i=1}^{N_\mathrm{lin}} \mathbf{R}_i
+  \mathbf{R}^e = \frac{1}{N} \sum_{i=1}^{N} \mathbf{R}_i^e
 \end{equation}
 %
-The element local coordinates are then defined as $\mathbf{r} = \mathbf{R} - \mathbf{R}_e$;
+The element local coordinates are then defined as $\mathbf{r} = \mathbf{R} - \mathbf{R}^e$;
 we then use the notation $\mathbf{r} = x\mathbf{e}_x + y\mathbf{e}_y + z\mathbf{e}_z$.
 
 Correspondingly, an element-local origin of the time dimension is defined as the mid-point of the
@@ -828,14 +836,12 @@ of monomials for a purely spatial interpolation are thus given by:
 \begin{v2quote}
 \begin{itemize}
   \item 1D: the monomials $1, x, x^2, x^3, \ldots, x^p$
-
   \item 2D --- Pascal triangle ordered as:
 \begin{lstlisting}[language=C,numbers=none]
 for (int i=0; i<=p; i++)
     for (int j=0; j<=i; j++)
         f[idx++] = $x^{(i-j)} y^j$;
 \end{lstlisting}
-
   \item 3D --- Pascal tetrahedron ordered as:
 \begin{lstlisting}[language=C,numbers=none]
 for (int i=0; i<=p; i++)
@@ -848,24 +854,22 @@ Again, a space-time interpolation can be obtained by multiplying with temporal m
 which yields the following sets of (ordered) monomials
 \begin{itemize}
   \item 1D in space plus time: the spatial monomials multiplied by monomials in (parametric)
-    time, ordered in the following way\\[0.3em]
+    time, ordered in the following way
 \begin{lstlisting}[language=C,numbers=none]
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
         f[idx++] = $t^h x^i$;
 \end{lstlisting}
-
-  \item 2D in space plus time: The spatial Pascal triangle multiplied by monomials in
-    (parametric) time, ordered in the following way\\[0.3em]
+  \item 2D in space plus time: the spatial Pascal triangle multiplied by monomials in
+    (parametric) time, ordered in the following way
 \begin{lstlisting}[language=C,numbers=none]
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
         for (int j=0; j<=i; j++)
             f[idx++] = $t^h x^{(i-j)} y^j$;
 \end{lstlisting}
-
   \item 3D: the spatial Pascal tetrahedron multiplied by monomials in (parametric) time,
-    ordered in the following way\\[0.3em]
+    ordered in the following way
 \begin{lstlisting}[language=C,numbers=none]
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
@@ -923,9 +927,9 @@ List( SolutionInterpolation\_t SolInterp1  ... SolInterpN);  \textrm{(o)}\\
 The \texttt{ElementInterpolation\_t} specifies the geometric interpolation of an element by
 listing an alternative set of Lagrange high-order control points in parametric space following
 the element conventions for the coordinate system.  In the absence of such a block for a given
-\texttt{ElementType\_t}, the standard described in Section~\ref{sec:coord-systems} is followed.  It is assumed that
+\texttt{ElementType\_t}, the standard described in Section~\ref{sec:coord-systems} is followed.  \textbf{It is assumed that
 the first points correspond to the principal vertices of the corresponding linear element, in the
-same order (cf.\ Figure~\ref{fig:coord-systems}).
+same order (cf.\ Figure~\ref{fig:coord-systems}).}
 \end{v2quote}
 
 \begin{sidsnode}{ElementInterpolation\_t :=}
@@ -1284,104 +1288,115 @@ A representative Fortran usage example is provided in \texttt{src/tests/test\_hi
 
 \subsection{\texttt{ElementInterpolation\_t}: Child Node of \texttt{Family\_t}}
 
-\begin{table}[htbp]
-\centering
-\small
-\rowcolors{2}{cgnslight!20}{white}
-\begin{tabular}{@{} l l @{}}
-\toprule
-\textbf{Property} & \textbf{Value} \\
-\midrule
-Parent            & \texttt{Family\_t} \\
-Name              & \textless{}user defined\textgreater{} \\
-Label             & \texttt{ElementInterpolation\_t} \\
-Data type         & \texttt{I4} \\
-Data              & \textless{}element type\textgreater{} \\
-Cardinality       & 0:N \\
-\bottomrule
+\begin{table}[H]
+\small\setlength{\extrarowheight}{2pt}
+\begin{tabularx}{\linewidth}{|N|M|}
+\hline
+\nfullrow{\cellcolor{cgnsblue!20}\textbf{Family\_t}} \\
+\hline
+\nfullrow{\cellcolor{cgnssalmon}\quad\textbf{Children}} \\
+\hline
+\nfullrow{\quad\ldots} \\
+\hline
+\nfullrow{\quad\begin{tabular}[t]{@{}l@{}}
+  name = \textless{}user defined\textgreater{} \\
+  label = \texttt{\textbf{ElementInterpolation\_t}} \\
+  datatype = \texttt{I4} \\
+  data = \textless{}element type\textgreater{} \\
+  cardinality = 0:N
+\end{tabular}} \\
+\hline
+\cellcolor{cgnssalmon}\quad\quad\textbf{Children} &
+\cellcolor{cgnssalmon}\textbf{Comments} \\
+\hline
+\quad\quad\begin{tabular}[t]{@{}l@{}}
+  name = LagrangeControlPoints \\
+  type = Descriptor\_t \\
+  datatype = \texttt{R8} \\
+  dims = [2] \\
+  data = \textless{}point locations\textgreater{} \\
+  cardinality = 1:1 \\
+  parameters: Dimension, NumberOfPoints
 \end{tabular}
-\caption{Node properties for \texttt{ElementInterpolation\_t}.}
-\end{table}
-
-\begin{table}[htbp]
-\centering
-\small
-\rowcolors{2}{cgnslight!20}{white}
-\begin{tabularx}{\linewidth}{@{} l l c >{\raggedright\arraybackslash}X @{}}
-\toprule
-\textbf{Child name} & \textbf{Data type} & \textbf{Card.} & \textbf{Description} \\
-\midrule
-\texttt{LagrangeControlPoints} &
-  \texttt{R8} &
-  0:1 &
-  Array of shape [\textit{Dim}][\textit{NPoints}]; \textit{Dim} = element dimension.
-  Present for \texttt{ParametricLagrange}. \\
-\addlinespace
-\texttt{MonomialCoefficients} &
-  \texttt{R8} &
-  0:1 &
-  Array of monomial coefficients; size from
-  \texttt{cg\_element\_monomial\_size}.
-  Present for \texttt{ParametricMonomialsPascal}. \\
-\bottomrule
+&
+table [Dimension][NumberOfPoints]\newline\newline
+dimension corresponds to that of the element \\
+\hline
+\quad\quad\begin{tabular}[t]{@{}l@{}}
+  name = MonomialCoefficients \\
+  datatype = \texttt{R8} \\
+  data = \textless{}monomial coefficients\textgreater{} \\
+  cardinality = 0:1
+\end{tabular}
+&
+size from \texttt{cg\_element\_monomial\_size}.\newline\newline
+Present for \texttt{ParametricMonomialsPascal}. \\
+\hline
 \end{tabularx}
-\caption{Children of \texttt{ElementInterpolation\_t}.}
+\caption{Node structure for \texttt{ElementInterpolation\_t}.}
 \end{table}
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{\texttt{SolutionInterpolation\_t}: Child Node of \texttt{Family\_t}}
 
-\begin{table}[htbp]
-\centering
-\small
-\rowcolors{2}{cgnslight!20}{white}
-\begin{tabular}{@{} l l @{}}
-\toprule
-\textbf{Property} & \textbf{Value} \\
-\midrule
-Parent      & \texttt{Family\_t} \\
-Name        & \textless{}user defined\textgreater{} \\
-Label       & \texttt{SolutionInterpolation\_t} \\
-Data type   & \texttt{I4} \\
-Dimensions  & 3 \\
-Data        & \textless{}element type, spatial order, temporal order\textgreater{} \\
-Cardinality & 0:N \\
-\bottomrule
+\begin{table}[H]
+\small\setlength{\extrarowheight}{2pt}
+\begin{tabularx}{\linewidth}{|N|M|}
+\hline
+\nfullrow{\cellcolor{cgnsblue!20}\textbf{Family\_t}} \\
+\hline
+\nfullrow{\cellcolor{cgnssalmon}\quad\textbf{Children}} \\
+\hline
+\nfullrow{\quad\ldots} \\
+\hline
+\nfullrow{\quad\begin{tabular}[t]{@{}l@{}}
+  name = \textless{}user defined\textgreater{} \\
+  type = \texttt{\textbf{SolutionInterpolation\_t}} \\
+  datatype = \texttt{I4} \\
+  dim = 3 \\
+  data = \textless{}element type, spatial order, temporal order\textgreater{} \\
+  cardinality = 0:N
+\end{tabular}} \\
+\hline
+\cellcolor{cgnssalmon}\quad\quad\textbf{Children} &
+\cellcolor{cgnssalmon}\textbf{Comments} \\
+\hline
+\quad\quad\begin{tabular}[t]{@{}l@{}}
+  name = InterpolationType \\
+  datatype = \texttt{\textbf{InterpolationType\_t}} \\
+  data = \textless{}choice for interpolation type\textgreater{}
 \end{tabular}
-\caption{Node properties for \texttt{SolutionInterpolation\_t}.}
-\end{table}
-
-\begin{table}[htbp]
-\centering
-\small
-\rowcolors{2}{cgnslight!20}{white}
-\begin{tabularx}{\linewidth}{@{} l l c >{\raggedright\arraybackslash}X @{}}
-\toprule
-\textbf{Child name} & \textbf{Data type} & \textbf{Card.} & \textbf{Description} \\
-\midrule
-\texttt{InterpolationType} &
-  \texttt{InterpolationType\_t} &
-  1 &
-  One of \texttt{ParametricLagrange}, \texttt{ParametricMonomialsPascal},
-  \texttt{CartesianMonomialsPascal}, \texttt{IsoParametric} \\
-\addlinespace
-\texttt{LagrangeControlPoints} &
-  \texttt{R8} &
-  0:1 &
-  Array of shape [\textit{Dim}][\textit{NPoints}]; \textit{Dim} may be
-  incremented by~1 for space-time.
-  Present for \texttt{ParametricLagrange}. \\
-\addlinespace
-\texttt{MonomialCoefficients} &
-  \texttt{R8} &
-  0:1 &
-  Array of monomial coefficients; size from
-  \texttt{cg\_solution\_monomial\_size}.
-  Present for \texttt{ParametricMonomialsPascal} or
-  \texttt{CartesianMonomialsPascal}. \\
-\bottomrule
+&
+\texttt{ParametricLagrange},\newline
+\texttt{ParametricMonomialsPascal},\newline
+\texttt{CartesianMonomialsPascal} or\newline
+\texttt{IsoParametric} \\
+\hline
+\quad\quad\begin{tabular}[t]{@{}l@{}}
+  name = LagrangeControlPoints \\
+  type = Descriptor\_t \\
+  datatype = \texttt{R8} \\
+  dims = [2] \\
+  data = \textless{}point locations\textgreater{} \\
+  cardinality = 0:1 \\
+  parameters: Dimension, NumberOfPoints
+\end{tabular}
+&
+table [Dimension][NumberOfPoints]\newline\newline
+dimension corresponds to element and can be incremented by~1 for space-time \\
+\hline
+\quad\quad\begin{tabular}[t]{@{}l@{}}
+  name = MonomialCoefficients \\
+  datatype = \texttt{R8} \\
+  data = \textless{}monomial coefficients\textgreater{} \\
+  cardinality = 0:1
+\end{tabular}
+&
+size from \texttt{cg\_solution\_monomial\_size}.\newline\newline
+Present for \texttt{ParametricMonomialsPascal} or \texttt{CartesianMonomialsPascal}. \\
+\hline
 \end{tabularx}
-\caption{Children of \texttt{SolutionInterpolation\_t}.}
+\caption{Node structure for \texttt{SolutionInterpolation\_t}.}
 \end{table}
 
 % ─────────────────────────────────────────────────────────────────────────
@@ -1389,23 +1404,27 @@ Cardinality & 0:N \\
 
 A single child node is added to \texttt{FlowSolution\_t}:
 
-\begin{table}[htbp]
-\centering
-\small
-\rowcolors{2}{cgnslight!20}{white}
-\begin{tabular}{@{} l l @{}}
-\toprule
-\textbf{Property}  & \textbf{Value} \\
-\midrule
-Name               & \texttt{InterpolationOrders} \\
-Label              & \texttt{IndexArray\_t} \\
-Data type          & \texttt{I4} \\
-Dimensions         & 1 \\
-Dimension values   & 2 \\
-Data               & \textless{}spatial order, temporal order\textgreater{} \\
-Cardinality        & 0:1 \\
-\bottomrule
-\end{tabular}
+\begin{table}[H]
+\small\setlength{\extrarowheight}{2pt}
+\begin{tabularx}{\linewidth}{|N|M|}
+\hline
+\nfullrow{\cellcolor{cgnsblue!20}\textbf{FlowSolution\_t}} \\
+\hline
+\nfullrow{\cellcolor{cgnssalmon}\quad\textbf{Children}} \\
+\hline
+\nfullrow{\quad\ldots} \\
+\hline
+\nfullrow{\quad\begin{tabular}[t]{@{}l@{}}
+  name = InterpolationOrders \\
+  type = \texttt{\textbf{IndexArray\_t}} \\
+  datatype = \texttt{I4} \\
+  dimensions = 1 \\
+  dimension values = 2 \\
+  data = \textless{}spatial and temporal interpolation order\textgreater{} \\
+  cardinality = 0:1
+\end{tabular}} \\
+\hline
+\end{tabularx}
 \caption{New \texttt{InterpolationOrders} child of \texttt{FlowSolution\_t}.}
 \end{table}
 
