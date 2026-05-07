@@ -447,9 +447,8 @@ defined.  \texttt{InterpolationType\_t} can take four values:
 
 For \texttt{ParametricLagrange} interpolation to be unambiguous and interoperable, the
 distribution of control points in parametric space must be explicitly recorded.  Without
-this, a writer using Gauss--Lobatto--Legendre (GLL) points and a reader assuming equidistant
-points (or vice-versa) produce $O(1)$ interpolation error --- catastrophic, not a small
-numerical error.
+this, if a writer uses Gauss-Lobatto-Legendre (GLL) points and a reader assumes equidistant points,
+or vice versa, this results in an $O(1)$ interpolation error, which is catastrophic rather than a minor numerical issue.
 
 \paragraph{Required attribute: \texttt{LagrangeControlPointDistribution}.}
 A \texttt{DataArray\_t} of \texttt{Character} type, child of \texttt{ElementInterpolation\_t}
