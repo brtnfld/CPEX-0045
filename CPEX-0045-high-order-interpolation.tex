@@ -393,7 +393,7 @@ adapted) that should be added to the new section.
 \end{v2quote}
 
 \begin{v2quote}
-The CGNS standard allows the user to specify their own interpolation approach for both elements
+``The CGNS standard allows the user to specify their own interpolation approach for both elements
 and solution.  The basic principles are:
 \begin{enumerate}
   \item The element coordinate system per element type is a fixed convention.
@@ -414,7 +414,7 @@ and solution.  The basic principles are:
     solution, unless explicitly specified that way.
   \item In addition to the spatial coordinates, time can also be used as an independent variable.
 \end{enumerate}
-The following sections describe how interpolations are specified.
+The following sections describe how interpolations are specified.''
 \end{v2quote}
 
 % ─────────────────────────────────────────────────────────────────────────
@@ -423,7 +423,7 @@ The following sections describe how interpolations are specified.
 % ─────────────────────────────────────────────────────────────────────────
 
 \begin{v2quote}
-\texttt{InterpolationType\_t} specifies how the high-order interpolants for the solution are
+``\texttt{InterpolationType\_t} specifies how the high-order interpolants for the solution are
 defined.  \texttt{InterpolationType\_t} can take four values:
 
 \begin{itemize}
@@ -436,7 +436,7 @@ defined.  \texttt{InterpolationType\_t} can take four values:
     in a Cartesian coordinate system, centred on the element and parallel to the main axes.  The
     interpolation functions are based on monomials according to the classical Pascal sets.
   \item \textbf{\texttt{IsoParametric}} corresponds to using the same interpolation functions for
-    the solution as for the mesh.
+    the solution as for the mesh.''
 \end{itemize}
 \end{v2quote}
 
@@ -625,7 +625,10 @@ coordinate $\mathbf{u}=(u,v,w)$ is used.}
                     >{\raggedright\arraybackslash}p{0.40\linewidth}
                     >{\raggedright\arraybackslash}p{0.09\linewidth} @{}}
 \toprule
-\textbf{Element} & \textbf{Base type} &
+\multicolumn{2}{@{}c}{\textbf{Element}} &
+\multicolumn{3}{c@{}}{\textbf{Function space $\mathcal{V}_p(u,v,w)$}} \\
+\cmidrule(lr){1-2}\cmidrule(l){3-5}
+\textbf{Type} & \textbf{Base type} &
   \textbf{Complete} &
   \textbf{Edge Serendipity} &
   \textbf{Face Serendipity} \\

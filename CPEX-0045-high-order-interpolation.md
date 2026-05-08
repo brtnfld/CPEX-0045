@@ -8,7 +8,7 @@ the Description of Curved Grid Elements\
 
 \
 Version 3.0\
-2026-05-06
+2026-05-08
 :::
 
   ----------------------- ----------------------------------------------------------------
@@ -109,7 +109,7 @@ v2).
 
 ::: motionbox
 **Motion.** The CGNS Steering Committee moves to adopt **CPEX-0045
-version 3.0** (2026-05-06) as an amendment to the previously approved
+version 3.0** (2026-05-08) as an amendment to the previously approved
 v2, incorporating: (1) the `LagrangeControlPointDistribution_t` enum and
 its associated child node; (2) `GridLocation = InterpolationPoints` for
 whole-zone high-order solutions; (3) the `InterpolationOrders` child of
@@ -189,7 +189,7 @@ In the remainder of this section we introduce the different paragraphs
 :::
 
 ::: v2quote
-The CGNS standard allows the user to specify their own interpolation
+"The CGNS standard allows the user to specify their own interpolation
 approach for both elements and solution. The basic principles are:
 
 1.  The element coordinate system per element type is a fixed
@@ -221,13 +221,13 @@ approach for both elements and solution. The basic principles are:
 5.  In addition to the spatial coordinates, time can also be used as an
     independent variable.
 
-The following sections describe how interpolations are specified.
+The following sections describe how interpolations are specified."
 :::
 
 ### Interpolation Type Enumeration: `InterpolationType_t` {#sec:interpolation-type}
 
 ::: v2quote
-`InterpolationType_t` specifies how the high-order interpolants for the
+"`InterpolationType_t` specifies how the high-order interpolants for the
 solution are defined. `InterpolationType_t` can take four values:
 
 - **`ParametricLagrange`** corresponds to a Lagrange interpolation based
@@ -244,17 +244,17 @@ solution are defined. `InterpolationType_t` can take four values:
   monomials according to the classical Pascal sets.
 
 - **`IsoParametric`** corresponds to using the same interpolation
-  functions for the solution as for the mesh.
+  functions for the solution as for the mesh."
 :::
 
 ### Lagrange Control Point Distribution {#sec:lagrange-distribution}
 
 For `ParametricLagrange` interpolation to be unambiguous and
 interoperable, the distribution of control points in parametric space
-must be explicitly recorded. Without this, a writer using
-Gauss--Lobatto--Legendre (GLL) points and a reader assuming equidistant
-points (or vice-versa) produce $O(1)$ interpolation error ---
-catastrophic, not a small numerical error.
+must be explicitly recorded. Without this, if a writer uses
+Gauss-Lobatto-Legendre (GLL) points and a reader assumes equidistant
+points, or vice versa, this results in an $O(1)$ interpolation error,
+which is catastrophic rather than a minor numerical issue.
 
 #### Required attribute: `LagrangeControlPointDistribution`.
 
@@ -415,27 +415,27 @@ control points internal to the element.
 :::
 
 ::: {#tab:spaces}
-  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  **Element**   **Base      **Complete**                                       **Edge Serendipity**                                                                        **Face
-                type**                                                                                                                                                     Serendipity**
-  ------------- ----------- -------------------------------------------------- ------------------------------------------------------------------------------------------- ---------------
-  Line          `BAR_2`     $\mathcal{L}_p(u)$, $N=p+1$                        n/a                                                                                         n/a
+  ---------- ----------- -------------------------------------------------- ------------------------------------------------------------------------------------------- ---------------
+  (l)3-5     **Base      **Complete**                                       **Edge Serendipity**                                                                        **Face
+  **Type**   type**                                                                                                                                                     Serendipity**
 
-  Quad          `QUAD_4`    $\mathcal{Q}^{2}_p(u,v)$, $N=(p+1)^2$              $\mathcal{L}_p(u)\otimes\mathcal{L}_1(v) \oplus \mathcal{L}_p(v)\otimes\mathcal{L}_1(u)$,   n/a
-                                                                               $N=4p$                                                                                      
+  Line       `BAR_2`     $\mathcal{L}_p(u)$, $N=p+1$                        n/a                                                                                         n/a
 
-  Hexa          `HEXA_8`    $\mathcal{Q}^{3}_p(u,v,w)$, $N=(p+1)^3$                                                                                                        
+  Quad       `QUAD_4`    $\mathcal{Q}^{2}_p(u,v)$, $N=(p+1)^2$              $\mathcal{L}_p(u)\otimes\mathcal{L}_1(v) \oplus \mathcal{L}_p(v)\otimes\mathcal{L}_1(u)$,   n/a
+                                                                            $N=4p$                                                                                      
 
-  Triangle      `TRI_3`     $\mathcal{P}^{2}_p(u,v)$, $N=\frac{(p+1)(p+2)}{2}$                                                                                             n/a
+  Hexa       `HEXA_8`    $\mathcal{Q}^{3}_p(u,v,w)$, $N=(p+1)^3$                                                                                                        
 
-  Tetra         `TETRA_4`   $\mathcal{P}^{3}_p(u,v,w)$,                                                                                                                    
-                            $N=\frac{(p+1)(p+2)(p+3)}{6}$                                                                                                                  
+  Triangle   `TRI_3`     $\mathcal{P}^{2}_p(u,v)$, $N=\frac{(p+1)(p+2)}{2}$                                                                                             n/a
 
-  Prism         `PENTA_6`   $\mathcal{P}^{2}_p(u,v)\otimes\mathcal{L}_p(w)$,                                                                                               
-                            $N=\frac{(p+1)^2(p+2)}{2}$                                                                                                                     
+  Tetra      `TETRA_4`   $\mathcal{P}^{3}_p(u,v,w)$,                                                                                                                    
+                         $N=\frac{(p+1)(p+2)(p+3)}{6}$                                                                                                                  
 
-  Pyramid       `PYRA_5`    see [@BCD10]                                                                                                                                   
-  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Prism      `PENTA_6`   $\mathcal{P}^{2}_p(u,v)\otimes\mathcal{L}_p(w)$,                                                                                               
+                         $N=\frac{(p+1)^2(p+2)}{2}$                                                                                                                     
+
+  Pyramid    `PYRA_5`    see [@BCD10]                                                                                                                                   
+  ---------- ----------- -------------------------------------------------- ------------------------------------------------------------------------------------------- ---------------
 
   : Lagrange functional spaces per element and interpolation type. The
   base type and order $p$ are specified for solution interpolation; the
