@@ -648,8 +648,8 @@ coordinate $\mathbf{u}=(u,v,w)$ is used.}
 \begin{tabular}{@{} >{\raggedright\arraybackslash}p{0.09\linewidth}
                     >{\raggedright\arraybackslash}p{0.10\linewidth}
                     >{\raggedright\arraybackslash}p{0.20\linewidth}
-                    >{\raggedright\arraybackslash}p{0.40\linewidth}
-                    >{\raggedright\arraybackslash}p{0.09\linewidth} @{}}
+                    >{\raggedright\arraybackslash}p{0.38\linewidth}
+                    >{\raggedright\arraybackslash}p{0.11\linewidth} @{}}
 \toprule
 \multicolumn{2}{@{}c}{\textbf{Element}} &
 \multicolumn{3}{c@{}}{\textbf{Function space $\mathcal{V}_p(u,v,w)$}} \\
@@ -1624,9 +1624,9 @@ When \texttt{GridLocation = InterpolationPoints}, each field \texttt{DataArray\_
   L \;=\; \sum_{e \in \mathcal{E}} N_\mathrm{DOFs}(e),
 \end{equation*}
 where $\mathcal{E}$ is the set of elements covered by the block (all zone elements
-when no \texttt{PointRange}/\texttt{PointList} is present, or the listed elements
-otherwise) and $N_\mathrm{DOFs}(e)$ is the per-element DOF count from the matching
-\texttt{SolutionInterpolation\_t} for element~$e$.  For a homogeneous block this
+when no \texttt{PointRange}\allowbreak/\texttt{PointList} is present, or the listed elements
+otherwise) and $N_\mathrm{DOFs}(e)$ is the per-element DOF count from the
+matching \texttt{SolutionInterpolation\_t} for element~$e$.  For a homogeneous block this
 collapses to $|\mathcal{E}| \cdot N_\mathrm{DOFs}$.  Within the array, the DOFs of
 the first listed element are stored contiguously, followed by all DOFs of the
 second listed element, and so on:
@@ -1641,12 +1641,12 @@ runs from $0$ to $N_\mathrm{DOFs}(e_i)-1$ in the ordering established by the ass
 Section~\ref{sec:parametric-modal}).
 
 \paragraph{CharacteristicLength.}
-A 1D \texttt{R8} \texttt{DataArray\_t} child of \texttt{FlowSolution\_t} named
-\texttt{CharacteristicLength}, of length equal to $|\mathcal{E}|$, holding the
-per-element normalisation length $h^e$ used by Cartesian modal interpolation
+A 1D \texttt{R8} \texttt{DataArray\_t} child of \texttt{FlowSolution\_t},
+of length $|\mathcal{E}|$, holding the per-element normalisation length $h^e$
+used by Cartesian modal interpolation
 (Section~\ref{sec:cartesian-modal}).  Mandatory when the associated
-\texttt{SolutionInterpolation\_t} has
-\texttt{InterpolationType = CartesianMonomialsPascal}; absent otherwise.  Element
+\texttt{SolutionInterpolation\_t} uses
+\texttt{CartesianMonomialsPascal}; absent otherwise.  Element
 ordering matches the field-array element ordering above.
 
 % ─────────────────────────────────────────────────────────────────────────
