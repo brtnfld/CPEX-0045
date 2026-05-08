@@ -686,10 +686,10 @@ dedicated lists of `ElementInterpolation_t` and
 > List( Descriptor_t Descriptor1 \... DescriptorN ); [(o)]{.roman}\
 > FamilyBC_t FamilyBC ; [(o)]{.roman}\
 > \...\
-> **List( ElementInterpolation_t ElemInterp1 \... ElemInterpN);
-> [(o)]{.roman}\
-> List( SolutionInterpolation_t SolInterp1 \... SolInterpN);
-> [(o)]{.roman}\**
+> [List( ElementInterpolation_t ElemInterp1 \...
+> ElemInterpN);]{style="color: red"} [(o)]{.roman}\
+> [List( SolutionInterpolation_t SolInterp1 \...
+> SolInterpN);]{style="color: red"} [(o)]{.roman}\
 > };
 
 ### `ElementInterpolation_t` --- New SIDS Section 12.10 {#sec:element-interpolation}
