@@ -827,8 +827,8 @@ which will use the specified order.
 
 > List( Descriptor_t Descriptor1 \... DescriptorN ); [(o)]{.roman}\
 > GridLocation_t GridLocation ; [(o/d)]{.roman}\
-> int SpatialOrder; [(o/d)]{.roman}\
-> int TemporalOrder; [(o/d)]{.roman}\
+> [int SpatialOrder;]{style="color: red"} [(o/d)]{.roman}\
+> [int TemporalOrder;]{style="color: red"} [(o/d)]{.roman}\
 > Rind_t\<IndexDimension\> Rind ; [(o/d)]{.roman}\
 > IndexRange\<IndexDimension\> PointRange ; [(o)]{.roman}\
 > IndexArray\<IndexDimension, ListLength\[\], int\> PointList ;
