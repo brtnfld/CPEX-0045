@@ -733,14 +733,14 @@ According to the underlying dimension the monomials are given by:
 \begin{lstlisting}[language=C,numbers=none]
 for (int i=0; i<=p; i++)
     for (int j=0; j<=i; j++)
-        f[idx++] = $u^{(i-j)} v^j$;
+        f[idx++] = $u^{(i-j)} v^j$
 \end{lstlisting}
   \item 3D --- Pascal tetrahedron ordered as:
 \begin{lstlisting}[language=C,numbers=none]
 for (int i=0; i<=p; i++)
     for (int j=0; j<=i; j++)
         for (int k=0; k<=i-j; k++)
-            f[idx++] = $u^{(i-j-k)} v^k w^j$;
+            f[idx++] = $u^{(i-j-k)} v^k w^j$
 \end{lstlisting}
 \end{itemize}
 The above covers purely spatial interpolation. In case the function space is defined in
@@ -751,7 +751,7 @@ space-time (eg. for ALE meshes), the complete functional spaces are given by
 \begin{lstlisting}[language=C,numbers=none]
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
-        f[idx++] = $\tau^h u^i$;
+        f[idx++] = $\tau^h u^i$
 \end{lstlisting}
   \item 2D in space plus time: the spatial Pascal triangle multiplied by monomials in
     (parametric) time $\tau$, ordered in the following way
@@ -759,7 +759,7 @@ for (int h=0; h<=q; h++)
 for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
         for (int j=0; j<=i; j++)
-            f[idx++] = $\tau^h u^{(i-j)} v^j$;
+            f[idx++] = $\tau^h u^{(i-j)} v^j$
 \end{lstlisting}
   \item 3D: the spatial Pascal tetrahedron multiplied by monomials in (parametric) time
     $\tau$, ordered in the following way
@@ -768,7 +768,7 @@ for (int h=0; h<=q; h++)
     for (int i=0; i<=p; i++)
         for (int j=0; j<=i; j++)
             for (int k=0; k<=i-j; k++)
-                f[idx++] = $\tau^h u^{(i-j-k)} v^k w^j$;
+                f[idx++] = $\tau^h u^{(i-j-k)} v^k w^j$
 \end{lstlisting}
 \end{itemize}
 \end{v2quote}
@@ -826,15 +826,14 @@ coefficients (typically as a per-element scalar) so a reader can recover physica
 
 \subsubsection{Cartesian Modal Interpolants}
 
+\nolinenumbers
 \begin{v2quote}
 The interpolation space for Cartesian modal interpolations follows the same approach as for
 parametric modal interpolation and is based on ordered sets of monomials spanning the standard
 Pascal spaces.  Here these are monomials in the element-local Cartesian coordinates $x, y, z$
 and (physical) time $t$, rather than coordinates in parametric space and time.  The ordered sets
 of monomials for a purely spatial interpolation are thus given by:
-\end{v2quote}
 
-\begin{v2quote}
 \begin{itemize}
   \item 1D: the monomials $1, x, x^2, x^3, \ldots, x^p$
   \item 2D --- Pascal triangle ordered as:
@@ -880,7 +879,7 @@ for (int h=0; h<=q; h++)
 \end{lstlisting}
 \end{itemize}
 \end{v2quote}
-
+\linenumbers
 
 %% ═════════════════════════════════════════════════════════════════════════
 \subsection{Overriding the Element Definition and Solution Interpolation}

@@ -520,12 +520,12 @@ According to the underlying dimension the monomials are given by:
 - 2D --- Pascal triangle ordered as:
 
   for (int i=0; i\<=p; i++) for (int j=0; j\<=i; j++) f\[idx++\] =
-  $u^{(i-j)} v^j$;
+  $u^{(i-j)} v^j$
 
 - 3D --- Pascal tetrahedron ordered as:
 
   for (int i=0; i\<=p; i++) for (int j=0; j\<=i; j++) for (int k=0;
-  k\<=i-j; k++) f\[idx++\] = $u^{(i-j-k)} v^k w^j$;
+  k\<=i-j; k++) f\[idx++\] = $u^{(i-j-k)} v^k w^j$
 
 The above covers purely spatial interpolation. In case the function
 space is defined in space-time (eg. for ALE meshes), the complete
@@ -535,20 +535,20 @@ functional spaces are given by
   in (parametric) time $\tau$, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) f\[idx++\] =
-  $\tau^h u^i$;
+  $\tau^h u^i$
 
 - 2D in space plus time: the spatial Pascal triangle multiplied by
   monomials in (parametric) time $\tau$, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
-  j\<=i; j++) f\[idx++\] = $\tau^h u^{(i-j)} v^j$;
+  j\<=i; j++) f\[idx++\] = $\tau^h u^{(i-j)} v^j$
 
 - 3D: the spatial Pascal tetrahedron multiplied by monomials in
   (parametric) time $\tau$, ordered in the following way
 
   for (int h=0; h\<=q; h++) for (int i=0; i\<=p; i++) for (int j=0;
   j\<=i; j++) for (int k=0; k\<=i-j; k++) f\[idx++\] =
-  $\tau^h u^{(i-j-k)} v^k w^j$;
+  $\tau^h u^{(i-j-k)} v^k w^j$
 :::
 
 ::: v2quote
@@ -611,9 +611,7 @@ these are monomials in the element-local Cartesian coordinates $x, y, z$
 and (physical) time $t$, rather than coordinates in parametric space and
 time. The ordered sets of monomials for a purely spatial interpolation
 are thus given by:
-:::
 
-::: v2quote
 - 1D: the monomials $1, x, x^2, x^3, \ldots, x^p$
 
 - 2D --- Pascal triangle ordered as:
