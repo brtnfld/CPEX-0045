@@ -611,12 +611,7 @@ interpolation can be defined which only excludes control points internal to the 
 for simplicity of notation a single compounded index $i=(i,j,k)$. Likewise a compound
 coordinate $\mathbf{u}=(u,v,w)$ is used.}
 
-\begin{table}[htbp]
-\centering
-\caption{Lagrange functional spaces per element and interpolation type.  The base type and
-  order $p$ are specified for solution interpolation; the full element type is used to classify
-  element interpolation.}
-\label{tab:spaces}
+\begin{v2quote}
 \footnotesize
 \rowcolors{2}{cgnslight!20}{white}
 \begin{tabular}{@{} >{\raggedright\arraybackslash}p{0.09\linewidth}
@@ -649,10 +644,14 @@ Prism   & \texttt{PENTA\_6} & $\Ptp(u,v)\otimes\Lsp(w)$, $N=\frac{(p+1)^2(p+2)}{
 Pyramid & \texttt{PYRA\_5}  & see~\cite{BCD10} & & \\
 \bottomrule
 \end{tabular}
-\end{table}
+\captionof{table}{Lagrange functional spaces per element and interpolation type.  The base type and
+  order $p$ are specified for solution interpolation; the full element type is used to classify
+  element interpolation.}
+\label{tab:spaces}
+\end{v2quote}
 
 \begin{v2quote}
-\noindent In which we use direct sums $\oplus$ and products $\otimes$ of the following standard spaces:
+\noindent In which we use direct sums $\oplus$ and products $\otimes$ of the following standard spaces of order $p$:
 
 \begin{itemize}
   \item The linear space: $\Lsp(u) = \mathrm{span}\{u^i,\; 0 \le i \le p\}$

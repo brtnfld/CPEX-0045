@@ -405,7 +405,8 @@ $$\begin{equation}
 
 The (spatial) parametric function spaces $\mathcal{V}_p(u,v,w)$ for each
 element type and order $p$, which support the Lagrange-type
-interpolation, are listed in Table [1](#tab:spaces){reference-type="ref"
+interpolation, are listed in
+Table [\[tab:spaces\]](#tab:spaces){reference-type="ref"
 reference="tab:spaces"}. Next to the standard "complete" element, also
 incomplete, or so-called serendipity elements are supported in higher
 dimensions. A first type of serendipity element only specifies control
@@ -414,7 +415,7 @@ a second serendipity interpolation can be defined which only excludes
 control points internal to the element.
 :::
 
-::: {#tab:spaces}
+::: v2quote
   ---------- ----------- -------------------------------------------------- ------------------------------------------------------------------------------------------- ---------------
   (l)3-5     **Base      **Complete**                                       **Edge Serendipity**                                                                        **Face
   **Type**   type**                                                                                                                                                     Serendipity**
@@ -437,14 +438,12 @@ control points internal to the element.
   Pyramid    `PYRA_5`    see [@BCD10]                                                                                                                                   
   ---------- ----------- -------------------------------------------------- ------------------------------------------------------------------------------------------- ---------------
 
-  : Lagrange functional spaces per element and interpolation type. The
-  base type and order $p$ are specified for solution interpolation; the
-  full element type is used to classify element interpolation.
+[]{#tab:spaces label="tab:spaces"}
 :::
 
 ::: v2quote
 In which we use direct sums $\oplus$ and products $\otimes$ of the
-following standard spaces:
+following standard spaces of order $p$:
 
 - The linear space:
   $\mathcal{L}_p(u) = \mathrm{span}\{u^i,\; 0 \le i \le p\}$
