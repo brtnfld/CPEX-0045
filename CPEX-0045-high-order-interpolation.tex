@@ -710,7 +710,10 @@ library does not provide a built-in pyramid layout helper.
 \nolinenumbers
 \begin{v2quote}
 For solutions, modal interpolation is also allowed.  The interpolation functions are based on an
-ordered set of monomials spanning the Pascal spaces.  The cardinality of the modal basis is the
+ordered set of monomials spanning the Pascal spaces.
+\end{v2quote}
+
+The cardinality of the modal basis is the
 same for every element shape of a given dimension --- the binomial coefficient
 \begin{equation}
   N_\mathrm{modal} = \binom{p+d}{d}, \qquad d = \text{element dimension}, \quad p = \text{spatial order}
@@ -721,7 +724,6 @@ $\binom{4}{2} = 6$ monomial coefficients (not 9 --- 9 is the Lagrange-basis card
 tensor-product space $\Qtp$).  The helper functions \texttt{cg\_element\_monomial\_size} and
 \texttt{cg\_solution\_monomial\_size} return $N_\mathrm{modal}$ for any supported element type
 and order combination.
-\end{v2quote}
 
 \begin{v2quote}
 According to the underlying dimension the monomials are given by:

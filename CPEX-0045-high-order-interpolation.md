@@ -497,9 +497,11 @@ library does not provide a built-in pyramid layout helper.
 ::: v2quote
 For solutions, modal interpolation is also allowed. The interpolation
 functions are based on an ordered set of monomials spanning the Pascal
-spaces. The cardinality of the modal basis is the same for every element
-shape of a given dimension --- the binomial coefficient
-$$\begin{equation}
+spaces.
+:::
+
+The cardinality of the modal basis is the same for every element shape
+of a given dimension --- the binomial coefficient $$\begin{equation}
   N_\mathrm{modal} = \binom{p+d}{d}, \qquad d = \text{element dimension}, \quad p = \text{spatial order}
 \end{equation}$$ For space-time interpolation the cardinality is
 multiplied by $(q+1)$ where $q$ is the temporal order. Consequently a
@@ -509,7 +511,6 @@ Lagrange-basis cardinality of the tensor-product space
 $\mathcal{Q}^{2}_p$). The helper functions `cg_element_monomial_size`
 and `cg_solution_monomial_size` return $N_\mathrm{modal}$ for any
 supported element type and order combination.
-:::
 
 ::: v2quote
 According to the underlying dimension the monomials are given by:
