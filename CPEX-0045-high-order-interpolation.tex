@@ -26,18 +26,8 @@
 \usepackage{hyphenat}
 \setlength{\emergencystretch}{3em}
 \usepackage{needspace}
-\usepackage[right,running]{lineno}
 \usepackage{subcaption}
 \usepackage{mdframed}
-
-%% ── Suppress lineno inside code listings ────────────────────────────────
-\makeatletter
-\let\cgns@orig@lstlisting\lstlisting
-\let\cgns@endorig@lstlisting\endlstlisting
-\renewenvironment{lstlisting}
-  {\par\vspace{-\parskip}\needspace{5\baselineskip}\nolinenumbers\cgns@orig@lstlisting}
-  {\cgns@endorig@lstlisting\par\vspace{-\parskip}\linenumbers}
-\makeatother
 
 %% ── Color palette ───────────────────────────────────────────────────────
 \definecolor{cgnsblue}{HTML}{1F4E79}
@@ -77,9 +67,7 @@
   framerule=0.5pt,
   rulecolor=\color{cgnsblue!40},
   backgroundcolor=\color{cgnslight!30},
-  numbers=left,
-  numberstyle=\tiny\color{cgnsblue!50},
-  numbersep=6pt,
+  numbers=none,
   showstringspaces=false,
   mathescape=true,
   xleftmargin=1em,
@@ -152,7 +140,6 @@
 
 %% =====================================================================
 \begin{document}
-\linenumbers
 
 %% ── Title Block ─────────────────────────────────────────────────────────
 \begin{center}
@@ -206,7 +193,6 @@ Sample: text in this style is verbatim or near-verbatim from CPEX-0045 v2.
 \newpage
 
 %% ── Amendment Preamble ──────────────────────────────────────────────────
-\nolinenumbers
 {\sloppy
 
 \begin{center}
@@ -345,7 +331,6 @@ Abstain:\underline{\hspace{1.4cm}}
 \end{motionbox}
 
 }% end \sloppy group
-\linenumbers
 
 \tableofcontents
 \newpage
@@ -738,7 +723,6 @@ library does not provide a built-in pyramid layout helper.
 \textbf{Scope}: This type of interpolation only applies to solutions.
 \end{v2quote}
 
-\nolinenumbers
 \begin{v2quote}
 For solutions, modal interpolation is also allowed.  The interpolation functions are based on an
 ordered set of monomials spanning the Pascal spaces.
@@ -803,7 +787,6 @@ for (int h=0; h<=q; h++)
 \end{lstlisting}
 \end{itemize}
 \end{v2quote}
-\linenumbers
 
 \begin{v2quote}
 Note that this space-time formulation reverts to purely spatial interpolation --- including the
@@ -875,7 +858,6 @@ and read this node directly; \texttt{cgnscheck} validates the array shape
 
 \subsubsection{Cartesian Modal Interpolants}
 
-\nolinenumbers
 \begin{v2quote}
 The interpolation space for Cartesian modal interpolations follows the same approach as for
 parametric modal interpolation and is based on ordered sets of monomials spanning the standard
@@ -928,7 +910,6 @@ for (int h=0; h<=q; h++)
 \end{lstlisting}
 \end{itemize}
 \end{v2quote}
-\linenumbers
 
 %% ═════════════════════════════════════════════════════════════════════════
 \subsection{Overriding the Element Definition and Solution Interpolation}
