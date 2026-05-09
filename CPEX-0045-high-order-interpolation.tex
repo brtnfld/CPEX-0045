@@ -1580,11 +1580,16 @@ and $q = \texttt{TemporalOrder}$.  Within each coordinate row, the points are or
   \qquad s = 0, \ldots, N_\mathrm{spatial}-1
 \end{equation*}
 That is, all spatial points at time level $t=0$ are listed first, then all spatial points at
-$t=1$, and so on.  The first \textit{Dim} rows of the $[\textit{Dim}+1, \cdot]$ array store
-$u, v, w$; the last (Dim+1)-th row stores the parametric time $\tau$.  Equivalently, the
-spatial coordinate components $u, v, w$ for all points are written first (the
-\textit{Dim}-fast layout), and the entire temporal $\tau$ array follows as a contiguous
-trailing block.  Solution-data arrays in \texttt{FlowSolution\_t} for space-time interpolation
+$t=1$, and so on.  Because the array has shape $[\textit{Dim}+1,\, \textit{NPoints}_\mathrm{ST}]$
+in CGNS Fortran-style (column-major) ordering, the $\textit{Dim}+1$ dimension is the
+fast-varying axis.  Consequently the byte stream is the concatenation of
+$\textit{NPoints}_\mathrm{ST}$ interleaved tuples, each of length $\textit{Dim}+1$:
+\begin{equation*}
+  (u_0, v_0, w_0, \tau_0,\; u_1, v_1, w_1, \tau_1,\; \ldots)
+\end{equation*}
+The spatial components and the temporal component $\tau$ are therefore \emph{interleaved per
+point}; $\tau$ does \emph{not} appear as a contiguous trailing block.
+Solution-data arrays in \texttt{FlowSolution\_t} for space-time interpolation
 follow the same time-major ordering within each element's $N_\mathrm{DOFs}(e)$ block.
 
 \paragraph{MonomialCoefficients.}

@@ -1795,12 +1795,12 @@ non-overlapping \texttt{PointRange} intervals, each annotated with
 
 \begin{lstlisting}[language=C,basicstyle=\ttfamily\small]
 /* Cells 1..4 at order 2, cells 5..8 at order 3 */
-cgsize_t range_lo[2]={1,1}, range_hi[2]={4,1};
-cg_sol_ptset_write(fn,B,Z,"FS_p2",InterpolationPoints,PointRange,2,range_lo,&S1);
+cgsize_t range_p2[2] = {1, 4};
+cg_sol_ptset_write(fn,B,Z,"FS_p2",InterpolationPoints,PointRange,2,range_p2,&S1);
 cg_sol_interpolation_order_write(fn,B,Z,S1, 2,0);
 
-cgsize_t range_lo2[2]={5,1}, range_hi2[2]={8,1};
-cg_sol_ptset_write(fn,B,Z,"FS_p3",InterpolationPoints,PointRange,2,range_lo2,&S2);
+cgsize_t range_p3[2] = {5, 8};
+cg_sol_ptset_write(fn,B,Z,"FS_p3",InterpolationPoints,PointRange,2,range_p3,&S2);
 cg_sol_interpolation_order_write(fn,B,Z,S2, 3,0);
 \end{lstlisting}
 
