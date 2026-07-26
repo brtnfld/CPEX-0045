@@ -1047,20 +1047,38 @@ own `I4` payload (length 3, rank 1), as detailed in
 Section [5](#sec:filemap){reference-type="ref" reference="sec:filemap"}.
 `TemporalOrder` defaults to 0 when omitted by the writer.
 
-#### Uniqueness and lookup.
+#### Uniqueness.
 
 At most one `SolutionInterpolation_t` per (basic-element-type,
 `SpatialOrder`, `TemporalOrder`) triplet is permitted within a family.
-Lookup is bidirectional with fallback: a query for triplet
-$(\texttt{TETRA\_10}, 2, 0)$ first searches for an exact `TETRA_10`
-match and, if absent, falls back to the basic-element tag `TETRA_4`.
-This permits a single basis description to cover all geometric orders of
-the same element family. The MLL function
+
+#### Stored element tag is the basic tag.
+
+The element type in the node's payload is *normalised to the basic
+(linear) tag of the element family* when the node is written: a writer
+given `TETRA_10` or `TETRA_35` stores `TETRA_4`. This is what makes the
+uniqueness rule above well defined --- tags differing only in geometric
+order are not distinguishable after normalisation, so they cannot
+coexist --- and it is what allows one basis description to serve every
+geometric order of the same family.
+
+#### Lookup.
+
+A query is therefore resolved in two steps: an exact comparison against
+the stored tag, and, failing that, a second comparison against the basic
+tag of the queried type. Both must be tried, because the caller may
+legitimately present either form. A query for
+$(\texttt{TETRA\_4}, 2, 0)$ matches on the first step; a query for
+$(\texttt{TETRA\_10}, 2, 0)$ or $(\texttt{TETRA\_35}, 2, 0)$ matches on
+the second, and resolves to the same node. Note that, because writers
+normalise, the first step succeeds only for a basic-tag query; the
+fallback is the operative path for any high-order tag. A triplet
+matching neither is reported as absent (`CG_NODE_NOT_FOUND`), which is a
+normal result and not an error. The MLL function
 `cg_solution_interpolation_find`
 (Section [4.2](#sec:family-api){reference-type="ref"
-reference="sec:family-api"}) implements this bidirectional-with-fallback
-lookup directly, so callers do not need to reimplement the fallback
-themselves.
+reference="sec:family-api"}) performs both steps, so callers need not
+reimplement the fallback.
 
 ::: v2quote
 The relevant `SolutionInterpolation_t` block will be found using the
@@ -1386,6 +1404,7 @@ Present when interpolation type is `ParametricLagrange`.\
 
 ::: tabularx
 \|N\|M\|\
+\
 \
 \
 \
