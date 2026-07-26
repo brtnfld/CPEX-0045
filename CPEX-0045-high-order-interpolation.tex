@@ -288,6 +288,28 @@ or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard
     reader agreeing on a geometric computation.  Both encodings and the dedicated MLL
     helpers \texttt{cg\_sol\_characteristic\_length\_\{read,write\}} ship in the v5.0
     library on the \texttt{CPEX45\_high\_order\_wip} branch.
+
+  \item \CLARIFY{} \textbf{\texttt{CharacteristicLength} is metadata, not a solution
+    field.}  States that a reader enumerating the \texttt{DataArray\_t} children of a
+    \texttt{FlowSolution\_t} to build its field list must exclude
+    \texttt{CharacteristicLength} by name, and must not apply the field-array length
+    rule to it (Section~\ref{sec:on-disk-layout}).  \textit{Rationale:} the node is a
+    \texttt{DataArray\_t} child of \texttt{FlowSolution\_t} and so collides with the
+    SIDS convention that such children are fields.  A reader that does not exclude it
+    reports a spurious field \emph{and} rejects conformant files, because the metadata
+    length does not equal $\sum_e N_\mathrm{DOFs}(e)$.  This was a real defect in the
+    reference implementation, invisible on test files with no element sections because
+    field size checking cannot run in that case.
+
+  \item \CLARIFY{} \textbf{Element tag stored in
+    \texttt{SolutionInterpolation\_t} is normalised.}  Records that the element type in
+    the node payload is the basic (linear) tag of the family --- \texttt{TETRA\_10} and
+    \texttt{TETRA\_35} are both stored as \texttt{TETRA\_4} --- which is what makes the
+    uniqueness rule well defined, and restates the lookup accordingly
+    (Section~\ref{sec:solution-interpolation}).  \textit{Rationale:} v2 and earlier v3
+    text described an exact-tag match followed by a fallback, implying that high-order
+    tags may be found on disk; they cannot, so the fallback is the operative path for
+    any high-order query.  Resolution behaviour is unchanged.
 \end{enumerate}
 
 \vspace{0.4em}
@@ -300,6 +322,13 @@ or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard
     data types, and DOF-ordering conventions.
   \item \NEW{} \textbf{Implementation Specification} --- polynomial order
     limits, validation requirements, error-code semantics, and default values.
+  \item \CLARIFY{} \textbf{Practical order ceiling of the monomial bases}
+    (Section~\ref{sec:modal-order-ceiling}) --- informative note that the monomial
+    mass matrix is Hilbert-like, so conditioning degrades exponentially with $p$
+    regardless of normalisation, limiting \texttt{ParametricMonomialsPascal} and
+    \texttt{CartesianMonomialsPascal} to roughly $p \le 2$--$3$ in double precision.
+    Adds no requirement; it bounds the usable range of an already-approved feature and
+    points at the $L^2$-orthogonal bases deferred to a future CPEX.
 \end{itemize}
 
 \vspace{0.4em}
@@ -345,9 +374,11 @@ on-disk encoding; (4)~mandatory coordinate normalisation for Cartesian modal
 interpolation, with a normative \texttt{CharacteristicLength} child of
 \texttt{FlowSolution\_t} supporting both an isotropic (rank-1) and a per-axis
 (rank-2) encoding, recorded by the writer rather than recomputed by the reader;
-and (5)~the Mid-Level Library API,
-SIDS File Mapping, and Implementation Specification sections as normative
-components of the standard.
+(5)~the Mid-Level Library API, SIDS File Mapping, and Implementation
+Specification sections as normative components of the standard; and (6)~the
+clarifications listed above, namely that \texttt{CharacteristicLength} is
+excluded from the \texttt{FlowSolution\_t} field list and that the element tag
+stored in \texttt{SolutionInterpolation\_t} is the basic (linear) tag.
 
 \medskip
 \noindent\textbf{Moved by:}\quad\underline{\hspace{5.8cm}}\\[0.9em]

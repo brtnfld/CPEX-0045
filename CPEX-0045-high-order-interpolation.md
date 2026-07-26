@@ -139,6 +139,35 @@ intent; no semantic change to the approved standard).
     `cg_sol_characteristic_length_{read,write}` ship in the v5.0 library
     on the `CPEX45_high_order_wip` branch.
 
+5.  [**\[CLARIFICATION\]**]{style="color: clarifybrown"}
+    **`CharacteristicLength` is metadata, not a solution field.** States
+    that a reader enumerating the `DataArray_t` children of a
+    `FlowSolution_t` to build its field list must exclude
+    `CharacteristicLength` by name, and must not apply the field-array
+    length rule to it
+    (Section [6.2](#sec:on-disk-layout){reference-type="ref"
+    reference="sec:on-disk-layout"}). *Rationale:* the node is a
+    `DataArray_t` child of `FlowSolution_t` and so collides with the
+    SIDS convention that such children are fields. A reader that does
+    not exclude it reports a spurious field *and* rejects conformant
+    files, because the metadata length does not equal
+    $\sum_e N_\mathrm{DOFs}(e)$. This was a real defect in the reference
+    implementation, invisible on test files with no element sections
+    because field size checking cannot run in that case.
+
+6.  [**\[CLARIFICATION\]**]{style="color: clarifybrown"} **Element tag
+    stored in `SolutionInterpolation_t` is normalised.** Records that
+    the element type in the node payload is the basic (linear) tag of
+    the family --- `TETRA_10` and `TETRA_35` are both stored as
+    `TETRA_4` --- which is what makes the uniqueness rule well defined,
+    and restates the lookup accordingly
+    (Section [3.4.4](#sec:solution-interpolation){reference-type="ref"
+    reference="sec:solution-interpolation"}). *Rationale:* v2 and
+    earlier v3 text described an exact-tag match followed by a fallback,
+    implying that high-order tags may be found on disk; they cannot, so
+    the fallback is the operative path for any high-order query.
+    Resolution behaviour is unchanged.
+
 *New normative sections (no equivalent in v2):*
 
 - [**\[NEW\]**]{style="color: newgreen"} **Mid-Level Library API** ---
@@ -151,6 +180,17 @@ intent; no semantic change to the approved standard).
 - [**\[NEW\]**]{style="color: newgreen"} **Implementation
   Specification** --- polynomial order limits, validation requirements,
   error-code semantics, and default values.
+
+- [**\[CLARIFICATION\]**]{style="color: clarifybrown"} **Practical order
+  ceiling of the monomial bases**
+  (Section [3.2.4](#sec:modal-order-ceiling){reference-type="ref"
+  reference="sec:modal-order-ceiling"}) --- informative note that the
+  monomial mass matrix is Hilbert-like, so conditioning degrades
+  exponentially with $p$ regardless of normalisation, limiting
+  `ParametricMonomialsPascal` and `CartesianMonomialsPascal` to roughly
+  $p \le 2$--$3$ in double precision. Adds no requirement; it bounds the
+  usable range of an already-approved feature and points at the
+  $L^2$-orthogonal bases deferred to a future CPEX.
 
 *Implementation evidence:* The v3 additions are implemented in the CGNS
 library branch `CPEX45_high_order_wip`: C API (`cgnslib.c/h`), internal
@@ -195,9 +235,12 @@ encoding; (4) mandatory coordinate normalisation for Cartesian modal
 interpolation, with a normative `CharacteristicLength` child of
 `FlowSolution_t` supporting both an isotropic (rank-1) and a per-axis
 (rank-2) encoding, recorded by the writer rather than recomputed by the
-reader; and (5) the Mid-Level Library API, SIDS File Mapping, and
+reader; (5) the Mid-Level Library API, SIDS File Mapping, and
 Implementation Specification sections as normative components of the
-standard.
+standard; and (6) the clarifications listed above, namely that
+`CharacteristicLength` is excluded from the `FlowSolution_t` field list
+and that the element tag stored in `SolutionInterpolation_t` is the
+basic (linear) tag.
 
 **Moved by:**\
 **Seconded by:**\
