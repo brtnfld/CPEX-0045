@@ -157,7 +157,7 @@
 %% ── Metadata Table ──────────────────────────────────────────────────────
 \noindent
 \rowcolors{2}{cgnslight!30}{white}
-\begin{tabular}{@{} >{\bfseries\color{cgnsblue}}l l @{}}
+\begin{tabular}{@{} >{\bfseries\color{cgnsblue}}l >{\raggedright\arraybackslash}p{0.62\linewidth} @{}}
 \toprule
 CPEX\#            & 0045 \\
 Scope             & High-order polynomial interpolation for elements and solutions \\
@@ -166,9 +166,10 @@ Organization      & Cenaero \\
 E-mail            & \href{mailto:koen.hillewaert@cenaero.be}{koen.hillewaert@cenaero.be} \\
 Date First Posted & Mar.\ 26, 2019 \\
 Date of Revision  & May\ 4, 2026 \\
-SIDS Status       & accepted; implementation complete (v5.0) \\
-Filemap Status    & accepted; implementation complete (v5.0) \\
-MLL Status        & accepted; implementation complete (v5.0) \\
+SIDS Status       & v2 accepted; v3 amendment pending Steering Committee vote \\
+Filemap Status    & v2 accepted; v3 amendment pending Steering Committee vote \\
+MLL Status        & v2 accepted; v3 amendment pending Steering Committee vote \\
+Reference impl.\  & branch \texttt{CPEX45\_high\_order\_wip} \\
 \bottomrule
 \end{tabular}
 
@@ -240,19 +241,26 @@ or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard
     \textit{Rationale:} a reader cannot reconstruct basis functions from
     control-point positions alone without this information.
 
-  \item \CLARIFY{} \textbf{\texttt{GridLocation = InterpolationPoints}.}
-    Designates \texttt{InterpolationPoints} as the required
-    \texttt{GridLocation} for \emph{all} high-order \texttt{FlowSolution\_t}
-    nodes, both whole-zone (uniform-order) and subset (variable-order via
-    \texttt{PointRange}/\texttt{PointList}).  \textit{Rationale:}
-    \texttt{CellCenter} mandates a field-array length equal to the number
-    of cells, which contradicts the high-order requirement
+  \item \NEW{} \textbf{New \texttt{GridLocation\_t} enumerator \texttt{InterpolationPoints}
+    (value 9), required for all high-order \texttt{FlowSolution\_t} nodes.}
+    This is a wire-format addition, not a reinterpretation of existing v2 semantics:
+    v2 specified \texttt{CellCenter} as the location for high-order solutions
+    (Section~\ref{sec:flowsolution}).  v3 instead designates the new
+    \texttt{InterpolationPoints} value as required \texttt{GridLocation} for
+    \emph{all} high-order \texttt{FlowSolution\_t} nodes, both whole-zone
+    (uniform-order) and subset (variable-order via \texttt{PointRange}/\texttt{PointList}).
+    \textit{Rationale:} \texttt{CellCenter} mandates a field-array length equal
+    to the number of cells, which contradicts the high-order requirement
     $\sum_e N_\mathrm{DOFs}(e)$ and would fail standard SIDS sizing rules
     in \texttt{cgnscheck}.  When the parent \texttt{FlowSolution\_t} carries
     a \texttt{PointRange} or \texttt{PointList} under
     \texttt{InterpolationPoints}, the listed indices are interpreted as
     \emph{element indices}, and field arrays have length
-    $\sum_e N_\mathrm{DOFs}(e)$ summed over the listed elements.
+    $\sum_e N_\mathrm{DOFs}(e)$ summed over the listed elements.  For
+    backward compatibility, readers still accept legacy files that use
+    \texttt{CellCenter} with an explicit \texttt{PointRange}/\texttt{PointList}
+    (Section~\ref{sec:impl-spec}), but conformant \emph{writers} must use
+    \texttt{InterpolationPoints} exclusively.
 
   \item \CLARIFY{} \textbf{\texttt{InterpolationOrders} encoding.}
     Formalises the on-disk representation of \texttt{SpatialOrder} and
@@ -261,16 +269,25 @@ or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard
 
   \item \NEW{} \textbf{Mandatory coordinate normalisation for Cartesian modal,
     with normative \texttt{CharacteristicLength} encoding.}
-    Requires writers to normalise local coordinates by the maximum inter-vertex
-    distance $h^e$ before populating \texttt{MonomialCoefficients}, and stores
-    $h^e$ in a normatively-named \texttt{CharacteristicLength} \texttt{DataArray\_t}
-    child of \texttt{FlowSolution\_t} (Section~\ref{sec:filemap}) so readers can
-    recover physical values.  \textit{Rationale:} high-order monomials in
-    un-normalised physical coordinates cause catastrophic floating-point overflow
-    at large or small element sizes; an arbitrary writer-defined storage location
-    would break interoperability.  Both the on-disk encoding and the dedicated
-    MLL helpers \texttt{cg\_sol\_characteristic\_length\_\{read,write\}} ship
-    in the v5.0 library on the \texttt{CPEX45\_high\_order\_wip} branch.
+    Requires writers to non-dimensionalise the element-local coordinates before
+    populating \texttt{MonomialCoefficients}, and to record the factors they used in
+    a normatively-named \texttt{CharacteristicLength} \texttt{DataArray\_t} child of
+    \texttt{FlowSolution\_t} (Section~\ref{sec:filemap}) so readers can recover
+    physical values.  Two normalisations are supported and are distinguished by array
+    rank: \emph{isotropic} (rank~1, one factor per element) and \emph{per-axis}
+    (rank~2, \texttt{PhysDim} factors per element).  Readers use the recorded factors
+    and do not recompute them.
+    \textit{Rationale:} high-order monomials in un-normalised physical coordinates
+    overflow at large or small element sizes, and an isotropic factor alone leaves the
+    modal mass matrix ill conditioned on the high-aspect-ratio cells typical of
+    wall-resolved boundary layers; per-axis scaling is the directional
+    non-dimensionalisation established in the Taylor-basis discontinuous-Galerkin
+    literature~\cite{LuoBaumLohner08,Kuzmin20}.  Recording rather than mandating a
+    formula lets a writer dump its native coefficient blocks without rescaling, per the
+    goals of Section~\ref{sec:motivation}, and removes any dependence on writer and
+    reader agreeing on a geometric computation.  Both encodings and the dedicated MLL
+    helpers \texttt{cg\_sol\_characteristic\_length\_\{read,write\}} ship in the v5.0
+    library on the \texttt{CPEX45\_high\_order\_wip} branch.
 \end{enumerate}
 
 \vspace{0.4em}
@@ -296,11 +313,20 @@ Fortran test programs pass.  The Cartesian-modal \texttt{CharacteristicLength}
 on-disk node defined in Section~\ref{sec:filemap} is shipped together with the
 \texttt{cg\_sol\_characteristic\_length\_\{read,write\}} helpers in the same
 branch; the Fortran wrappers follow the standard \texttt{\_f} suffix convention.
+Both \texttt{CharacteristicLength} encodings, the input validation, and the
+re-write semantics are covered by the dedicated regression test
+\texttt{src/tests/test\_characteristic\_length.c}.  The bidirectional
+element-type lookup of Section~\ref{sec:solution-interpolation} is provided by
+\texttt{cg\_solution\_interpolation\_find}.
 
 \vspace{0.4em}
 \noindent\textit{Deferred to a future CPEX:} explicit symbolic representation
-of individual interpolation functions (noted as a potential extension in v2);
-space-time mesh geometry (e.g.\ ALE), which would add a temporal-order
+of individual interpolation functions (noted as a potential extension in v2),
+which is also the mechanism by which $L^2$-orthogonal modal bases
+(tensor-product Legendre, Dubiner/Koornwinder on simplices) would be described ---
+these are what high-order modal methods require beyond the practical order ceiling
+of the monomial bases specified here (Section~\ref{sec:modal-order-ceiling});
+and space-time mesh geometry (e.g.\ ALE), which would add a temporal-order
 attribute to \texttt{ElementInterpolation\_t} or introduce a dedicated
 space-time mesh-interpolation node.
 
@@ -317,7 +343,9 @@ solutions, both uniform-order (whole-zone) and variable-order
 \texttt{InterpolationOrders} child of \texttt{FlowSolution\_t} as the normative
 on-disk encoding; (4)~mandatory coordinate normalisation for Cartesian modal
 interpolation, with a normative \texttt{CharacteristicLength} child of
-\texttt{FlowSolution\_t} encoding $h^e$; and (5)~the Mid-Level Library API,
+\texttt{FlowSolution\_t} supporting both an isotropic (rank-1) and a per-axis
+(rank-2) encoding, recorded by the writer rather than recomputed by the reader;
+and (5)~the Mid-Level Library API,
 SIDS File Mapping, and Implementation Specification sections as normative
 components of the standard.
 
@@ -338,6 +366,7 @@ Abstain:\underline{\hspace{1.4cm}}
 
 %% ═════════════════════════════════════════════════════════════════════════
 \section{Motivation and Scope}
+\label{sec:motivation}
 %% ═════════════════════════════════════════════════════════════════════════
 
 \begin{v2quote}
@@ -795,6 +824,31 @@ ordering --- for the (default) temporal order $q=0$.
 \end{v2quote}
 
 % ─────────────────────────────────────────────────────────────────────────
+\subsubsection{Practical Order Ceiling of the Monomial Bases}
+\label{sec:modal-order-ceiling}
+% ─────────────────────────────────────────────────────────────────────────
+
+Both \texttt{ParametricMonomialsPascal} and \texttt{CartesianMonomialsPascal} use raw
+monomials.  Implementers should be aware that this choice carries an intrinsic
+conditioning limit that coordinate normalisation does \emph{not} remove.  The mass
+matrix of the monomial set $\{1, x, x^2, \ldots, x^p\}$ on $[-1,1]$ has entries
+$M_{mn} \propto \int_{-1}^{1} x^{m+n}\,\mathrm{d}x$, which is a Hilbert-like matrix
+whose condition number grows exponentially with $p$.  Normalisation
+(Section~\ref{sec:cartesian-modal}) removes the \emph{scale} disparity between
+directions and prevents overflow, but it cannot remove this growth.
+
+In practice, modal formulations built on monomials --- notably the Taylor-basis
+discontinuous-Galerkin family~\cite{LuoBaumLohner08,Kuzmin20} --- are therefore
+generally applied at low order, typically $p \le 2$ or $p \le 3$ in double precision.
+Methods that need higher order use $L^2$-orthogonal bases instead (tensor-product
+Legendre on quadrilaterals and hexahedra, Dubiner/Koornwinder on simplices), for which
+the mass matrix is diagonal.  This version of the standard has no way to name such a
+basis; describing one is the province of the explicit symbolic representation of
+interpolation functions deferred to a future CPEX.  Writers requiring high-order modal
+data should use \texttt{ParametricLagrange} with an appropriate control-point
+distribution (Section~\ref{sec:lagrange-distribution}) instead.
+
+% ─────────────────────────────────────────────────────────────────────────
 \subsection{Cartesian Modal Interpolation}
 \label{sec:cartesian-modal}
 % ─────────────────────────────────────────────────────────────────────────
@@ -825,37 +879,87 @@ $t = T - (T_n + T_{n+1})/2$.
 \end{v2quote}
 
 \paragraph{Numerical stability: mandatory normalization.}
-Using element-local but \emph{unnormalized} coordinates in monomials $x^p, y^p, z^p$ at
-high orders causes catastrophic floating-point overflow or underflow when the physical
-element size differs greatly from~1 (e.g.\ kilometres or micrometres).  Conformant writers
-\emph{must} normalize the local coordinates by a characteristic element length:
-\begin{equation}
-  \xi = x/h^e, \quad \eta = y/h^e, \quad \zeta = z/h^e,
-  \qquad
-  h^e = \max_{i,j \in \{1,\ldots,N_v\}} \|\mathbf{R}_i^\mathrm{vertex} - \mathbf{R}_j^\mathrm{vertex}\|
-\end{equation}
-where the maximum is taken over pairs of principal vertices.  This guarantees
-$\xi, \eta, \zeta \in O([-1, 1])$, well-conditioned Vandermonde matrices, and stable
-reconstruction.  The characteristic length $h^e$ must be stored alongside the modal
-coefficients so a reader can recover physical values.
+Using element-local but \emph{unnormalized} coordinates in monomials $x^p, y^p, z^p$
+causes catastrophic floating-point overflow or underflow when the physical element
+size differs greatly from~1 (e.g.\ kilometres or micrometres), and produces a badly
+conditioned element mass matrix when the element is strongly stretched.  Conformant
+writers \emph{must} therefore non-dimensionalise the element-local coordinates before
+forming \texttt{MonomialCoefficients}.  Two normalisations are permitted.
 
-\paragraph{On-disk encoding of $h^e$.}
-$h^e$ is recorded as a \texttt{DataArray\_t} child of the parent \texttt{FlowSolution\_t}
-node, named \texttt{CharacteristicLength}, of \texttt{R8} datatype and one-dimensional
-shape equal to the number of elements covered by the block (i.e.\ all elements of the
-zone for a whole-zone block, or the number of elements listed by
-\texttt{PointRange}/\texttt{PointList} for a subset block).  Element ordering within
-the array matches the element ordering of the corresponding field arrays
-(see Section~\ref{sec:filemap}).  The \texttt{CharacteristicLength} child is mandatory
-when the associated \texttt{SolutionInterpolation\_t} carries
-\texttt{CartesianMonomialsPascal} and is otherwise omitted.
+\smallskip\noindent\textit{Isotropic.}  A single scale factor per element,
+\begin{equation}
+  \xi = x/h^e, \quad \eta = y/h^e, \quad \zeta = z/h^e .
+\end{equation}
+This is appropriate for near-equilateral elements and for general polygonal or
+polyhedral cells, for which axis-aligned extents are not meaningful.
+
+\smallskip\noindent\textit{Per-axis (recommended for stretched elements).}  One scale
+factor per coordinate direction,
+\begin{equation}
+  \xi = x/h^e_x, \quad \eta = y/h^e_y, \quad \zeta = z/h^e_z .
+\end{equation}
+This is the directional non-dimensionalisation used by the Taylor-basis
+discontinuous-Galerkin family~\cite{LuoBaumLohner08,Kuzmin20}, in which the natural
+choice is the extent of the element along each axis,
+$h^e_k = \max_{i,j}\,|\mathbf{e}_k\cdot(\mathbf{R}_i^\mathrm{vertex}
+- \mathbf{R}_j^\mathrm{vertex})|$.
+It is what keeps the modal mass matrix well conditioned on high-aspect-ratio cells such
+as those used in wall-resolved boundary layers: under a single isotropic $h^e$ dominated
+by the long axis, the short-direction coordinate collapses toward zero and its higher
+powers lose relative precision, even though no overflow occurs.
+
+\smallskip\noindent The axes remain parallel to the global Cartesian axes in both cases,
+as required by the definition of \texttt{CartesianMonomialsPascal}; only the scaling
+differs.  Rotated or otherwise oriented local frames are \emph{not} permitted, because
+the modal coefficients of this basis are interpretable as scaled directional derivatives
+at the element barycentre, and slope limiters in the Taylor-basis family act on them
+component-wise along the global axes.
+
+\paragraph{Recorded, not recomputed.}
+Writers \emph{must record the scale factors they actually used}, and readers
+\emph{must use the recorded values} rather than recomputing any geometric formula.
+The expressions above are recommended defaults, not requirements: a writer whose
+solver already works in a normalised frame simply records its own factors and dumps
+its coefficient blocks unchanged, consistent with the goal (Section~\ref{sec:motivation})
+of using the native storage of the application without loss of precision.  Mandating a
+formula instead of a record would force such a writer to rescale its coefficients on
+output, and would leave the reconstruction exposed to any disagreement between the
+writer's and the reader's evaluation of that formula.
+
+\paragraph{On-disk encoding.}
+The scale factors are recorded in a \texttt{DataArray\_t} child of the parent
+\texttt{FlowSolution\_t} node, named \texttt{CharacteristicLength}, of \texttt{R8}
+datatype.  \emph{The array rank selects the normalisation}:
+
+{\sloppy
+\begin{itemize}
+  \item \textbf{rank~1}, shape $[|\mathcal{E}|]$ --- isotropic; one $h^e$ per element.
+  \item \textbf{rank~2}, shape $[\texttt{PhysDim}, |\mathcal{E}|]$ --- per-axis;
+    \texttt{PhysDim} factors per element, with \texttt{PhysDim} the fast-varying axis
+    so that the factors of one element are contiguous
+    $(h^1_x, h^1_y, h^1_z,\; h^2_x, h^2_y, h^2_z,\; \ldots)$, matching the
+    \texttt{LagrangeControlPoints} layout convention.
+\end{itemize}
+\par}
+
+\noindent$|\mathcal{E}|$ is the number of elements covered by the block: all elements of
+the zone for a whole-zone block, or the number of elements listed by
+\texttt{PointRange}/\texttt{PointList} for a subset block.  Element ordering within the
+array matches the element ordering of the corresponding field arrays
+(Section~\ref{sec:filemap}).  All factors must be strictly positive.  The
+\texttt{CharacteristicLength} child is mandatory when the associated
+\texttt{SolutionInterpolation\_t} carries \texttt{CartesianMonomialsPascal}, and is
+otherwise omitted.
 
 \paragraph{Implementation status.}
-The on-disk shape and name are normative.  The MLL helpers
+The node name and both on-disk shapes are normative.  The MLL helpers
 \texttt{cg\_sol\_characteristic\_length\_read} and
-\texttt{cg\_sol\_characteristic\_length\_write} (Section~\ref{sec:sol-api}) write
-and read this node directly; \texttt{cgnscheck} validates the array shape
-(\texttt{R8}, 1-D) and length whenever the node is present.
+\texttt{cg\_sol\_characteristic\_length\_write} (Section~\ref{sec:sol-api}) carry an
+explicit \texttt{nscale} argument selecting the encoding, and write and read this node
+directly.  \texttt{cgnscheck} validates the datatype, the rank, that \texttt{nscale} is
+either~1 or \texttt{PhysDim}, and the element count, whenever the node is present; it
+also reports a missing \texttt{CharacteristicLength} on a \texttt{CartesianMonomialsPascal}
+solution (an error under \texttt{cgnscheck -s}, a warning otherwise).
 
 \subsubsection{Cartesian Modal Interpolants}
 
@@ -967,8 +1071,14 @@ same order (cf.\ Figure~\ref{fig:coord-systems}).}
 ElementType\_t Element;                                  \textrm{(r)}\\
 DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
 DataArray\_t<Float,DataSize[]> MonomialCoefficients;     \textrm{(o)}\\
+DataArray\_t<Character> LagrangeControlPointDistribution; \textrm{(o)}\\
 \};
 \end{sidsnode}
+
+\noindent \texttt{LagrangeControlPointDistribution} is present when
+\texttt{LagrangeControlPoints} is present (i.e.\ the interpolation type is
+\texttt{ParametricLagrange}); see Section~\ref{sec:lagrange-distribution}
+and the File Mapping in Section~\ref{sec:filemap}.
 
 The interpolation type is not stored explicitly as a child node; it is inferred from
 which optional children are present:
@@ -1026,12 +1136,19 @@ are stored in a \texttt{SolutionInterpolation\_t} leaf attached to the correspon
 
 \begin{sidsnode}{SolutionInterpolation\_t :=}
 \textbf{int[3] InterpolationData;}                       \textrm{(r)} \quad\textrm{/* [ElementType, SpatialOrder, TemporalOrder] */}\\
-InterpolationType\_t InterpolationName;                  \textrm{(r)}\\
+InterpolationType\_t InterpolationType;                  \textrm{(r)}\\
 DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
 DataArray\_t<Float,DataSize[]> MonomialCoefficients;     \textrm{(o)}\\
 DataArray\_t<Character> LagrangeControlPointDistribution; \textrm{(o)}\\
 \};
 \end{sidsnode}
+
+\paragraph{Naming note.}
+v2 referred to this required child informally as \texttt{InterpolationName}
+(see the quoted passage below).  The normative on-disk name adopted for v3,
+consistent with the File Mapping in Section~\ref{sec:filemap} and the
+reference implementation, is \texttt{InterpolationType}.  There is only one
+such child; the two names refer to the same node.
 
 \noindent The triple \texttt{[ElementType, SpatialOrder, TemporalOrder]} is the
 node's own \texttt{I4} payload (length~3, rank~1), as detailed in
@@ -1044,6 +1161,9 @@ At most one \texttt{SolutionInterpolation\_t} per (basic-element-type, \texttt{S
 fallback: a query for triplet $(\texttt{TETRA\_10}, 2, 0)$ first searches for an exact
 \texttt{TETRA\_10} match and, if absent, falls back to the basic-element tag \texttt{TETRA\_4}.
 This permits a single basis description to cover all geometric orders of the same element family.
+The MLL function \texttt{cg\_solution\_interpolation\_find} (Section~\ref{sec:family-api})
+implements this bidirectional-with-fallback lookup directly, so callers do not need to
+reimplement the fallback themselves.
 
 \begin{v2quote}
 The relevant \texttt{SolutionInterpolation\_t} block will be found using the pair composed by
@@ -1074,7 +1194,8 @@ which will use the specified order.
 List( Descriptor\_t Descriptor1 ... DescriptorN );            \textrm{(o)}\\
 GridLocation\_t GridLocation ;                                 \textrm{(o/d)}\\
 \textcolor{red}{IndexArray\_t$<$1, 2, int$>$ InterpolationOrders ;}      \textrm{(o/d)}\\
-\textcolor{red}{DataArray\_t$<$R8, 1, [NumElements]$>$ CharacteristicLength ;} \textrm{(o)}\\
+\textcolor{red}{DataArray\_t$<$R8, 1|2, [NumElements] or [PhysDim,NumElements]$>$}\\
+\quad\textcolor{red}{CharacteristicLength ;}                                   \textrm{(o)}\\
 Rind\_t<IndexDimension> Rind ;                                 \textrm{(o/d)}\\
 IndexRange<IndexDimension> PointRange ;                        \textrm{(o)}\\
 IndexArray<IndexDimension, ListLength[], int> PointList ;      \textrm{(o)}\\
@@ -1087,8 +1208,10 @@ List( UserDefinedData\_t UserDefinedData1 ... UserDefinedDataN ); \textrm{(o)}\\
 \end{sidsnode}
 
 \noindent The \texttt{IndexArray\_t} carries
-\texttt{[\textbf{SpatialOrder}, \textbf{TemporalOrder}]} (length~2, datatype \texttt{I4});
-\texttt{CharacteristicLength} is required only for Cartesian modal interpolation.
+\texttt{[\textbf{SpatialOrder}, \textbf{TemporalOrder}]} (length~2, datatype \texttt{I4}).
+\texttt{CharacteristicLength} is required only for Cartesian modal interpolation; its
+rank selects the normalisation (rank~1 isotropic, rank~2 per-axis), as defined in
+Section~\ref{sec:cartesian-modal}.
 
 \begin{v2quote}
 The default value for \texttt{SpatialOrder} depends on the type of interpolation; the default
@@ -1188,6 +1311,7 @@ given type (and order) are already present.
 \texttt{cg\_solution\_interpolation\_points\_read(fn, bn, fam, sn, *pu, *pv, *pw, *pt)} & r{-}{-} \\
 \texttt{cg\_solution\_interpolation\_write(fn, bn, fam, name, et, os, ot, it, *sn)} & {-}wm \\
 \texttt{cg\_solution\_interpolation\_points\_write(fn, bn, fam, sn, *pu, *pv, *pw, *pt)} & {-}wm \\
+\texttt{cg\_solution\_interpolation\_find(fn, bn, fam, et, os, ot, *sn, *it)} & r{-}{-} \\
 \addlinespace
 \texttt{cg\_element\_interpolation\_coefficients\_read(fn, bn, fam, en, *coeff)} & r{-}{-} \\
 \texttt{cg\_element\_interpolation\_coefficients\_write(fn, bn, fam, en, *coeff)} & {-}wm \\
@@ -1218,7 +1342,8 @@ given type (and order) are already present.
 \texttt{ne}   & Number of element interpolation blocks & in/out \\
 \texttt{en}   & Element interpolation index number & in \\
 \texttt{ns}   & Number of solution interpolation blocks & in/out \\
-\texttt{sn}   & Solution interpolation index number & in \\
+\texttt{sn}   & Solution interpolation index number; returned as an output by
+  \texttt{cg\_solution\_interpolation\_find} & in/out \\
 \texttt{os}   & Spatial interpolation order & in \\
 \texttt{ot}   & Temporal interpolation order & in \\
 \texttt{it}   & Interpolation type (\texttt{InterpolationType\_t}) & in/out \\
@@ -1284,8 +1409,8 @@ must not be called on a node whose interpolation type is \texttt{ParametricLagra
 \texttt{cg\_sol\_interpolation\_order\_read(fn, bn, zn, sn, *os, *ot)} & r{-}{-} \\
 \texttt{cg\_sol\_interpolation\_order\_write(fn, bn, zn, sn, os, ot)} & {-}wm \\
 \addlinespace
-\texttt{cg\_sol\_characteristic\_length\_read(fn, bn, zn, sn, *numElements, *h\_e)} & r{-}{-} \\
-\texttt{cg\_sol\_characteristic\_length\_write(fn, bn, zn, sn, numElements, *h\_e)} & {-}wm \\
+\texttt{cg\_sol\_characteristic\_length\_read(fn, bn, zn, sn, *nscale, *numElements, *h\_e)} & r{-}{-} \\
+\texttt{cg\_sol\_characteristic\_length\_write(fn, bn, zn, sn, nscale, numElements, *h\_e)} & {-}wm \\
 \bottomrule
 \end{tabular}
 \caption{FlowSolution-level interpolation order and characteristic-length API.}
@@ -1310,6 +1435,11 @@ must not be called on a node whose interpolation type is \texttt{ParametricLagra
 \texttt{loc}  & Grid location (\texttt{InterpolationPoints} for high-order; both uniform and variable-order) & in \\
 \texttt{os}   & Spatial interpolation order & in/out \\
 \texttt{ot}   & Temporal interpolation order & in/out \\
+\texttt{nscale} & Number of normalisation factors per element: \texttt{1} selects the
+  isotropic encoding, \texttt{PhysDim} the per-axis encoding & in/out \\
+\texttt{numElements} & Number of elements covered by the solution block & in/out \\
+\texttt{h\_e} & Normalisation factors, total length \texttt{nscale}$\times$\texttt{numElements}
+  (\texttt{NULL} on read for a shape-only query) & in/out \\
 \bottomrule
 \end{tabular}
 \caption{Input/output parameters for FlowSolution-level API.}
@@ -1508,15 +1638,20 @@ A single child node is added to \texttt{FlowSolution\_t}:
   name = CharacteristicLength \\
   type = \texttt{\textbf{DataArray\_t}} \\
   datatype = \texttt{R8} \\
-  dimensions = 1 \\
-  dimension values = $|\mathcal{E}|$ (number of elements in the block) \\
-  data = \textless{}per-element $h^e$ values\textgreater{} \\
+  dimensions = 1 \emph{or} 2 \quad(rank selects the normalisation) \\
+  dimension values = $[\,|\mathcal{E}|\,]$ \quad\quad\ \ isotropic: one factor per element \\
+  \quad\quad\quad\quad\quad\quad\quad\ \ $[\texttt{PhysDim}, |\mathcal{E}|]$ \ \ per-axis: \texttt{PhysDim} factors \\
+  \quad\quad\quad\quad\quad\quad\quad\ \ \quad\quad\quad\quad\quad\quad\ \ \ per element, \texttt{PhysDim} fast-varying \\
+  data = \textless{}per-element normalisation factors\textgreater{} \\
   cardinality = 0:1
 \end{tabular}} \\
 \hline
 \nfullrow{\textit{Mandatory when the associated \texttt{SolutionInterpolation\_t}
 has \texttt{InterpolationType = CartesianMonomialsPascal}; element ordering matches
-the field-array ordering.}} \\
+the field-array ordering.  All factors must be strictly positive.  $|\mathcal{E}|$ is
+the number of elements covered by the block.  Writers record the factors they actually
+used; readers use the recorded values and do not recompute them
+(Section~\ref{sec:cartesian-modal}).}} \\
 \hline
 \end{tabularx}
 \captionof{table}{New \texttt{InterpolationOrders} and \texttt{CharacteristicLength}
@@ -1627,14 +1762,30 @@ runs from $0$ to $N_\mathrm{DOFs}(e_i)-1$ in the ordering established by the ass
 \texttt{LagrangeControlPoints}, or modal coefficients in the Pascal traversal of
 Section~\ref{sec:parametric-modal}).
 
+\paragraph{Metadata arrays are not solution fields.}
+\texttt{CharacteristicLength} is a \texttt{DataArray\_t} child of
+\texttt{FlowSolution\_t}, but it is interpolation \emph{metadata} and carries its own
+shape rather than the field length $L$ above.  Readers that enumerate the
+\texttt{DataArray\_t} children of a \texttt{FlowSolution\_t} to build the list of
+solution fields \emph{must exclude it by name}, and must not apply the field
+size rule to it.  A reader that does not exclude it will both report a spurious extra
+field and reject a conformant file, because the metadata length
+($\texttt{nscale}\times|\mathcal{E}|$) does not equal $L$.  Implementations should note
+that this failure is invisible on test files that contain no element sections, since
+field size checking cannot be performed at all in that case.
+
 \paragraph{CharacteristicLength.}
-A 1D \texttt{R8} \texttt{DataArray\_t} child of \texttt{FlowSolution\_t},
-of length $|\mathcal{E}|$, holding the per-element normalisation length $h^e$
-used by Cartesian modal interpolation
-(Section~\ref{sec:cartesian-modal}).  Mandatory when the associated
-\texttt{SolutionInterpolation\_t} uses
-\texttt{CartesianMonomialsPascal}; absent otherwise.  Element
-ordering matches the field-array element ordering above.
+An \texttt{R8} \texttt{DataArray\_t} child of \texttt{FlowSolution\_t} holding the
+per-element coordinate normalisation factors used by Cartesian modal interpolation
+(Section~\ref{sec:cartesian-modal}).  The array rank selects the normalisation:
+rank~1 with shape $[|\mathcal{E}|]$ is isotropic (one factor per element); rank~2 with
+shape $[\texttt{PhysDim}, |\mathcal{E}|]$ is per-axis (\texttt{PhysDim} factors per
+element, \texttt{PhysDim} fast-varying, so one element's factors are contiguous).  All
+factors must be strictly positive.  Mandatory when the associated
+\texttt{SolutionInterpolation\_t} uses \texttt{CartesianMonomialsPascal}; absent
+otherwise.  Element ordering matches the field-array element ordering above.  The
+values recorded are those the writer actually applied; readers must not recompute them
+from element geometry.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Validation Requirements (Reader)}
@@ -1658,8 +1809,16 @@ A conforming reader must reject:
     \texttt{InterpolationType\_t} child named \texttt{InterpolationType};
   \item Duplicate \texttt{ElementInterpolation\_t} nodes (same \texttt{ElementType\_t} tag) or
     duplicate \texttt{SolutionInterpolation\_t} nodes (same basic-type, \texttt{os},
-    \texttt{ot}) within a family.
+    \texttt{ot}) within a family;
+  \item \texttt{CharacteristicLength} children whose data type is not \texttt{R8}, whose
+    array rank is neither~1 nor~2, whose \texttt{nscale} (rank-2 only) is neither~1 nor
+    \texttt{PhysDim}, whose element count disagrees with the block, or which contain a
+    non-positive factor.
 \end{itemize}
+
+\noindent A conforming reader must also \emph{exclude} \texttt{CharacteristicLength} from
+the solution-field list of its parent \texttt{FlowSolution\_t}, and must not apply the
+field size rule of Section~\ref{sec:on-disk-layout} to it.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Cross-Validation Rules (Writer)}
@@ -1831,7 +1990,7 @@ cg_field_write(fn,B,Z,S2,RealDouble,"VelocityX",velocity,&fld);
 \subsection{\texttt{IsoParametric} for \texttt{SolutionInterpolation\_t}}
 % ─────────────────────────────────────────────────────────────────────────
 
-When \texttt{InterpolationName} is set to \texttt{IsoParametric}, the solution uses the
+When \texttt{InterpolationType} is set to \texttt{IsoParametric}, the solution uses the
 same interpolation basis as the mesh (i.e.\ the \texttt{ElementInterpolation\_t} defined for
 the same element type in the family).  No \texttt{LagrangeControlPoints} or
 \texttt{MonomialCoefficients} child is stored.  The corresponding
@@ -1893,8 +2052,18 @@ $10^{6}$ or $10^{-6}$ in either coordinate), modal-coefficient writes followed b
 must round-trip the data without overflow or precision loss when the writer applies
 the normalization of Section~\ref{sec:cartesian-modal}.  Failure of this test indicates
 missing or incorrect normalization at the writer.  The reader must additionally verify
-that the normalisation scalar $h^e$ recovered from the \texttt{CharacteristicLength}
-node correctly reconstructs the unnormalised coordinate space without precision loss.
+that the normalisation factors recovered from the \texttt{CharacteristicLength} node
+correctly reconstruct the unnormalised coordinate space without precision loss, for
+both the isotropic (rank-1) and per-axis (rank-2) encodings.
+
+\paragraph{Anisotropic conditioning (Cartesian modal, per-axis).}
+For a strongly stretched element --- e.g.\ a \texttt{QUAD} or \texttt{HEXA} of aspect
+ratio $10^{4}$, representative of a wall-resolved boundary-layer cell --- a per-axis
+\texttt{CharacteristicLength} must round-trip exactly and must place every normalised
+coordinate in $O([-1,1])$.  An implementation that emits a single isotropic factor for
+such an element is conformant only if it accepts the resulting loss of relative
+precision in the short direction; per-axis normalisation is the recommended encoding
+in this case.
 
 \paragraph{Compliance checklist.}
 \begin{itemize}
@@ -1906,7 +2075,11 @@ node correctly reconstructs the unnormalised coordinate space without precision 
   \item Numerical stability for extreme coordinate scales.
   \item Time-major ordering for space-time data layout.
   \item Principal vertices identified per the linear sub-element rule (Cartesian modal only).
-  \item Coordinate normalization applied for Cartesian modal interpolation.
+  \item Coordinate normalization applied for Cartesian modal interpolation, with the
+    factors actually used recorded in
+    \texttt{Charac\-teristic\-Length}.
+  \item Both \texttt{Charac\-teristic\-Length} encodings handled on read: rank-1
+    isotropic and rank-2 per-axis.
   \item \texttt{LagrangeControlPointDistribution} attribute present on every
     \texttt{ParametricLagrange} node.
 \end{itemize}
@@ -1937,6 +2110,20 @@ node correctly reconstructs the unnormalised coordinate space without precision 
   \textit{Nodal Discontinuous Galerkin Methods: Algorithms, Analysis, and Applications},
   Springer Texts in Applied Mathematics, vol.~54, Springer, 2008.
   \href{https://doi.org/10.1007/978-0-387-72067-8}{doi:10.1007/978-0-387-72067-8}
+
+\bibitem{LuoBaumLohner08}
+  H.\ Luo, J.\ D.\ Baum, and R.\ L\"ohner,
+  ``A discontinuous Galerkin method based on a Taylor basis for the compressible
+  flows on arbitrary grids'',
+  \textit{Journal of Computational Physics}, vol.~227, no.~20, pp.~8875--8893, 2008.
+  \href{https://doi.org/10.1016/j.jcp.2008.06.035}{doi:10.1016/j.jcp.2008.06.035}
+
+\bibitem{Kuzmin20}
+  D.\ Kuzmin,
+  ``Entropy stabilization and property-preserving limiters for discontinuous
+  Galerkin discretizations of nonlinear hyperbolic equations'',
+  \textit{Journal of Numerical Mathematics}, vol.~29, no.~4, pp.~307--322, 2021.
+  \href{https://arxiv.org/abs/2004.03521}{arXiv:2004.03521}
 
 \bibitem{Mathex}
   S.\ Massago, \textit{mathex} library, part of the Small Scientific Library (SSCILIB).
