@@ -75,12 +75,12 @@ writers record the factors they actually used and readers must not recompute a f
    distribution is named, implying the points from family + order + element type. This is
    the only option under which the original rationale is correct as written.
 
-**Cost notes.** Option 3 is the largest change and would need new normative text plus
-implementation work. Its space saving is modest: `ElementInterpolation_t` hangs off
-`Family_t`, so the coordinate array is already shared across all elements of a type and
-order rather than stored per element. Option 3 is also the only option that eliminates the
-redundancy rather than managing it — under options 1 and 2 the two children coexist and the
-precedence rule is what keeps them consistent.
+**Design notes.** Option 3 is the only option that eliminates the redundancy rather than
+managing it — under options 1 and 2 the two children coexist and the precedence rule is what
+keeps them consistent. Its storage saving, sometimes cited in its favour, is in fact small:
+`ElementInterpolation_t` hangs off `Family_t`, so the coordinate array is already shared across
+all elements of a type and order rather than stored per element. So option 3 should be judged on
+removing the redundancy, not on file size.
 
 **Draft position (placeholder, not a preference).** The draft implements option 1, with an
 explicit precedence rule so the "inconsistent in general" case is defined rather than left to
@@ -106,7 +106,7 @@ semantics are stated once and hold for both flavours — and scoped the objectio
 **Question.** Keep `InterpolationPoints`, or rename to something flavour-neutral such as
 `InterpolationDOF`?
 
-**Cost notes.** Lower than it first appears, and verified against the draft:
+**Scope, verified against the draft.** Nothing here constrains the choice:
 
 - The enumerator appears only as an argument *value* (`loc` in `cg_sol_ptset_write`), never
   in a function name. A rename changes no API signature.
@@ -114,16 +114,17 @@ semantics are stated once and hold for both flavours — and scoped the objectio
   `LagrangeControlPoints` array, not for this enumerator, and are already rejected for
   modal types. They are unaffected.
 - No released CGNS version writes value 9, so there is no archival-file compatibility to
-  protect. The churn is this document plus the `CPEX45_high_order_wip` branch.
+  protect.
 
-**For keeping it.** Every other `GridLocation_t` value names a place — `Vertex`,
-`CellCenter`, `FaceCenter`, `EdgeCenter` — so `InterpolationDOF` would sit oddly in that
-list. And no name repairs the underlying awkwardness: applying `GridLocation` to modal
+**Arguments for keeping the current name.** Every other `GridLocation_t` value names a place —
+`Vertex`, `CellCenter`, `FaceCenter`, `EdgeCenter` — so `InterpolationDOF` would sit oddly in
+that list. And no name repairs the underlying awkwardness: applying `GridLocation` to modal
 coefficients is an abuse whatever it is called, since coefficients are not located anywhere.
 A better name is less wrong, not right.
 
-**Timing.** Pre-vote is the cheapest this will ever be. Once the enumerator is approved and
-the value ships, the name is effectively permanent.
+**Timing.** Once the enumerator is approved and the value ships, the name is effectively
+permanent, so this is best settled now rather than deferred — a point about reversibility, not
+about effort.
 
 ---
 
@@ -158,10 +159,15 @@ So the usage is consistent and traceable, just mis-named.
    text and treating "order" purely as a field name. This is close to option 1 and is what
    the draft now does for the numeric cases.
 
-**Cost notes.** Unlike **D-02**, this one *does* reach API signatures
-(`cg_sol_interpolation_order_{read,write}`, the `os`/`ot` arguments) and the on-disk
-`InterpolationOrders` node name, and it contradicts text already approved in v2. Option 2 is
-substantially more disruptive than the other two open items.
+**Scope, verified 2026-07-29.** Option 2 would reach the `cg_sol_interpolation_order_{read,write}`
+signatures with their `os`/`ot` arguments, and the on-disk `InterpolationOrders` node name.
+**None of these are released:** `cg_sol_interpolation_order` and `InterpolationOrders` appear zero
+times on both `origin/master` and `origin/develop`, existing only on `CPEX45_high_order_wip`. So
+there is no compatibility constraint here either.
+
+The one consideration that is not about effort: "order" is the term used in the v2 text the
+Committee has already approved, so renaming means the v3 amendment departs from approved wording.
+`InterpolationPoints` in D-02 has no such v2 precedent, being itself a v3 addition.
 
 **Draft position (placeholder, not a preference).** The draft implements option 1: a normative
 note in §Conventions stating that order means degree, that $p=1$ is linear and $q=0$ is
@@ -174,25 +180,28 @@ has to happen alongside the other v3 wire-format changes rather than later.
 
 ### Interactions between the open items
 
-**D-02 and D-03 look alike but are not.** Both ask whether to rename something, and in both the
-draft keeps the existing name. The costs differ sharply:
+**Implementation effort is not a decision factor, and neither is compatibility.** Nothing in
+CPEX-45 has been released. Verified 2026-07-29: `cg_sol_interpolation_order` and
+`InterpolationOrders` appear **zero** times on both `origin/master` and `origin/develop`, and no
+released CGNS version writes `GridLocation` value 9. Every name under discussion exists only on
+`CPEX45_high_order_wip`. There are therefore no archival files, no shipped APIs, and no
+downstream users to protect, and each of these questions should be settled on what is correct
+for the standard.
 
-- **D-02** (`InterpolationPoints`) touches no API signature and no released file. The
-  enumerator appears only as an argument *value*, and no released CGNS version writes value 9.
-- **D-03** (`SpatialOrder` / `TemporalOrder`) reaches the on-disk `InterpolationOrders` node
-  name, the `cg_sol_interpolation_order_{read,write}` signatures, *and* text already approved
-  in v2.
+An earlier draft of this register and of the 2026-08-04 agenda ranked D-03 as "more disruptive"
+than D-02 because it reaches API signatures and on-disk node names. That ranking was wrong —
+those signatures and names are unreleased too — and the framing was removed on 2026-07-29.
 
-If both are taken up in one session, a decision on either must not be read as a decision on the
-other.
+**D-02 and D-03 are both purely naming questions.** In both the draft keeps the existing name,
+and in both the choice is unconstrained by anything already shipped. The one substantive
+difference is not effort: "order" is the term used in the v2 text the Committee has already
+approved, so renaming in D-03 means the v3 amendment departs from approved wording, whereas
+`InterpolationPoints` is itself a v3 addition with no v2 precedent. If both are taken up in one
+session, a decision on either must not be read as a decision on the other.
 
-**Both renames are one-way doors.** Pre-vote is the cheapest either will ever be. Once the
-enumerator value and the node names ship, they are effectively permanent — so "defer" is not a
-cost-free option for D-02 or D-03 the way it is for most items.
-
-**D-01 gates implementation work.** The `cgnscheck` change recorded in C-04 follows from the
-option-1 placeholder. Options 2 and 3 would each require reworking it, and option 3 would need
-new normative text plus new library code.
+**D-01 has a consequence for C-04.** The `cgnscheck` change recorded in C-04 follows from the
+option-1 placeholder, so options 2 and 3 would each mean revisiting it. Noted for tracking, not
+as an argument for option 1.
 
 **One spec claim currently outruns the implementation.** §Lagrange Control Point Distribution
 states that `cgnscheck` compares the stored coordinates against the named distribution. It does
@@ -267,10 +276,11 @@ from the coordinates. `cgnscheck -s` on `high_order.cgns` went from 1 error to 0
 high-order, modal and characteristic-length tests pass.
 
 Two gaps remain. The coordinates-versus-distribution consistency check that
-§Lagrange Control Point Distribution assigns to `cgnscheck` is **not implemented** — it needs
-Legendre and Warp&Blend node generation the library does not contain. If the committee defers
-it, that sentence in the spec should be softened, since it currently promises behaviour that
-does not exist. And no test in the tree references the attribute at all, so the new
+§Lagrange Control Point Distribution assigns to `cgnscheck` is **not implemented**, so the spec
+currently asserts behaviour that does not exist; it must either be implemented or the sentence
+withdrawn. (For scoping only, not as an argument either way: it would need Legendre and
+Warp&Blend node generation the library does not yet contain, `Equidistant` being the one trivial
+case.) And no test in the tree references the attribute at all, so the new
 `ElementInterpolation_t` branch is unexercised.
 
 If the committee chooses option 2 or 3 under D-01, this change must be revisited.
