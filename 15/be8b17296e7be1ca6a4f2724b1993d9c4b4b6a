@@ -1,0 +1,49 @@
+COMMITTEE-DECISIONS.md
+  s_2487c6750a7f8e::t_8cb5fea6cadede 90-94
+  s_2487c6750a7f8e::t_28207d2bd97f43 216-242
+  s_2487c6750a7f8e::t_84359c04d1d87c 28-34
+  s_2487c6750a7f8e::t_6a6466d61025d5 125-126,132-169
+  s_2487c6750a7f8e::t_3e91da459b2f49 43-59
+  s_2487c6750a7f8e::t_699ca37ed3dd62 64-66
+  s_2487c6750a7f8e::t_ee30b207f48e6c 76-78,80-84
+  s_2487c6750a7f8e::t_f3f8d45903b6b1 11
+  s_2487c6750a7f8e::t_f3a4e97255ad0b 1-10,12-27,35-42,60-63,67-75,79,85-89,95-124,170-172,174,186-215,243-248
+  s_2487c6750a7f8e::t_7ca2d56ff58eb4 127-131
+  s_2487c6750a7f8e::t_ccad6abacf77a8 173,175-185
+Makefile
+  s_2487c6750a7f8e::t_84d989dd2a1ff5 7,11-12
+CPEX-0045-high-order-interpolation.tex
+  s_2487c6750a7f8e::t_e78a31c28250a2 239,241-248
+  s_2487c6750a7f8e::t_0fa71861a67dd7 466-482
+  s_2487c6750a7f8e::t_29e7183dba33ed 1199,1201-1204
+  s_2487c6750a7f8e::t_adc0f2c4375e80 546-557,559-563,567-574
+  s_2487c6750a7f8e::t_d814dd5cf2a33d 2240-2242
+  s_2487c6750a7f8e::t_8caaaf7e826998 620-626
+  s_2487c6750a7f8e::t_8b9d2d8ea01428 1990-1995
+  s_2487c6750a7f8e::t_5431440cc8f92d 1951-1952
+  s_2487c6750a7f8e::t_b4b5f64eb74cef 650-661
+  s_2487c6750a7f8e::t_607e291c658457 882-883,886-888
+  s_2487c6750a7f8e::t_eb28b7014e3751 1968-1973
+  s_2487c6750a7f8e::t_25b8c6d62a554a 599-619
+  s_2487c6750a7f8e::t_ec7510a3ed24dc 564-566
+  s_2487c6750a7f8e::t_e47e79176885d8 257-262
+  s_2487c6750a7f8e::t_2951dfd5d7bd0b 1669-1670,1749-1750
+.gitignore
+  s_2487c6750a7f8e::t_e805ef2f335be7 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "15be8b17296e7be1ca6a4f2724b1993d9c4b4b6a",
+  "prompts": {},
+  "sessions": {
+    "s_2487c6750a7f8e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5285565-c8a4-4b85-a0c6-590ae3fbf9b2",
+        "model": "claude-opus-5"
+      },
+      "human_author": "M. Scot Breitenfeld <brtnfld@hdfgroup.org>"
+    }
+  }
+}
