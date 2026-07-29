@@ -19,10 +19,12 @@ The register is organised as follows.
 
 Status values: `OPEN`, `NEEDS-VOTE`, `DECIDED`, `CLOSED`.
 
-Open items deliberately carry **no recommendation**. Where the draft already implements one of
-the options, that is recorded as a *placeholder* — chosen so the document stays internally
-consistent while the question is open — and must not be read as advocacy. The published
-2026-08-04 agenda follows the same convention.
+Open items carry **no recommendation**. Where the draft already implements one of the options,
+that is a *placeholder* — chosen so the document stays internally consistent while the question
+is open — and is not advocacy. The 2026-08-04 agenda follows the same convention.
+
+Implementation effort is not a decision factor. Nothing in CPEX-45 has been released, so no
+option is constrained by shipped code or archival files.
 
 ---
 
@@ -187,10 +189,6 @@ released CGNS version writes `GridLocation` value 9. Every name under discussion
 `CPEX45_high_order_wip`. There are therefore no archival files, no shipped APIs, and no
 downstream users to protect, and each of these questions should be settled on what is correct
 for the standard.
-
-An earlier draft of this register and of the 2026-08-04 agenda ranked D-03 as "more disruptive"
-than D-02 because it reaches API signatures and on-disk node names. That ranking was wrong —
-those signatures and names are unreleased too — and the framing was removed on 2026-07-29.
 
 **D-02 and D-03 are both purely naming questions.** In both the draft keeps the existing name,
 and in both the choice is unconstrained by anything already shipped. The one substantive
