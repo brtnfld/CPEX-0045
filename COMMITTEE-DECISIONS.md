@@ -19,6 +19,11 @@ The register is organised as follows.
 
 Status values: `OPEN`, `NEEDS-VOTE`, `DECIDED`, `CLOSED`.
 
+Open items deliberately carry **no recommendation**. Where the draft already implements one of
+the options, that is recorded as a *placeholder* — chosen so the document stays internally
+consistent while the question is open — and must not be read as advocacy. The published
+2026-08-04 agenda follows the same convention.
+
 ---
 
 ## A. Open decisions
@@ -77,11 +82,11 @@ order rather than stored per element. Option 3 is also the only option that elim
 redundancy rather than managing it — under options 1 and 2 the two children coexist and the
 precedence rule is what keeps them consistent.
 
-**Recommendation.** Option 1, already reflected in the draft, now with an explicit precedence
-rule so the "inconsistent in general" case is defined rather than left to implementations.
-Option 3 deserves a hearing if the committee would rather remove the redundancy at the source;
-it is the only option under which the two children cannot contradict each other, because only
-one of them would be present.
+**Draft position (placeholder, not a preference).** The draft implements option 1, with an
+explicit precedence rule so the "inconsistent in general" case is defined rather than left to
+implementations. This is only so the document is internally consistent while the question is
+open. Option 3 remains fully available: it is the only option under which the two children
+cannot contradict each other, because only one of them would be present.
 
 ---
 
@@ -158,12 +163,41 @@ So the usage is consistent and traceable, just mis-named.
 `InterpolationOrders` node name, and it contradicts text already approved in v2. Option 2 is
 substantially more disruptive than the other two open items.
 
-**Recommendation.** Option 1, already reflected in the draft: a normative note in
-§Conventions stating that order means degree, that $p=1$ is linear and $q=0$ is constant in
-time, and that this differs from the order $=$ degree $+1$ convention. The confusing
-"order-2 modal interpolation" example has been reworded to "degree $p=2$ (quadratic)".
-Worth surfacing to the committee anyway, since if anyone *does* want the rename, it has to
-happen alongside the other v3 wire-format changes rather than later.
+**Draft position (placeholder, not a preference).** The draft implements option 1: a normative
+note in §Conventions stating that order means degree, that $p=1$ is linear and $q=0$ is
+constant in time, and that this differs from the order $=$ degree $+1$ convention. The
+confusing "order-2 modal interpolation" example has been reworded to "degree $p=2$
+(quadratic)". Surfaced to the committee regardless, because if anyone *does* want the rename it
+has to happen alongside the other v3 wire-format changes rather than later.
+
+---
+
+### Interactions between the open items
+
+**D-02 and D-03 look alike but are not.** Both ask whether to rename something, and in both the
+draft keeps the existing name. The costs differ sharply:
+
+- **D-02** (`InterpolationPoints`) touches no API signature and no released file. The
+  enumerator appears only as an argument *value*, and no released CGNS version writes value 9.
+- **D-03** (`SpatialOrder` / `TemporalOrder`) reaches the on-disk `InterpolationOrders` node
+  name, the `cg_sol_interpolation_order_{read,write}` signatures, *and* text already approved
+  in v2.
+
+If both are taken up in one session, a decision on either must not be read as a decision on the
+other.
+
+**Both renames are one-way doors.** Pre-vote is the cheapest either will ever be. Once the
+enumerator value and the node names ship, they are effectively permanent — so "defer" is not a
+cost-free option for D-02 or D-03 the way it is for most items.
+
+**D-01 gates implementation work.** The `cgnscheck` change recorded in C-04 follows from the
+option-1 placeholder. Options 2 and 3 would each require reworking it, and option 3 would need
+new normative text plus new library code.
+
+**One spec claim currently outruns the implementation.** §Lagrange Control Point Distribution
+states that `cgnscheck` compares the stored coordinates against the named distribution. It does
+not — see C-04. Whichever way D-01 goes, either that check gets implemented or that sentence
+gets softened; leaving both as they are ships a spec that promises absent behaviour.
 
 ---
 
