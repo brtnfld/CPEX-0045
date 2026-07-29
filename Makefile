@@ -4,10 +4,12 @@ MAIN    = CPEX-0045-high-order-interpolation
 
 .PHONY: all pdf md clean
 
-all: pdf md
+all: pdf
 
 pdf: $(MAIN).pdf
 
+# Not built by "all": the .md is a generated convenience view, not a tracked
+# artifact.  The .tex is the source of truth.
 md: $(MAIN).md
 
 $(MAIN).pdf: $(MAIN).tex CGNS_logo_1.png

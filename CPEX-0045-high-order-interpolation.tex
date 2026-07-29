@@ -236,10 +236,16 @@ or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard
     Values: \texttt{GaussLobattoLegendre}, \texttt{Equidistant},
     \texttt{GaussLegendre}, \texttt{WarpAndBlend}.
     Stored as an optional named child of \texttt{ElementInterpolation\_t}
-    or \texttt{SolutionInterpolation\_t}; required for
+    or \texttt{SolutionInterpolation\_t}; recommended, but not required, for
     \texttt{ParametricLagrange}.
-    \textit{Rationale:} a reader cannot reconstruct basis functions from
-    control-point positions alone without this information.
+    \textit{Rationale:} the attribute is redundant for \emph{interpretation}
+    --- the nodal basis is already determined by the stored control-point
+    coordinates together with the element type and order --- but naming the
+    distribution lets a reader use a well-conditioned closed-form
+    construction instead of inverting the Vandermonde matrix, regenerate the
+    nodes at full working precision rather than inheriting the writer's
+    \texttt{R8} rounding, and lets \texttt{cgnscheck} cross-validate the
+    stored coordinates.
 
   \item \NEW{} \textbf{New \texttt{GridLocation\_t} enumerator \texttt{InterpolationPoints}
     (value 9), required for all high-order \texttt{FlowSolution\_t} nodes.}
@@ -248,7 +254,12 @@ or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard
     (Section~\ref{sec:flowsolution}).  v3 instead designates the new
     \texttt{InterpolationPoints} value as required \texttt{GridLocation} for
     \emph{all} high-order \texttt{FlowSolution\_t} nodes, both whole-zone
-    (uniform-order) and subset (variable-order via \texttt{PointRange}/\texttt{PointList}).
+    (uniform-order) and subset (variable-order via \texttt{PointRange}/\texttt{PointList}),
+    and for both the Lagrange and the modal interpolation types --- despite its
+    name, the enumerator labels the per-element block of degrees of freedom, not
+    a set of geometric points, and modal \texttt{FlowSolution\_t} nodes store
+    coefficients rather than point values under it
+    (Section~\ref{sec:interpolation-points-loc}).
     \textit{Rationale:} \texttt{CellCenter} mandates a field-array length equal
     to the number of cells, which contradicts the high-order requirement
     $\sum_e N_\mathrm{DOFs}(e)$ and would fail standard SIDS sizing rules
@@ -452,6 +463,23 @@ order, and time-dependent interpolants.
 
 \subsection{Conventions}
 
+\paragraph{``Order'' denotes polynomial degree.}
+\label{sec:order-means-degree}
+Throughout CPEX-0045, and in v2 before it, \emph{order} means the polynomial \emph{degree}
+of the expansion --- not the number of terms, and not the degree plus one.
+\texttt{SpatialOrder} $= p$ means the interpolation space contains the polynomials of
+degree $\le p$: $p=1$ is linear, $p=2$ is quadratic.  Likewise \texttt{TemporalOrder}
+$= q = 0$ denotes data that is constant in time, not linear in time.  This differs from the
+common convention under which a degree-$p$ approximation is called order $p+1$, so a
+``second-order'' method in that sense corresponds to $p=1$ here.
+
+The v2 usage is retained because \texttt{InterpolationOrders}, \texttt{SpatialOrder} and
+\texttt{TemporalOrder} are established on-disk node and API argument names, and because v2's
+own text is already explicit that what is recorded is a degree --- it describes the modal
+choices as ``the maximum \emph{degree} of a Pascal polynomial space'' and defines $q=0$ as
+the purely spatial case.  To keep the two readings from being confused, this document writes
+``degree'' explicitly wherever the numeric value of $p$ or $q$ appears in prose.
+
 \begin{v2quote}
 \textbf{Modifications to the SIDS:}
 \begin{itemize}
@@ -515,12 +543,35 @@ defined.  \texttt{InterpolationType\_t} can take four values:
 \label{sec:lagrange-distribution}
 % ─────────────────────────────────────────────────────────────────────────
 
-For \texttt{ParametricLagrange} interpolation to be unambiguous and interoperable, the
-distribution of control points in parametric space must be explicitly recorded.  Without
-this, if a writer uses Gauss-Lobatto-Legendre (GLL) points and a reader assumes equidistant points,
-or vice versa, this results in an $O(1)$ interpolation error, which is catastrophic rather than a minor numerical issue.
+The parametric coordinates of the control points are stored explicitly in
+\texttt{LagrangeControlPoints} (Section~\ref{sec:on-disk-layout}).  Together with the
+reference domain, fixed by the element type, and the polynomial space, fixed by the element
+type and order, those coordinates determine the nodal basis uniquely: the functions
+$\lambda_i$ satisfying $\lambda_i(\mathbf{u}_j) = \delta_{ij}$ are the solution of a
+standard multivariate polynomial interpolation problem --- obtainable, for instance, by
+inverting the generalised Vandermonde matrix --- and exist and are unique whenever the
+stored point set is unisolvent for that space.  A reader therefore never has to
+\emph{assume} a distribution, and recording it is not required in order to interpret the
+file correctly.
 
-\paragraph{Required attribute: \texttt{LagrangeControlPointDistribution}.}
+Recording it is nonetheless recommended, for three reasons:
+
+\begin{itemize}
+  \item \textbf{Conditioning.} A reader that knows the points are Gauss-Lobatto-Legendre
+    (GLL), Gauss-Legendre or Warp\&Blend can build the basis from the closed-form
+    barycentric weights of that family, which stays stable at high order, rather than
+    inverting a Vandermonde matrix whose conditioning degrades rapidly as $p$ grows.
+  \item \textbf{Precision.} The stored coordinates are \texttt{R8}-rounded, whereas the
+    \emph{interior} nodes of the \texttt{GaussLobattoLegendre}, \texttt{GaussLegendre} and
+    \texttt{WarpAndBlend} families are irrational at all but the lowest orders.  Naming the
+    family lets a reader regenerate the nodes at its own working precision instead of
+    inheriting the writer's rounding.
+  \item \textbf{Validation.} \texttt{cgnscheck} can compare the stored coordinates against
+    the named family and so flag writer errors --- a permuted point list, or a
+    $[0,1]$-versus-$[-1,1]$ domain convention --- that are otherwise invisible.
+\end{itemize}
+
+\paragraph{Recommended attribute: \texttt{LagrangeControlPointDistribution}.}
 A \texttt{DataArray\_t} of \texttt{Character} type, child of \texttt{ElementInterpolation\_t}
 or \texttt{SolutionInterpolation\_t} when \texttt{InterpolationType} is
 \texttt{ParametricLagrange}.  Allowed values:
@@ -545,10 +596,34 @@ applied independently in each parametric direction.  For simplex elements (\text
 \texttt{TETRA}), \texttt{WarpAndBlend} or Fekete distributions are required for $p>2$;
 equidistant points may be used at $p=2$ but become unstable at higher orders.
 
-\paragraph{Default behaviour.}
-If \texttt{LagrangeControlPointDistribution} is absent, an implementation \emph{should} assume
-\texttt{GaussLobattoLegendre} but \emph{should} issue a warning to flag the ambiguity.  Strict
-CPEX-0045 conformance requires the attribute to be present.
+\paragraph{Precedence: the coordinates are authoritative.}
+\texttt{LagrangeControlPoints} and \texttt{LagrangeControlPointDistribution} are
+deliberately redundant, and the redundancy is resolved in favour of the data: the stored
+coordinates are normative and the distribution name is advisory metadata.  A reader
+\emph{must} construct a basis that interpolates at the coordinates actually present in
+\texttt{LagrangeControlPoints}.  It \emph{may} use the named family to obtain those nodes by
+the better-conditioned or higher-precision route described above, but only after confirming
+that the family's nodes agree with the stored coordinates to within its chosen tolerance; if
+they do not, it \emph{must} fall back to the stored coordinates and \emph{should} warn.  It
+must never silently substitute the named family's nodes for the stored ones.
+
+This mirrors the rule adopted for \texttt{CharacteristicLength}
+(Section~\ref{sec:cartesian-modal}), where writers record the factors they actually used and
+readers must use the recorded values rather than recomputing a formula.  In both cases the
+recorded data wins over anything derivable, so that reconstruction never depends on writer
+and reader agreeing on a computation.
+
+Correspondingly, a writer \emph{must not} record a distribution name that disagrees with the
+coordinates it writes.  \texttt{cgnscheck} compares the two whenever both are present and
+reports a mismatch: an error under \texttt{cgnscheck -s}, a warning otherwise.
+
+\paragraph{Absent attribute.}
+If \texttt{LagrangeControlPointDistribution} is absent, a reader \emph{must} construct the
+basis from the stored \texttt{LagrangeControlPoints} coordinates directly.  It must
+\emph{not} substitute an assumed distribution, and no warning is warranted, because nothing
+is ambiguous.  An implementation \emph{may} try to recognise the stored points as one of the
+named families in order to take the better-conditioned path described above, but must fall
+back to the general construction when no family matches within its chosen tolerance.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsubsection{New \texttt{GridLocation\_t} Value: \texttt{InterpolationPoints}}
@@ -571,6 +646,18 @@ CPEX-0045 adds a new \texttt{GridLocation\_t} enumeration value:
     DOFs of the second element, and so on.
 \end{itemize}
 \par}
+
+\paragraph{Interpretation of the name.}
+The enumerator is named for the Lagrange case, where the stored values genuinely are
+nodal values at the control points, but it applies unchanged to the modal types
+(\texttt{ParametricMonomialsPascal}, \texttt{CartesianMonomialsPascal}), where the stored
+values are expansion coefficients that are not associated with any point.  Read
+\texttt{InterpolationPoints} as a label for \emph{the per-element block of interpolation
+degrees of freedom} --- whatever those degrees of freedom happen to be for the declared
+interpolation type --- and not as an assertion that the data lie at a set of geometric
+locations.  The field-array length rule $\sum_e N_\mathrm{DOFs}(e)$ and the element-index
+semantics below are identical for the nodal and modal flavours; only the meaning of an
+individual entry differs.
 
 \paragraph{Mandatory for high-order solutions.}
 For all high-order solutions, \texttt{GridLocation = InterpolationPoints} is required,
@@ -792,10 +879,13 @@ ordered set of monomials spanning the Pascal spaces.
 The cardinality of the modal basis is the
 same for every element shape of a given dimension --- the binomial coefficient
 \begin{equation}
-  N_\mathrm{modal} = \binom{p+d}{d}, \qquad d = \text{element dimension}, \quad p = \text{spatial order}
+  N_\mathrm{modal} = \binom{p+d}{d}, \qquad d = \text{element dimension}, \quad
+  p = \text{spatial order, i.e.\ polynomial degree}
 \end{equation}
 For space-time interpolation the cardinality is multiplied by $(q+1)$ where $q$ is the temporal
-order.  Consequently a \texttt{QUAD\_9} element used with order-2 modal interpolation stores
+order, again a degree.  Consequently a \texttt{QUAD\_9} element used with modal interpolation of
+degree $p=2$ (quadratic; \texttt{SpatialOrder} $=2$, per
+Section~\ref{sec:order-means-degree}) stores
 $\binom{4}{2} = 6$ monomial coefficients (not 9 --- 9 is the Lagrange-basis cardinality of the
 tensor-product space $\Qtp$).  The helper functions \texttt{cg\_element\_monomial\_size} and
 \texttt{cg\_solution\_monomial\_size} return $N_\mathrm{modal}$ for any supported element type
@@ -1106,10 +1196,12 @@ DataArray\_t<Character> LagrangeControlPointDistribution; \textrm{(o)}\\
 \};
 \end{sidsnode}
 
-\noindent \texttt{LagrangeControlPointDistribution} is present when
+\noindent \texttt{LagrangeControlPointDistribution} may be present when
 \texttt{LagrangeControlPoints} is present (i.e.\ the interpolation type is
-\texttt{ParametricLagrange}); see Section~\ref{sec:lagrange-distribution}
-and the File Mapping in Section~\ref{sec:filemap}.
+\texttt{ParametricLagrange}).  It is recommended but not required, and carries no
+information a reader needs in order to interpret the control points; see
+Section~\ref{sec:lagrange-distribution} and the File Mapping in
+Section~\ref{sec:filemap}.
 
 The interpolation type is not stored explicitly as a child node; it is inferred from
 which optional children are present:
@@ -1574,7 +1666,8 @@ Present for \texttt{ParametricMonomialsPascal}. \\
 \end{tabular}
 &
 Name of the distribution (e.g., \texttt{GaussLobattoLegendre}).\newline\newline
-Present when interpolation type is \texttt{ParametricLagrange}. \\
+Recommended, not required, when interpolation type is
+\texttt{ParametricLagrange}. \\
 \hline
 \end{tabularx}
 \captionof{table}{Node structure for \texttt{ElementInterpolation\_t}.}
@@ -1653,7 +1746,8 @@ Present for \texttt{ParametricMonomialsPascal} or \texttt{CartesianMonomialsPasc
 \end{tabular}
 &
 Name of the distribution (e.g., \texttt{GaussLobattoLegendre}).\newline\newline
-Present when interpolation type is \texttt{ParametricLagrange}. \\
+Recommended, not required, when interpolation type is
+\texttt{ParametricLagrange}. \\
 \hline
 \end{tabularx}
 \captionof{table}{Node structure for \texttt{SolutionInterpolation\_t}.}
@@ -1854,7 +1948,8 @@ A conforming reader must reject:
     array dimension is not~1;
   \item \texttt{DataArray\_t} children of \texttt{ElementInterpolation\_t} or
     \texttt{SolutionInterpolation\_t} whose name is anything other than
-    \texttt{LagrangeControlPoints} or \texttt{MonomialCoefficients};
+    \texttt{LagrangeControlPoints}, \texttt{MonomialCoefficients} or
+    \texttt{LagrangeControlPointDistribution};
   \item \texttt{SolutionInterpolation\_t} nodes that do not contain exactly one
     \texttt{InterpolationType\_t} child named \texttt{InterpolationType};
   \item Duplicate \texttt{ElementInterpolation\_t} nodes (same \texttt{ElementType\_t} tag) or
@@ -1869,6 +1964,12 @@ A conforming reader must reject:
 \noindent A conforming reader must also \emph{exclude} \texttt{CharacteristicLength} from
 the solution-field list of its parent \texttt{FlowSolution\_t}, and must not apply the
 field size rule of Section~\ref{sec:on-disk-layout} to it.
+
+\noindent A mismatch between \texttt{LagrangeControlPointDistribution} and the coordinates in
+\texttt{LagrangeControlPoints} is \emph{not} grounds for rejection.  The coordinates are
+authoritative (Section~\ref{sec:lagrange-distribution}): a conforming reader must build the
+basis from them and should warn about the disagreement, rather than failing the file or
+adopting the named family's nodes.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Cross-Validation Rules (Writer)}
@@ -1886,6 +1987,12 @@ field size rule of Section~\ref{sec:on-disk-layout} to it.
   \item Re-writing an existing \texttt{LagrangeControlPoints} or \texttt{MonomialCoefficients}
     array requires the file to be opened in \texttt{CG\_MODE\_MODIFY}; in
     \texttt{CG\_MODE\_WRITE} the second write must be rejected.
+  \item A writer must not record a \texttt{LagrangeControlPointDistribution} whose family
+    nodes disagree with the \texttt{LagrangeControlPoints} coordinates written on the same
+    node.  \texttt{cgnscheck} compares the two whenever both are present and reports a
+    mismatch --- an error under \texttt{cgnscheck -s}, a warning otherwise.  Because the
+    coordinates are authoritative (Section~\ref{sec:lagrange-distribution}), the remedy is to
+    correct or omit the name, never to alter the coordinates to match it.
   \item \texttt{cg\_sol\_interpolation\_order\_write} requires
     \texttt{GridLocation = InterpolationPoints} on the parent \texttt{FlowSolution\_t}.
     For backward compatibility with files written under earlier drafts, the library
@@ -2130,8 +2237,9 @@ in this case.
     \texttt{Charac\-teristic\-Length}.
   \item Both \texttt{Charac\-teristic\-Length} encodings handled on read: rank-1
     isotropic and rank-2 per-axis.
-  \item \texttt{LagrangeControlPointDistribution} attribute present on every
-    \texttt{ParametricLagrange} node.
+  \item Lagrange basis constructed from the stored \texttt{LagrangeControlPoints}
+    coordinates whether or not a \texttt{LagrangeControlPointDistribution} attribute
+    is present, and no distribution assumed when it is absent.
 \end{itemize}
 
 
