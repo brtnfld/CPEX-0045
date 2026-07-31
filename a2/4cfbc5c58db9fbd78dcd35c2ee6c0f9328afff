@@ -1,0 +1,23 @@
+COMMITTEE-DECISIONS.md
+  s_2487c6750a7f8e::t_bf94738d44be5e 253-255
+  s_2487c6750a7f8e::t_d96b69c09e8bfc 98-100
+  s_2487c6750a7f8e::t_33fc933f2a113a 29-33
+  s_2487c6750a7f8e::t_f70f882c1265cf 139-151
+  s_2487c6750a7f8e::t_c7d69fae641a0e 202-205
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "a24cfbc5c58db9fbd78dcd35c2ee6c0f9328afff",
+  "prompts": {},
+  "sessions": {
+    "s_2487c6750a7f8e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5285565-c8a4-4b85-a0c6-590ae3fbf9b2",
+        "model": "claude-opus-5"
+      },
+      "human_author": "M. Scot Breitenfeld <brtnfld@hdfgroup.org>"
+    }
+  }
+}
