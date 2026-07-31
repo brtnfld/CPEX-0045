@@ -255,11 +255,9 @@ or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard
     \texttt{InterpolationPoints} value as required \texttt{GridLocation} for
     \emph{all} high-order \texttt{FlowSolution\_t} nodes, both whole-zone
     (uniform-order) and subset (variable-order via \texttt{PointRange}/\texttt{PointList}),
-    and for both the Lagrange and the modal interpolation types --- despite its
-    name, the enumerator labels the per-element block of degrees of freedom, not
-    a set of geometric points, and modal \texttt{FlowSolution\_t} nodes store
-    coefficients rather than point values under it
-    (Section~\ref{sec:interpolation-points-loc}).
+    and for the modal types as well as Lagrange --- despite its name, the
+    enumerator labels the per-element block of degrees of freedom, not geometric
+    points (Section~\ref{sec:interpolation-points-loc}).
     \textit{Rationale:} \texttt{CellCenter} mandates a field-array length equal
     to the number of cells, which contradicts the high-order requirement
     $\sum_e N_\mathrm{DOFs}(e)$ and would fail standard SIDS sizing rules
@@ -648,16 +646,13 @@ CPEX-0045 adds a new \texttt{GridLocation\_t} enumeration value:
 \par}
 
 \paragraph{Interpretation of the name.}
-The enumerator is named for the Lagrange case, where the stored values genuinely are
-nodal values at the control points, but it applies unchanged to the modal types
-(\texttt{ParametricMonomialsPascal}, \texttt{CartesianMonomialsPascal}), where the stored
-values are expansion coefficients that are not associated with any point.  Read
-\texttt{InterpolationPoints} as a label for \emph{the per-element block of interpolation
-degrees of freedom} --- whatever those degrees of freedom happen to be for the declared
-interpolation type --- and not as an assertion that the data lie at a set of geometric
-locations.  The field-array length rule $\sum_e N_\mathrm{DOFs}(e)$ and the element-index
-semantics below are identical for the nodal and modal flavours; only the meaning of an
-individual entry differs.
+The enumerator is named for the Lagrange case but applies unchanged to the modal types, where
+the stored values are expansion coefficients not associated with any point.  Read
+\texttt{InterpolationPoints} as labelling \emph{the per-element block of interpolation degrees
+of freedom} --- whatever those are for the declared interpolation type --- not as an assertion
+that the data lie at geometric locations.  The length rule $\sum_e N_\mathrm{DOFs}(e)$ and the
+element-index semantics below apply identically to both; only the meaning of an individual
+entry differs.
 
 \paragraph{Mandatory for high-order solutions.}
 For all high-order solutions, \texttt{GridLocation = InterpolationPoints} is required,
@@ -1965,8 +1960,9 @@ A conforming reader must reject:
 the solution-field list of its parent \texttt{FlowSolution\_t}, and must not apply the
 field size rule of Section~\ref{sec:on-disk-layout} to it.
 
-\noindent A mismatch between \texttt{LagrangeControlPointDistribution} and the coordinates in
-\texttt{LagrangeControlPoints} is \emph{not} grounds for rejection.  The coordinates are
+\noindent A mismatch between
+\texttt{Lagrange\-Control\-Point\-Distribution}\allowbreak{} and the coordinates in
+\texttt{Lagrange\-Control\-Points} is \emph{not} grounds for rejection.  The coordinates are
 authoritative (Section~\ref{sec:lagrange-distribution}): a conforming reader must build the
 basis from them and should warn about the disagreement, rather than failing the file or
 adopting the named family's nodes.
