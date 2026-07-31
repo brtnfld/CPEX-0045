@@ -26,6 +26,11 @@ is open — and is not advocacy. The 2026-08-04 agenda follows the same conventi
 Implementation effort is not a decision factor. Nothing in CPEX-45 has been released, so no
 option is constrained by shipped code or archival files.
 
+Note that the placeholder framing does not fully succeed: the first reviewer to respond read it
+as an "implicit recommendation". Recording which option the draft implements appears to be
+unavoidably suggestive, so treat concurrence with a draft position as weaker evidence than an
+independently reasoned answer.
+
 ---
 
 ## A. Open decisions
@@ -90,6 +95,9 @@ implementations. This is only so the document is internally consistent while the
 open. Option 3 remains fully available: it is the only option under which the two children
 cannot contradict each other, because only one of them would be present.
 
+**Reviewer response (2026-07-30, Tobias Leicht).** Supports option 1 — what the draft does. No
+argument advanced for option 2 or 3.
+
 ---
 
 ### D-02 — Keep the `InterpolationPoints` enumerator name, or rename?
@@ -127,6 +135,19 @@ A better name is less wrong, not right.
 **Timing.** Once the enumerator is approved and the value ships, the name is effectively
 permanent, so this is best settled now rather than deferred — a point about reversibility, not
 about effort.
+
+**Reviewer response (2026-07-30, Tobias Leicht).** Supports keeping `InterpolationPoints`,
+while maintaining that the name is not "correct". Reasoning: the underlying problem is probably
+not resolvable, because `GridLocation` must be specified but in the modal case there is no
+location; and `InterpolationDOF` is not clearly better for intuitive understandability. Given
+that, keeping `InterpolationPoints` is the most consistent choice — it matches the concept of
+`GridLocation` — provided the generalised meaning in the monomial case is documented briefly
+but clearly.
+
+This converges with the draft, and independently reaches the same conclusion the register
+records above: no name repairs the abuse, so a better name would be less wrong rather than
+right. The reviewer asked for the gloss to be brief as well as clear; §New `GridLocation_t`
+Value currently spends a full paragraph on it, which may be worth tightening.
 
 ---
 
@@ -178,6 +199,10 @@ confusing "order-2 modal interpolation" example has been reworded to "degree $p=
 (quadratic)". Surfaced to the committee regardless, because if anyone *does* want the rename it
 has to happen alongside the other v3 wire-format changes rather than later.
 
+**Reviewer response (2026-07-30, Tobias Leicht).** Supports option 1 — keep the names, document
+the meaning. Note that this reviewer is the one who raised the issue, so the objection is
+satisfied by documentation rather than by a rename.
+
 ---
 
 ### Interactions between the open items
@@ -224,6 +249,9 @@ wording of B-1 and B-2 respectively.
 - **B-5** — SIDS File Mapping: on-disk shapes, data types, DOF ordering. New normative section.
 - **B-6** — Implementation Specification: order limits, validation, error codes, defaults.
   New normative section.
+
+**Reviewer position (2026-07-30, Tobias Leicht).** Would vote yes on all six. One reviewer, not
+a quorum — the motions still stand.
 
 The four `[CLARIFICATION]` items (`InterpolationOrders` encoding; `CharacteristicLength` is
 metadata not a field; element-tag normalisation; practical order ceiling of the monomial
