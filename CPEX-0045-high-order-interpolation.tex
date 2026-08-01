@@ -2067,7 +2067,11 @@ Figure~\ref{fig:coord-systems}, which is normative:
     plane $u+v+w = -1$.
   \item Prism (\texttt{PENTA}): the \texttt{TRI} cross-section above, in $(u,v)$, extruded
     along $w \in [-1, 1]$.
-  \item Pyramid (\texttt{PYRA}): see~\cite{BCD10}.
+  \item Pyramid (\texttt{PYRA}): $\{(u,v,w) : -1 \le w \le 1,\;
+    |u| \le \tfrac{1-w}{2},\; |v| \le \tfrac{1-w}{2}\}$ --- the square base
+    $[-1,1]^2$ at $w = -1$ contracting linearly to the apex $(0,0,1)$.  The
+    functional space on this domain is not a polynomial space and is defined
+    in~\cite{BCD10}; its cardinality is given in Section~\ref{sec:lagrange}.
 \end{itemize}
 
 \noindent\textbf{This is an interoperability requirement, not a recommendation.}  Control

@@ -160,11 +160,11 @@ Recorded so it does not get re-litigated:
 |----|-----------|
 | C1 | §Coordinate-System Conventions rewritten to the bi-unit domains, with `TRI` and `TETRA` given explicitly (constraint *and* vertex list, so the two cannot drift apart again), `PENTA` defined by reference to the corrected `TRI`, and the tensor-product entry relabelled "bi-unit cube" (`[-1,1]^d` is not the unit cube). Adds a lead sentence stating that all elements use `[-1,1]` rather than `[0,1]`, and that Figure 1 is normative. The closing paragraph now states this as an interoperability requirement and explains *why* a `[0,1]` simplex convention is undetectable after the fact — the previous text mentioned non-enforcement without saying what it implied. |
 | C2 | TETRA test point (−0.6,−0.2,−0.1) → **(−0.6,−0.5,−0.4)**, `u+v+w = −1.5 < −1`. All four points now carry their interiority condition inline, and the sentence states they are strictly interior to the domains of the corrected section. Verified programmatically: QUAD, HEXA, TRI and TETRA points are all strictly interior. |
+| m2 | **Fixed.** The PYRA parametric domain is now stated inline --- `{-1 <= w <= 1, |u| <= (1-w)/2, |v| <= (1-w)/2}`, the square base `[-1,1]^2` at `w = -1` contracting to the apex `(0,0,1)` --- verified against `figures/coord-pyra.jpg` (apex vertex 5 on the `w` axis at `+1`, square base vertices 1-4 at `w = -1`) and matching `highorder.rst:153`. `[BCD10]` is retained for what it actually supplies, the non-polynomial functional space, with a cross-reference to the cardinality formula. Every element type now has an explicit domain. |
 | m5 (part) | `HW08` is now cited, at the corrected reference-domain definition — its natural home. `CPEX0036`, `CPEX0038` and `Mathex` remain uncited. |
 
 Added `\label{sec:coord-conventions}` so the compliance tests can point at the domain definitions.
 
 **Not applied** — the remaining findings are unchanged and still open: M1 (the
 `LagrangeControlPointDistribution_t` enumeration is voted on and implemented but never defined in
-the document), M2, M3, M4, M5, M6, m1–m4, m6, s1–s3. Note that **m2 (the missing PYRA domain) is in
-the paragraph rewritten for C1** and is a one-line addition if wanted.
+the document), M2, M3, M4, M5, M6, m1, m3, m4, m6, s1–s3.
