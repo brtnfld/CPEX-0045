@@ -2049,22 +2049,35 @@ child read by \texttt{cg\_solution\_interpolation\_read}.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Coordinate-System Conventions}
+\label{sec:coord-conventions}
 % ─────────────────────────────────────────────────────────────────────────
 
-The natural parametric domains for the supported elements (illustrated in
-Figure~\ref{fig:coord-systems}) are conventional:
+All supported elements use the \emph{bi-unit} reference domain, i.e.\ each parametric
+coordinate ranges over $[-1, 1]$ rather than $[0, 1]$.  These are the standard reference
+elements of the high-order literature~\cite{HW08}, and they are the domains drawn in
+Figure~\ref{fig:coord-systems}, which is normative:
+
 \begin{itemize}
-  \item Tensor-product elements (\texttt{BAR}, \texttt{QUAD}, \texttt{HEXA}): unit cube
-    $[-1, 1]^d$.
-  \item Simplex elements (\texttt{TRI}, \texttt{TETRA}): unit simplex $\{u_i \ge 0,\;
-    \sum u_i \le 1\}$.
-  \item Prism (\texttt{PENTA}): triangular cross-section in $(u,v) \in \{u,v \ge 0,\;
-    u+v \le 1\}$ extruded along $w \in [-1, 1]$.
+  \item Tensor-product elements (\texttt{BAR}, \texttt{QUAD}, \texttt{HEXA}): the bi-unit
+    cube $[-1, 1]^d$.
+  \item Triangle (\texttt{TRI}): $\{(u,v) : u \ge -1,\; v \ge -1,\; u+v \le 0\}$, with
+    vertices $(-1,-1)$, $(1,-1)$, $(-1,1)$.  The hypotenuse is the line $u+v = 0$.
+  \item Tetrahedron (\texttt{TETRA}): $\{(u,v,w) : u,v,w \ge -1,\; u+v+w \le -1\}$, with
+    vertices $(-1,-1,-1)$, $(1,-1,-1)$, $(-1,1,-1)$, $(-1,-1,1)$.  The oblique face is the
+    plane $u+v+w = -1$.
+  \item Prism (\texttt{PENTA}): the \texttt{TRI} cross-section above, in $(u,v)$, extruded
+    along $w \in [-1, 1]$.
   \item Pyramid (\texttt{PYRA}): see~\cite{BCD10}.
 \end{itemize}
-The library does \emph{not} enforce these ranges on user-supplied control points; any
-\texttt{double} value is accepted.  Conformance with the conventional domain is the writer's
-responsibility.
+
+\noindent\textbf{This is an interoperability requirement, not a recommendation.}  Control
+points are stored as bare parametric coordinates, so a writer and a reader that assume
+different reference domains will exchange a file that is structurally valid and passes
+\texttt{cgnscheck} while being geometrically wrong.  A $[0,1]$-based simplex convention in
+particular is \emph{not} conformant: its coordinates are indistinguishable from valid
+bi-unit coordinates, so the error cannot be detected after the fact.  The library does
+\emph{not} enforce these ranges on user-supplied control points --- any \texttt{double}
+value is accepted --- which is precisely why conformance is the writer's responsibility.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Scope of \texttt{InterpolationPoints} Grid Location}
@@ -2176,9 +2189,11 @@ For \texttt{ParametricLagrange} interpolation of any supported element type and 
   \sum_{i=1}^{N} \lambda_i(\mathbf{u}) = 1
   \quad \text{for any } \mathbf{u} \text{ in the parametric domain},
 \end{equation}
-within tolerance $\epsilon = 10^{-12}$.  Reference test points: \texttt{QUAD} $p=2$ at
+within tolerance $\epsilon = 10^{-12}$.  Reference test points, each strictly interior to
+its reference domain (Section~\ref{sec:coord-conventions}): \texttt{QUAD} $p=2$ at
 $(u,v)=(0.3, -0.7)$; \texttt{HEXA} $p=2$ at $(0.5, -0.5, 0.2)$; \texttt{TRI} $p=2$ at
-$(-0.5, -0.3)$; \texttt{TETRA} $p=2$ at $(-0.6, -0.2, -0.1)$.
+$(-0.5, -0.3)$, for which $u+v = -0.8 < 0$; \texttt{TETRA} $p=2$ at $(-0.6, -0.5, -0.4)$,
+for which $u+v+w = -1.5 < -1$.
 
 \paragraph{Kronecker delta (Lagrange).}
 At each control point $\mathbf{u}_j$,
