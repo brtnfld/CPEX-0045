@@ -571,10 +571,16 @@ Recording it is nonetheless recommended, for three reasons:
     $[0,1]$-versus-$[-1,1]$ domain convention --- that are otherwise invisible.
 \end{itemize}
 
-\paragraph{Recommended attribute: \texttt{LagrangeControlPointDistribution}.}
-A \texttt{DataArray\_t} of \texttt{Character} type, child of \texttt{ElementInterpolation\_t}
-or \texttt{SolutionInterpolation\_t} when \texttt{InterpolationType} is
-\texttt{ParametricLagrange}.  Allowed values:
+\paragraph{Recommended attribute: \texttt{LagrangeControlPointDistribution\_t}.}
+An enumeration, stored as a labelled child node named
+\texttt{LagrangeControlPointDistribution} of \texttt{ElementInterpolation\_t} or
+\texttt{SolutionInterpolation\_t} when \texttt{InterpolationType} is
+\texttt{ParametricLagrange} --- the same convention used for \texttt{InterpolationType\_t}
+(Section~\ref{sec:interpolation-type}), and not the name-matched \texttt{DataArray\_t}
+convention used for the sibling \texttt{LagrangeControlPoints} and
+\texttt{MonomialCoefficients} children.  As with every CGNS enumeration, \texttt{Null} and
+\texttt{UserDefined} members exist for completeness, though in practice the node is simply
+omitted rather than written as \texttt{Null}.  The four named values:
 
 {\sloppy
 \begin{itemize}
@@ -1186,12 +1192,18 @@ same order (cf.\ Figure~\ref{fig:coord-systems}).}
 \end{v2quote}
 
 \begin{sidsnode}{ElementInterpolation\_t :=}
-ElementType\_t Element;                                  \textrm{(r)}\\
+\textbf{int Element;}                                    \textrm{(r)} \quad\textrm{/* ElementType\_t */}\\
 DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
 DataArray\_t<Float,DataSize[]> MonomialCoefficients;     \textrm{(o)}\\
-DataArray\_t<Character> LagrangeControlPointDistribution; \textrm{(o)}\\
+LagrangeControlPointDistribution\_t LagrangeControlPointDistribution; \textrm{(o)}\\
 \};
 \end{sidsnode}
+
+\noindent \texttt{Element} is the node's own \texttt{I4} payload (the
+\texttt{ElementType\_t} value), not a child --- the same convention used for
+\texttt{SolutionInterpolation\_t}'s triple (Section~\ref{sec:solution-interpolation}) and
+matching the File Mapping in Section~\ref{sec:filemap} and the reader-validation rule of
+Section~\ref{sec:validation}.
 
 \noindent \texttt{LagrangeControlPointDistribution} may be present when
 \texttt{LagrangeControlPoints} is present (i.e.\ the interpolation type is
@@ -1259,7 +1271,7 @@ are stored in a \texttt{SolutionInterpolation\_t} leaf attached to the correspon
 InterpolationType\_t InterpolationType;                  \textrm{(r)}\\
 DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
 DataArray\_t<Float,DataSize[]> MonomialCoefficients;     \textrm{(o)}\\
-DataArray\_t<Character> LagrangeControlPointDistribution; \textrm{(o)}\\
+LagrangeControlPointDistribution\_t LagrangeControlPointDistribution; \textrm{(o)}\\
 \};
 \end{sidsnode}
 
@@ -1591,6 +1603,11 @@ The cardinality of the interpolation functions is to be determined first by acce
 description of the interpolation.
 \end{v2quote}
 
+\noindent\textbf{Implementation note} --- superseded by Implementation note~2
+(Section~\ref{sec:flowsolution}): the \texttt{CellCenter} location in the v2 text above is
+not used for high-order solutions in v3.  All such \texttt{FlowSolution\_t} nodes use
+\texttt{GridLocation = InterpolationPoints}.
+
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Fortran Bindings}
 % ─────────────────────────────────────────────────────────────────────────
@@ -1658,11 +1675,15 @@ Present for \texttt{ParametricMonomialsPascal}. \\
 \hline
 \quad\quad\begin{tabular}[t]{@{}l@{}}
   name = LagrangeControlPointDistribution \\
-  datatype = \texttt{C1} \\
+  datatype = \texttt{\textbf{LagrangeControlPointDistribution\_t}} \\
+  data = \textless{}choice of distribution\textgreater{} \\
   cardinality = 0:1
 \end{tabular}
 &
-Name of the distribution (e.g., \texttt{GaussLobattoLegendre}).\newline\newline
+\texttt{GaussLobattoLegendre},\newline
+\texttt{Equidistant},\newline
+\texttt{GaussLegendre} or\newline
+\texttt{WarpAndBlend}.\newline\newline
 Recommended, not required, when interpolation type is
 \texttt{ParametricLagrange}. \\
 \hline
@@ -1738,11 +1759,15 @@ Present for \texttt{ParametricMonomialsPascal} or \texttt{CartesianMonomialsPasc
 \hline
 \quad\quad\begin{tabular}[t]{@{}l@{}}
   name = LagrangeControlPointDistribution \\
-  datatype = \texttt{C1} \\
+  datatype = \texttt{\textbf{LagrangeControlPointDistribution\_t}} \\
+  data = \textless{}choice of distribution\textgreater{} \\
   cardinality = 0:1
 \end{tabular}
 &
-Name of the distribution (e.g., \texttt{GaussLobattoLegendre}).\newline\newline
+\texttt{GaussLobattoLegendre},\newline
+\texttt{Equidistant},\newline
+\texttt{GaussLegendre} or\newline
+\texttt{WarpAndBlend}.\newline\newline
 Recommended, not required, when interpolation type is
 \texttt{ParametricLagrange}. \\
 \hline
@@ -1930,6 +1955,7 @@ from element geometry.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Validation Requirements (Reader)}
+\label{sec:validation}
 % ─────────────────────────────────────────────────────────────────────────
 
 A conforming reader must reject:
@@ -1945,10 +1971,12 @@ A conforming reader must reject:
     array dimension is not~1;
   \item \texttt{DataArray\_t} children of \texttt{ElementInterpolation\_t} or
     \texttt{SolutionInterpolation\_t} whose name is anything other than
-    \texttt{LagrangeControlPoints}, \texttt{MonomialCoefficients} or
-    \texttt{LagrangeControlPointDistribution};
+    \texttt{LagrangeControlPoints} or \texttt{MonomialCoefficients};
   \item \texttt{SolutionInterpolation\_t} nodes that do not contain exactly one
     \texttt{InterpolationType\_t} child named \texttt{InterpolationType};
+  \item more than one \texttt{LagrangeControlPointDistribution\_t} child under a single
+    parent, or one whose data is not a value named in
+    Section~\ref{sec:lagrange-distribution};
   \item Duplicate \texttt{ElementInterpolation\_t} nodes (same \texttt{ElementType\_t} tag) or
     duplicate \texttt{SolutionInterpolation\_t} nodes (same basic-type, \texttt{os},
     \texttt{ot}) within a family;

@@ -37,9 +37,11 @@ The remaining findings are one under-specified enumeration that is nonetheless i
 Motion and fully implemented, two internal encoding inconsistencies, and two cross-CPEX
 sequencing collisions that matter because 45, 49 and 50 are being voted at one meeting.
 
-**Recommendation**: fix C1 and C2 before the vote — both are single-paragraph edits. M1–M3 should
-be fixed before adoption because they change what a second implementer builds. M4/M5 are
-minute-book items, not document defects.
+**Recommendation**: fix C1, C2, M1, M2, M3 and M6 before the vote — none require the committee to
+choose between options, each has a single correct answer fixed by matching the text to the
+reference implementation the Motion already cites as evidence, and each is a place where the text
+under vote currently contradicts itself. M4/M5 are minute-book sequencing items, not document
+defects, and remain open for the Committee's record.
 
 ---
 
@@ -165,6 +167,18 @@ Recorded so it does not get re-litigated:
 
 Added `\label{sec:coord-conventions}` so the compliance tests can point at the domain definitions.
 
-**Not applied** — the remaining findings are unchanged and still open: M1 (the
-`LagrangeControlPointDistribution_t` enumeration is voted on and implemented but never defined in
-the document), M2, M3, M4, M5, M6, m1, m3, m4, m6, s1–s3.
+**M1, M2, M3 and M6 fixed** (2026-08-01, same pass). Build remains clean: 0 errors, 0 undefined
+references, 0 undefined citations, **0 overfull boxes**, 37 pp.
+
+| ID | Resolution |
+|----|-----------|
+| M1 + M2 | `LagrangeControlPointDistribution` is now specified as a labelled enumeration node, `LagrangeControlPointDistribution_t`, matching how `InterpolationType_t` is handled and how the branch already implements it — not the name-matched `DataArray_t<Character>` of the previous draft. Both SIDS blocks (`ElementInterpolation_t`, `SolutionInterpolation_t`) declare it as a typed child; both File Mapping tables show `datatype = LagrangeControlPointDistribution_t` in the `InterpolationType`-style bold, with the four named values moved to the comments column; reader validation now rejects more than one such child, or one whose data is not a named value, instead of merely whitelisting a `DataArray_t` name. The lead paragraph states the enumeration explicitly, including the `Null`/`UserDefined` members every CGNS enumeration carries. A second implementer working from the text now gets a self-describing node, matching the ballot item's own name and the reference implementation. |
+| M3 | `ElementInterpolation_t`'s SIDS block declared `ElementType_t Element; (r)` — child-node notation — while the File Mapping and reader validation (correctly) treat the element type as the node's own `I4` payload. Changed to `\textbf{int Element;} (r)` matching the bolded-payload convention `SolutionInterpolation_t`'s sibling block already uses correctly, with an explanatory note cross-referencing the File Mapping and validation sections so the convention is stated, not just implied by boldface. |
+| M6 | Added the missing "Implementation note" after the second, previously unannotated, retained v2 passage claiming the solution "is supposed to be attached to `CellCenter`" (in the MLL `FlowSolution_t` accessor section) — the identical claim earlier in the document already carries this correction (Implementation note 2); this occurrence now cross-references it instead of standing uncorrected. |
+
+One overfull hbox appeared from the new validation bullet's long unbreakable token and was fixed by
+shortening the sentence to point at Section~\ref{sec:lagrange-distribution} rather than repeating
+all four value names inline.
+
+**Not applied** — still open: M4, M5 (both minute-book sequencing items, not document defects), m1,
+m3, m4, m6, s1–s3.
