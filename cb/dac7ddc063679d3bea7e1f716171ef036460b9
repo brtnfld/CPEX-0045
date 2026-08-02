@@ -1,0 +1,30 @@
+CPEX-0045-high-order-interpolation.tex
+  s_5428cac5e39054::t_8427b5a9c814e8 1274
+  s_5428cac5e39054::t_5083b66b380f32 1195,1198,1202-1206
+  s_5428cac5e39054::t_7f74ee254e2d1e 574-583
+  s_5428cac5e39054::t_e582fcd6a37e5d 1974
+  s_5428cac5e39054::t_ab6cd8159df315 1678-1679,1683-1686,1762-1763,1767-1770
+  s_5428cac5e39054::t_949e255d6a9b98 1977-1979
+  s_5428cac5e39054::t_e1fce392704577 1606-1610
+  s_5428cac5e39054::t_e7155e997aff1a 1958
+  s_5428cac5e39054::t_4ed19e804f18ca 1207
+CPEX-0045-review-findings.md
+  s_5428cac5e39054::t_06b7a348af00b7 40-44
+  s_5428cac5e39054::t_871d7a3a07b9ba 170-184
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "cbdac7ddc063679d3bea7e1f716171ef036460b9",
+  "prompts": {},
+  "sessions": {
+    "s_5428cac5e39054": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed8dc27e-a7b2-49df-9d8e-680c0cbaccb2",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "M. Scot Breitenfeld <brtnfld@hdfgroup.org>"
+    }
+  }
+}
