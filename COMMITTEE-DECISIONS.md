@@ -313,6 +313,54 @@ If the committee chooses option 2 or 3 under D-01, this change must be revisited
 
 ---
 
+### C-05 — Mesh interpolation restricted to nodal; element-side modal API removed
+
+`DECIDED` (editorial, no vote; spec `66e9742`). Review asked why `ElementInterpolation_t` had a
+`MonomialCoefficients` child when the v2 principles restrict mesh geometry to control points.
+It should not have. The third v2 principle states that the mesh is always defined by control
+points in parametric space, and the second offers the three-way choice for the *solution*
+interpolation. Allowing modal geometry would also have required changing the element
+connectivity description, which v2 explicitly set out to preserve.
+
+An `ElementInterpolation_t` now carries no `MonomialCoefficients`, and its interpolation type is
+either `ParametricLagrange` or `IsoParametric`. Removed across thirteen spec sites, and from the
+implementation on `CPEX45_high_order_wip`: `cg_element_monomial_size` and
+`cg_element_interpolation_coefficients_{read,write}` in `cgnslib.h`/`cgnslib.c` and the Fortran
+bindings, the `monomialCoeff` field on the element struct, the reader branch in
+`cgns_internals.c` (which now rejects the child by name), and the element-modal tests.
+
+Two notes from the implementation pass. `test_modal_interpolation.c` had a `test_cartesian_modal`
+case writing `CartesianMonomialsPascal` onto an `ElementInterpolation_t` — a combination the
+document forbade *before* this change, so the suite was exercising something already invalid.
+Deleting it removes the only Cartesian-modal round-trip coverage in the tree; a solution-side
+replacement is worth adding. And no test asserted the element-modal path was rejected, so the
+new rejection is unexercised.
+
+### C-06 — `cg_element_interpolation_points_read` keeps returning `CG_NODE_NOT_FOUND` for `IsoParametric`
+
+`DECIDED` (design, no vote). Review asked whether returning `CG_NODE_NOT_FOUND` was a needless
+implementation choice, given the call could return the convention points as a convenience.
+
+It is deliberate, for a reason the draft had not stated: the return value distinguishes a file
+that recorded its own control-point distribution from one that did not. A writer storing
+`LagrangeControlPoints` may place them anywhere unisolvent — GLL, say — whereas `IsoParametric`
+means the equidistant lattice of the standard layout. Synthesising points would erase exactly
+the distinction the array exists to record, and it is the same distinction D-01 turns on.
+
+The reviewer's underlying need is nonetheless real, and wider than the read call: verified
+2026-07-31, the library has no route to those coordinates at all. `cg_npe_ho`,
+`cg_element_dimension`, `cg_element_basic_element_type` and
+`cg_element_lagrange_interpolation_size` are all file-independent element-type queries, but none
+returns locations, and neither does anything else. What resolves it is that the locations are not
+implementation-defined: they are the equidistant lattice on the element's reference domain in the
+standard node order, both normative in §Standard Coordinate Systems, so a reader reconstructs
+them from the element type alone. The spec now says so at the point of confusion, and records a
+convenience helper returning that lattice as a candidate addition — deliberately not a
+requirement, since the library currently holds neither the coordinates nor the high-order node
+ordering in any form, and a wrong table would be worse than none.
+
+---
+
 ## D. Closed
 
 *None yet.*

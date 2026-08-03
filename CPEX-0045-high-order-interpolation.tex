@@ -1558,6 +1558,26 @@ control-point write call follows.  The corresponding read function
 \texttt{cg\_element\_interpolation\_points\_read} returns \texttt{CG\_NODE\_NOT\_FOUND} on such
 nodes.
 
+\paragraph{Why the read call does not synthesise the points.}
+\texttt{CG\_NODE\_NOT\_FOUND} here is deliberate, not an omission.  The call reports what the
+file contains, and that distinction carries information the caller needs: a writer that stores
+\texttt{LagrangeControlPoints} may place them anywhere unisolvent --- Gauss-Lobatto-Legendre,
+for instance (Section~\ref{sec:lagrange-distribution}) --- whereas
+\texttt{IsoParametric} means the equidistant lattice of the standard node layout.  If the read
+call returned synthesised convention points, a reader could no longer tell a file that
+specified its own distribution from one that did not, which is precisely the distinction the
+control-point array exists to record.
+
+This costs the reader nothing, because the \texttt{IsoParametric} locations are not
+implementation-defined: they are the equidistant lattice on the reference domain of the element
+type, traversed in the standard node order, both of which are normative in
+Section~\ref{sec:coord-systems}.  A reader implementing the full interpolation machinery
+therefore reconstructs them from the element type alone, with no further information from the
+file and no ambiguity.  A future convenience helper returning that lattice for a given
+\texttt{ElementType\_t} --- alongside the existing element-type queries such as
+\texttt{cg\_element\_lagrange\_interpolation\_size} --- would save readers from tabulating it
+themselves, and is noted here as a candidate addition rather than a requirement.
+
 \paragraph{Modal coefficient access.}
 \texttt{cg\_solution\_interpolation\_coefficients\_\{read,write\}} operate on the
 \texttt{MonomialCoefficients} child of a \texttt{SolutionInterpolation\_t} node.  The expected
