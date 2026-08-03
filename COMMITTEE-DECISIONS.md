@@ -344,8 +344,16 @@ implementation choice, given the call could return the convention points as a co
 It is deliberate, for a reason the draft had not stated: the return value distinguishes a file
 that recorded its own control-point distribution from one that did not. A writer storing
 `LagrangeControlPoints` may place them anywhere unisolvent — GLL, say — whereas `IsoParametric`
-means the equidistant lattice of the standard layout. Synthesising points would erase exactly
-the distinction the array exists to record, and it is the same distinction D-01 turns on.
+means the equidistant lattice of the standard layout.
+
+**Correction (2026-08-01).** That rationale was overstated on first writing. It claimed
+synthesising points would erase a distinction the caller needs, but the interpolation type is
+separately available from `cg_element_interpolation_type_read`, so `CG_NODE_NOT_FOUND` is not
+the only signal and nothing would be erased. What actually justifies the current behaviour is
+narrower: for a mesh `IsoParametric` node no control points are stored *anywhere in the file*,
+so a points read has nothing to return and consistency with "a read call reports what the file
+contains" is the only argument in play. See **C-07** for the solution-side case, where that
+argument does not hold at all.
 
 The reviewer's underlying need is nonetheless real, and wider than the read call: verified
 2026-07-31, the library has no route to those coordinates at all. `cg_npe_ho`,
@@ -358,6 +366,43 @@ them from the element type alone. The spec now says so at the point of confusion
 convenience helper returning that lattice as a candidate addition — deliberately not a
 requirement, since the library currently holds neither the coordinates nor the high-order node
 ordering in any form, and a wrong table would be worse than none.
+
+### C-07 — `cg_solution_interpolation_points_read` now resolves the `IsoParametric` reference
+
+`DECIDED` (design, no vote). Review made the same objection about the *solution* side and added
+the decisive detail: for an `IsoParametric` solution the point distribution "exists directly or
+indirectly in the `ElementInterpolation` node". That is correct, and it makes the solution case
+materially different from C-06.
+
+An `IsoParametric` solution takes the mesh basis, and the spec already requires the referenced
+`ElementInterpolation_t` to exist in the family. So the points *are* in the file, one documented
+indirection away, and the indirection is what `IsoParametric` means. Returning
+`CG_NODE_NOT_FOUND` when the answer is retrievable was unhelpful, and the C-06 argument — that a
+read call reports what the file contains — does not apply, because the file does contain them.
+
+`cg_solution_interpolation_points_read` therefore resolves the reference and returns the
+referenced node's control points. It reports `CG_NODE_NOT_FOUND` only when that
+`ElementInterpolation_t` is itself `IsoParametric`, where nothing is stored anywhere and the
+standard node layout applies — which reduces to C-06.
+
+### C-08 — `SpatialOrder = 0` is valid, and does not constrain `TemporalOrder`
+
+`DECIDED` (defect fix, no vote). The draft flagged `SpatialOrder = 0` as an error under
+`cgnscheck -s` "because no valid Lagrange basis corresponds to it", and required
+`TemporalOrder > 0` to imply `SpatialOrder >= 1`. Review objected on two grounds, both correct:
+degree 0 is a perfectly valid modal basis, and a solution constant in space but varying in time
+is exactly what an unsteady finite-volume scheme produces.
+
+Neither restriction is defensible. v2's own text describes "standard interpolation (i.e.
+constant per element)" as a case the standard covers, so degree 0 was always in scope. For a
+modal basis it is the single constant monomial, $N_\mathrm{modal} = \binom{0+d}{d} = 1$; for a
+Lagrange basis it is one control point whose nodal function is identically one, and a single
+point is unisolvent for $P_0$ — so the "no valid Lagrange basis" claim was wrong too, not merely
+too broad. The coupling constraint went with it: `SpatialOrder = 0` with `TemporalOrder = q`
+gives $N_\mathrm{DOFs} = q+1$ per element by the general rule, with nothing special about it.
+
+Strict mode now errors outside $[0,100]$ rather than $[1,100]$, and no constraint couples the
+two orders. Needs matching changes in `cg_sol_interpolation_order_write` and `cgnscheck`.
 
 ---
 

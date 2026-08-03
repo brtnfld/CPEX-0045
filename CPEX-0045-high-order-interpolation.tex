@@ -88,7 +88,13 @@
   innerleftmargin=12pt, innerrightmargin=4pt,
   skipabove=0.6em, skipbelow=0.6em
 }
-\newmdenv[style=v2quotestyle]{v2quote}
+\newmdenv[style=v2quotestyle]{v2quoteframe}
+% Quoted v2 text is labelled so it is never mistaken for v3 normative text.
+\newenvironment{v2quote}
+  {\begin{v2quoteframe}%
+   \noindent{\footnotesize\sffamily\bfseries\color{cgnsblue}v2 text}%
+   \nopagebreak\par\nopagebreak\vspace{0.15em}}
+  {\end{v2quoteframe}}
 
 %% ── Motion box environment ───────────────────────────────────────────────
 \mdfdefinestyle{motionstyle}{
@@ -1881,18 +1887,37 @@ writers.
 
 \begin{itemize}
   \item \textbf{Geometric order} (encoded via \texttt{ElementType\_t}): bounded by the available
-    high-order tags, currently up to fourth order (e.g.\ \texttt{HEXA\_125}, \texttt{TETRA\_35}).
+    high-order tags, currently up to degree four (e.g.\ \texttt{HEXA\_125}, the degree-4
+    tensor-product hexahedron, and \texttt{TETRA\_35}, the degree-4 tetrahedron with
+    $\binom{4+3}{3} = 35$ nodes), per Section~\ref{sec:order-means-degree}.
   \item \textbf{Solution spatial order}: non-negative integer.  The library writer
     (\texttt{cg\_sol\_interpolation\_order\_write}) accepts any value $\ge 0$.
     \texttt{cgnscheck} warns when the spatial order falls outside the typical range
-    $[0,100]$; in strict CPEX-0045 mode (\texttt{cgnscheck -s}) values outside $[1,100]$
-    are reported as errors and \texttt{SpatialOrder = 0} is also flagged as an error
-    because no valid Lagrange basis corresponds to it.
+    $[0,100]$, and in strict CPEX-0045 mode (\texttt{cgnscheck -s}) reports values outside
+    $[0,100]$ as errors.
   \item \textbf{Solution temporal order}: non-negative integer.  \texttt{cgnscheck}
     warns when outside $[0,10]$; strict mode reports values outside $[0,10]$ as errors.
-  \item \textbf{Constraint}: \texttt{TemporalOrder} $> 0$ requires \texttt{SpatialOrder} $\ge 1$
-    (enforced by \texttt{cg\_sol\_interpolation\_order\_write}).
+  \item \textbf{No constraint couples the two.}  Any combination of a non-negative
+    \texttt{SpatialOrder} and a non-negative \texttt{TemporalOrder} is valid.
 \end{itemize}
+
+\paragraph{Degree zero is valid.}
+\texttt{SpatialOrder} $= 0$ denotes a single spatial degree of freedom per element --- a
+solution constant over the element --- and must be accepted.  It is the ``standard
+interpolation (i.e.\ constant per element)'' case of the v2 text
+(Section~\ref{sec:solution-interpolation}), and it is the natural representation of a
+finite-volume cell average.  For a modal basis it is the single constant monomial,
+$N_\mathrm{modal} = \binom{0+d}{d} = 1$.  For a Lagrange basis it is the one control point
+recorded in \texttt{LagrangeControlPoints}, whose nodal function is identically one; the point
+set is unisolvent for $P_0$, so the basis is well defined
+(Section~\ref{sec:lagrange-distribution}).
+
+Consequently \texttt{TemporalOrder} $> 0$ with \texttt{SpatialOrder} $= 0$ is also valid, and
+describes a per-element value that is constant in space and varies in time --- an unsteady
+finite-volume solution.  Its degree-of-freedom count is
+$N_\mathrm{DOFs} = 1 \times (q+1) = q+1$ per element, by the general rule of
+Section~\ref{sec:on-disk-layout}.  Neither the writer nor \texttt{cgnscheck} may reject these
+configurations.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{On-Disk Layout of Control Points and Coefficients}
@@ -2246,8 +2271,23 @@ cg_solution_interpolation_write(fn,bn,fam,"QUAD4_IsoParam",
 /* No cg_solution_interpolation_points_write call needed */
 \end{lstlisting}
 
-Reading back verifies that \texttt{cg\_solution\_interpolation\_points\_read} returns
-\texttt{CG\_NODE\_NOT\_FOUND} for an \texttt{IsoParametric} node.
+\paragraph{Reading points from an \texttt{IsoParametric} solution.}
+Unlike the mesh case (Section~\ref{sec:family-api}), the control points of an
+\texttt{IsoParametric} \emph{solution} are present in the file: the referenced
+\texttt{ElementInterpolation\_t} must exist, and it either stores
+\texttt{LagrangeControlPoints} or is itself \texttt{IsoParametric}.
+\texttt{cg\_solution\_interpolation\_points\_read} therefore \emph{resolves the reference} and
+returns the control points of that node, rather than reporting the solution node's own lack of
+a data array.  It returns \texttt{CG\_NODE\_NOT\_FOUND} only when the referenced
+\texttt{ElementInterpolation\_t} is itself \texttt{IsoParametric}, in which case no control
+points are stored anywhere and the standard node layout of
+Section~\ref{sec:coord-systems} applies.
+
+Returning the referenced points is not synthesis: the data is in the file, one documented
+indirection away, and the indirection is exactly what \texttt{IsoParametric} means.  A caller
+that needs to know the interpolation type asks for it directly through
+\texttt{cg\_solution\_interpolation\_read}, so nothing is lost by having the points call
+succeed.
 
 
 %% ═════════════════════════════════════════════════════════════════════════
