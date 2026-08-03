@@ -321,6 +321,21 @@ or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard
     text described an exact-tag match followed by a fallback, implying that high-order
     tags may be found on disk; they cannot, so the fallback is the operative path for
     any high-order query.  Resolution behaviour is unchanged.
+
+  \item \CLARIFY{} \textbf{Mesh interpolation is nodal only; modal types are
+    solution-only.}  States that an \texttt{ElementInterpolation\_t} node carries no
+    \texttt{MonomialCoefficients} child and that its interpolation type is therefore
+    either \texttt{ParametricLagrange} or \texttt{IsoParametric}.  Removes the
+    element-side modal API (\texttt{cg\_element\_monomial\_size},
+    \texttt{cg\_element\_interpolation\_coefficients\_\{read,write\}}) and the
+    corresponding File Mapping row (Section~\ref{sec:element-interpolation}).
+    \textit{Rationale:} the third v2 principle states that \emph{the mesh is always
+    defined using interpolations in parametric space, by specifying the set of control
+    points}, and the three-way choice of the second principle is offered for the
+    \emph{solution} interpolation.  Earlier v3 text nonetheless allowed
+    \texttt{ParametricMonomialsPascal} on the mesh, which contradicted that and would
+    have required changing the element connectivity description.  No approved v2
+    capability is withdrawn.
 \end{enumerate}
 
 \vspace{0.4em}
@@ -462,6 +477,7 @@ order, and time-dependent interpolants.
 %% ═════════════════════════════════════════════════════════════════════════
 
 \subsection{Conventions}
+\label{sec:conventions}
 
 \paragraph{``Order'' denotes polynomial degree.}
 \label{sec:order-means-degree}
@@ -890,9 +906,10 @@ order, again a degree.  Consequently a \texttt{QUAD\_9} element used with modal 
 degree $p=2$ (quadratic; \texttt{SpatialOrder} $=2$, per
 Section~\ref{sec:order-means-degree}) stores
 $\binom{4}{2} = 6$ monomial coefficients (not 9 --- 9 is the Lagrange-basis cardinality of the
-tensor-product space $\Qtp$).  The helper functions \texttt{cg\_element\_monomial\_size} and
-\texttt{cg\_solution\_monomial\_size} return $N_\mathrm{modal}$ for any supported element type
-and order combination.
+tensor-product space $\Qtp$).  The helper function \texttt{cg\_solution\_monomial\_size} returns
+$N_\mathrm{modal}$ for any supported element type and order combination.  Modal interpolation
+applies to solution data only, never to mesh geometry
+(Section~\ref{sec:element-interpolation}).
 
 \begin{v2quote}
 According to the underlying dimension the monomials are given by:
@@ -1194,7 +1211,6 @@ same order (cf.\ Figure~\ref{fig:coord-systems}).}
 \begin{sidsnode}{ElementInterpolation\_t :=}
 \textbf{int Element;}                                    \textrm{(r)} \quad\textrm{/* ElementType\_t */}\\
 DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
-DataArray\_t<Float,DataSize[]> MonomialCoefficients;     \textrm{(o)}\\
 LagrangeControlPointDistribution\_t LagrangeControlPointDistribution; \textrm{(o)}\\
 \};
 \end{sidsnode}
@@ -1213,14 +1229,23 @@ Section~\ref{sec:lagrange-distribution} and the File Mapping in
 Section~\ref{sec:filemap}.
 
 The interpolation type is not stored explicitly as a child node; it is inferred from
-which optional children are present:
+whether the one optional data array is present:
 \begin{itemize}
   \item \texttt{LagrangeControlPoints} present $\Rightarrow$ \texttt{ParametricLagrange}
-  \item \texttt{MonomialCoefficients} present $\Rightarrow$ \texttt{ParametricMonomialsPascal}
-  \item neither present $\Rightarrow$ \texttt{IsoParametric} (element's own coordinates used)
+  \item absent $\Rightarrow$ \texttt{IsoParametric} (element's own coordinates used)
 \end{itemize}
-\texttt{CartesianMonomialsPascal} applies to \emph{solution} interpolation only and cannot
-be attached to an \texttt{ElementInterpolation\_t} node.
+
+\paragraph{Mesh interpolation is nodal only.}
+Neither modal type may be attached to an \texttt{ElementInterpolation\_t} node, and this node
+therefore has no \texttt{MonomialCoefficients} child.  This follows the third of the v2
+principles quoted in Section~\ref{sec:conventions}: \emph{the mesh is always defined using
+interpolations in parametric space, by specifying the set of control points}.  The three
+choices of the second principle --- control points, a parametric Pascal space, and a Cartesian
+Pascal space --- are offered for the \emph{solution} interpolation; mesh geometry is restricted
+to control points, so that the element connectivity description need not change.  Accordingly
+\texttt{ParametricMonomialsPascal} and \texttt{CartesianMonomialsPascal} are both
+solution-only, and the only mesh interpolation types are \texttt{ParametricLagrange} and
+\texttt{IsoParametric}.
 
 \begin{v2quote}
 \textbf{Limitations}: The current proposal maintains \texttt{ElementType\_t} to describe both
@@ -1322,6 +1347,14 @@ solution on a 4th-order tetrahedron will be associated to element tag \texttt{TE
 interpolation (i.e.\ constant per element) applies.
 \end{v2quote}
 
+\noindent The \texttt{TETRA\_35} alternative in the passage above no longer arises on disk.
+Because writers normalise the stored tag, the block for that example is always written under
+\texttt{TETRA\_4}, and a \texttt{SolutionInterpolation\_t} tagged \texttt{TETRA\_35} is never
+produced.  The either/or the passage describes survives only on the \emph{query} side, where a
+caller may legitimately present the high-order or the basic tag and the lookup resolves both to
+the same node.  The v2 wording predates the normalisation rule stated above and is retained
+here for the historical record only.
+
 % ─────────────────────────────────────────────────────────────────────────
 \subsubsection{Addition to Section~7.7 (\texttt{FlowSolution\_t})}
 \label{sec:flowsolution}
@@ -1398,7 +1431,6 @@ plus \texttt{InterpolationOrders} as a SIDS conflict.
 \midrule
 ierr = cg\_element\_lagrange\_interpolation\_size(ElementType\_t t, cgsize\_t *sz) & r{-}{-} \\
 ierr = cg\_solution\_lagrange\_interpolation\_size(ElementType\_t t, int os, int ot, cgsize\_t *sz) & r{-}{-} \\
-ierr = cg\_element\_monomial\_size(ElementType\_t t, cgsize\_t *sz) & r{-}{-} \\
 ierr = cg\_solution\_monomial\_size(ElementType\_t t, int os, int ot, cgsize\_t *sz) & r{-}{-} \\
 \addlinespace
 ierr = cg\_element\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t t, int *cnt) & r{-}{-} \\
@@ -1460,8 +1492,6 @@ given type (and order) are already present.
 \texttt{cg\_solution\_interpolation\_points\_write(fn, bn, fam, sn, *pu, *pv, *pw, *pt)} & {-}wm \\
 \texttt{cg\_solution\_interpolation\_find(fn, bn, fam, et, os, ot, *sn, *it)} & r{-}{-} \\
 \addlinespace
-\texttt{cg\_element\_interpolation\_coefficients\_read(fn, bn, fam, en, *coeff)} & r{-}{-} \\
-\texttt{cg\_element\_interpolation\_coefficients\_write(fn, bn, fam, en, *coeff)} & {-}wm \\
 \texttt{cg\_solution\_interpolation\_coefficients\_read(fn, bn, fam, sn, *coeff)} & r{-}{-} \\
 \texttt{cg\_solution\_interpolation\_coefficients\_write(fn, bn, fam, sn, *coeff)} & {-}wm \\
 \addlinespace
@@ -1521,20 +1551,21 @@ The family contains the set of interpolation bases:
 
 \paragraph{IsoParametric mesh interpolation.}
 \texttt{cg\_element\_isoparametric\_write} is a convenience writer that creates an
-\texttt{ElementInterpolation\_t} node with neither \texttt{LagrangeControlPoints} nor
-\texttt{MonomialCoefficients}.  The interpolation type is implicitly
+\texttt{ElementInterpolation\_t} node without a \texttt{LagrangeControlPoints} child.  The
+interpolation type is implicitly
 \texttt{IsoParametric}: the element's own connectivity table coordinates are reused, and no
 control-point write call follows.  The corresponding read function
 \texttt{cg\_element\_interpolation\_points\_read} returns \texttt{CG\_NODE\_NOT\_FOUND} on such
 nodes.
 
 \paragraph{Modal coefficient access.}
-\texttt{cg\_element\_interpolation\_coefficients\_\{read,write\}} and the matching
-\texttt{cg\_solution\_interpolation\_coefficients\_\{read,write\}} pair operate on the
-\texttt{MonomialCoefficients} child.  The expected array length is given by
-\texttt{cg\_element\_monomial\_size} or \texttt{cg\_solution\_monomial\_size}.  These functions
-must not be called on a node whose interpolation type is \texttt{ParametricLagrange} or
-\texttt{IsoParametric}.
+\texttt{cg\_solution\_interpolation\_coefficients\_\{read,write\}} operate on the
+\texttt{MonomialCoefficients} child of a \texttt{SolutionInterpolation\_t} node.  The expected
+array length is given by \texttt{cg\_solution\_monomial\_size}.  These functions must not be
+called on a node whose interpolation type is \texttt{ParametricLagrange} or
+\texttt{IsoParametric}.  There is no element-side counterpart: mesh interpolation is nodal
+only (Section~\ref{sec:element-interpolation}), so no \texttt{ElementInterpolation\_t} node
+carries modal coefficients.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Accessing Data in the \texttt{FlowSolution\_t} Node}
@@ -1662,16 +1693,6 @@ A representative Fortran usage example is provided in \texttt{src/tests/test\_hi
 &
 \texttt{IndexDimension} is the rank of the array (2).\newline
 \texttt{Dimension} is the spatial dimension of the element. \\
-\hline
-\quad\quad\begin{tabular}[t]{@{}l@{}}
-  name = MonomialCoefficients \\
-  datatype = \texttt{R8} \\
-  data = \textless{}monomial coefficients\textgreater{} \\
-  cardinality = 0:1
-\end{tabular}
-&
-size from \texttt{cg\_element\_monomial\_size}.\newline\newline
-Present for \texttt{ParametricMonomialsPascal}. \\
 \hline
 \quad\quad\begin{tabular}[t]{@{}l@{}}
   name = LagrangeControlPointDistribution \\
@@ -1969,9 +1990,12 @@ A conforming reader must reject:
     array dimension is not~2;
   \item \texttt{MonomialCoefficients} children whose data type is not \texttt{R8} or whose
     array dimension is not~1;
-  \item \texttt{DataArray\_t} children of \texttt{ElementInterpolation\_t} or
-    \texttt{SolutionInterpolation\_t} whose name is anything other than
-    \texttt{LagrangeControlPoints} or \texttt{MonomialCoefficients};
+  \item \texttt{DataArray\_t} children of \texttt{SolutionInterpolation\_t} whose name is
+    anything other than \texttt{LagrangeControlPoints} or \texttt{MonomialCoefficients};
+  \item \texttt{DataArray\_t} children of \texttt{ElementInterpolation\_t} whose name is
+    anything other than \texttt{LagrangeControlPoints} --- in particular a
+    \texttt{MonomialCoefficients} child, which mesh interpolation never carries
+    (Section~\ref{sec:element-interpolation});
   \item \texttt{SolutionInterpolation\_t} nodes that do not contain exactly one
     \texttt{InterpolationType\_t} child named \texttt{InterpolationType};
   \item more than one \texttt{LagrangeControlPointDistribution\_t} child under a single
@@ -2008,8 +2032,7 @@ adopting the named family's nodes.
     \texttt{ParametricMonomialsPascal} or \texttt{CartesianMonomialsPascal} (modal nodes do not
     carry Lagrange points; coefficients must be written instead).
   \item \texttt{cg\_element\_isoparametric\_write} must not be followed by
-    \texttt{cg\_element\_interpolation\_points\_write} or
-    \texttt{cg\_element\_interpolation\_coefficients\_write} on the same node.
+    \texttt{cg\_element\_interpolation\_points\_write} on the same node.
   \item Re-writing an existing \texttt{LagrangeControlPoints} or \texttt{MonomialCoefficients}
     array requires the file to be opened in \texttt{CG\_MODE\_MODIFY}; in
     \texttt{CG\_MODE\_WRITE} the second write must be rejected.
@@ -2057,10 +2080,10 @@ adopting the named family's nodes.
 
 \paragraph{Detecting interpolation type at runtime.}
 For \texttt{ElementInterpolation\_t}, call \texttt{cg\_element\_interpolation\_type\_read}; the
-returned value is one of \texttt{ParametricLagrange}, \texttt{ParametricMonomialsPascal}, or
-\texttt{IsoParametric}.  \texttt{CartesianMonomialsPascal} is never returned for mesh
-interpolation.  For \texttt{SolutionInterpolation\_t}, the type is the \texttt{InterpolationType}
-child read by \texttt{cg\_solution\_interpolation\_read}.
+returned value is either \texttt{ParametricLagrange} or \texttt{IsoParametric}.  Neither modal
+type is ever returned for mesh interpolation
+(Section~\ref{sec:element-interpolation}).  For \texttt{SolutionInterpolation\_t}, the type is
+the \texttt{InterpolationType} child read by \texttt{cg\_solution\_interpolation\_read}.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Default Values}
