@@ -205,6 +205,42 @@ satisfied by documentation rather than by a rename.
 
 ---
 
+### D-04 — Specify a helper returning the standard control-point lattice, or defer it?
+
+- **Status:** `OPEN` — scope, not design
+- **Raised by:** reviewer comment on the IsoParametric point reads (Overleaf), made twice
+- **Spec refs:** §IsoParametric mesh interpolation; §Standard Coordinate Systems; §Mid-Level
+  Library API
+- **Current draft:** no such helper; the spec notes it as a candidate and leaves the choice open
+
+**This is not a design question.** The design was settled during review and is recorded in
+**C-06** and **C-07**: point reads report what the file contains, the solution-side call resolves
+its reference to the mesh node, and the mesh-side call returns `CG_NODE_NOT_FOUND` because
+nothing is stored anywhere. What remains is a scope call the committee is better placed to make.
+
+**The question.** For an `IsoParametric` mesh node the control-point locations are normatively
+defined — the equidistant lattice on the element's reference domain in standard node order — but
+the library cannot return them, and neither can anything else in the API. Verified 2026-07-31:
+`cg_npe_ho`, `cg_element_dimension`, `cg_element_basic_element_type` and
+`cg_element_lagrange_interpolation_size` are all file-independent element-type queries, and none
+returns locations. So every reader implementing the full interpolation machinery tabulates the
+standard node ordering itself, independently, from the figures.
+
+1. **Specify the helper in this amendment.** Adds one function returning the lattice for a given
+   `ElementType_t`. Removes duplicated work from every reader. Cost is real and worth stating
+   plainly: the library holds neither the coordinates nor the high-order node ordering in any
+   form, so it means encoding the ordering for seven element families up to degree four, checked
+   against the normative figures. A wrong table shipped as authoritative would be worse than no
+   table.
+2. **Defer to a future CPEX**, leaving the spec's note that it is a candidate. Keeps this
+   amendment's scope as-is; the duplicated-effort problem persists.
+
+**Reviewer position (2026-07-31, Tobias Leicht).** Raised the underlying point twice, on the mesh
+and solution sides, which is why it is on the agenda rather than closed. Has not stated a
+preference between specifying and deferring.
+
+---
+
 ### Interactions between the open items
 
 **Implementation effort is not a decision factor, and neither is compatibility.** Nothing in

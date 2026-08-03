@@ -1574,15 +1574,19 @@ call returned synthesised convention points, a reader could no longer tell a fil
 specified its own distribution from one that did not, which is precisely the distinction the
 control-point array exists to record.
 
-This costs the reader nothing, because the \texttt{IsoParametric} locations are not
-implementation-defined: they are the equidistant lattice on the reference domain of the element
-type, traversed in the standard node order, both of which are normative in
-Section~\ref{sec:coord-systems}.  A reader implementing the full interpolation machinery
-therefore reconstructs them from the element type alone, with no further information from the
-file and no ambiguity.  A future convenience helper returning that lattice for a given
-\texttt{ElementType\_t} --- alongside the existing element-type queries such as
-\texttt{cg\_element\_lagrange\_interpolation\_size} --- would save readers from tabulating it
-themselves, and is noted here as a candidate addition rather than a requirement.
+The locations themselves are never in doubt: they are the equidistant lattice on the reference
+domain of the element type, traversed in the standard node order, both of which are normative in
+Section~\ref{sec:coord-systems}.  A reader can therefore reconstruct them from the element type
+alone, with no further information from the file and no ambiguity.
+
+That is not the same as saying the reader is well served.  Reconstructing the lattice means
+tabulating the standard node ordering for every element family and order, which every reader
+implementing the full interpolation machinery would then do independently --- duplicated work
+that a library is better placed to do once.  A convenience helper returning that lattice for a
+given \texttt{ElementType\_t}, alongside the existing element-type queries such as
+\texttt{cg\_element\_lagrange\_interpolation\_size}, is therefore a genuine candidate for
+inclusion rather than a hypothetical one.  It is deliberately left open here: the choice is
+whether to specify it in this amendment or defer it, not whether it would be useful.
 
 \paragraph{Modal coefficient access.}
 \texttt{cg\_solution\_interpolation\_coefficients\_\{read,write\}} operate on the
