@@ -1575,9 +1575,10 @@ specified its own distribution from one that did not, which is precisely the dis
 control-point array exists to record.
 
 The locations themselves are never in doubt: they are the equidistant lattice on the reference
-domain of the element type, traversed in the standard node order, both of which are normative in
-Section~\ref{sec:coord-systems}.  A reader can therefore reconstruct them from the element type
-alone, with no further information from the file and no ambiguity.
+domain of the element type (Section~\ref{sec:coord-conventions}), traversed in the standard node
+order of Figure~\ref{fig:coord-systems} (Section~\ref{sec:coord-systems}).  Both are normative,
+so a reader can reconstruct the locations from the element type alone, with no further
+information from the file and no ambiguity.
 
 That is not the same as saying the reader is well served.  Reconstructing the lattice means
 tabulating the standard node ordering for every element family and order, which every reader
@@ -2284,8 +2285,15 @@ Unlike the mesh case (Section~\ref{sec:family-api}), the control points of an
 returns the control points of that node, rather than reporting the solution node's own lack of
 a data array.  It returns \texttt{CG\_NODE\_NOT\_FOUND} only when the referenced
 \texttt{ElementInterpolation\_t} is itself \texttt{IsoParametric}, in which case no control
-points are stored anywhere and the standard node layout of
-Section~\ref{sec:coord-systems} applies.
+points are stored anywhere and the reference domain of
+Section~\ref{sec:coord-conventions} with the node order of
+Figure~\ref{fig:coord-systems} applies.
+
+\emph{Implementation status:} this resolution is specified here but not yet implemented on the
+\texttt{CPEX45\_high\_order\_wip} branch, where the call still reports
+\texttt{CG\_NODE\_NOT\_FOUND} from the solution node's own missing array.  Like the
+coordinate-versus-distribution comparison of Section~\ref{sec:lagrange-distribution}, this is a
+normative statement the reference implementation has yet to catch up with.
 
 Returning the referenced points is not synthesis: the data is in the file, one documented
 indirection away, and the indirection is exactly what \texttt{IsoParametric} means.  A caller
