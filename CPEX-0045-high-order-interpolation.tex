@@ -645,6 +645,13 @@ Correspondingly, a writer \emph{must not} record a distribution name that disagr
 coordinates it writes.  \texttt{cgnscheck} compares the two whenever both are present and
 reports a mismatch: an error under \texttt{cgnscheck -s}, a warning otherwise.
 
+\emph{Implementation status:} this comparison is specified here but not yet implemented on the
+\texttt{CPEX45\_high\_order\_wip} branch, which validates the attribute's presence and value but
+does not check it against the stored coordinates.  Implementing the comparison requires node
+generation for the named families, which the library does not currently contain, so it is either
+to be implemented or the requirement withdrawn --- see the note in
+Section~\ref{sec:impl-spec}.
+
 \paragraph{Absent attribute.}
 If \texttt{LagrangeControlPointDistribution} is absent, a reader \emph{must} construct the
 basis from the stored \texttt{LagrangeControlPoints} coordinates directly.  It must
