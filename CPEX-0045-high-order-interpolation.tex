@@ -286,7 +286,7 @@ or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard
     and the corresponding accessors
     (\texttt{cg\_sol\_interpolation\_order\_\{read,write\}} $\to$
     \texttt{cg\_sol\_interpolation\_degree\_\{read,write\}}, with scalar arguments
-    \texttt{sd}/\texttt{td}).  \textit{Rationale:} v2 used \emph{order} to mean polynomial
+    \texttt{spatialDegree}/\texttt{temporalDegree}).  \textit{Rationale:} v2 used \emph{order} to mean polynomial
     \emph{degree} throughout ---
     the common convention calls a degree-$p$ approximation order $p+1$ --- so the field name
     invited exactly the off-by-one misreading Section~\ref{sec:order-means-degree} exists to
@@ -524,8 +524,8 @@ CPEX-0045 v3 resolves it by renaming rather than by documenting around it:
 \texttt{InterpolationDegrees} rather than \texttt{InterpolationOrders}
 (Section~\ref{sec:filemap}).  The corresponding Mid-Level Library accessors are
 \texttt{cg\_sol\_interpolation\_degree\_\{read,write\}}, and their scalar arguments are named
-\texttt{sd} and \texttt{td}.  A reader no longer has to be told which convention a numeric
-field uses; the field name states it.
+\texttt{spatialDegree} and \texttt{temporalDegree}.  A reader no longer has to be told which
+convention a numeric field uses; the field name states it.
 
 \paragraph{``Geometric order'' is a separate, unrenamed concept.}
 The \texttt{ElementType\_t} tag numbering --- e.g.\ \texttt{TETRA\_35} versus \texttt{TETRA\_4}
@@ -1477,11 +1477,11 @@ plus \texttt{InterpolationDegrees} as a SIDS conflict.
 \textbf{Function signature} & \textbf{Modes} \\
 \midrule
 ierr = cg\_element\_lagrange\_interpolation\_size(ElementType\_t t, cgsize\_t *sz) & r{-}{-} \\
-ierr = cg\_solution\_lagrange\_interpolation\_size(ElementType\_t t, int sd, int td, cgsize\_t *sz) & r{-}{-} \\
-ierr = cg\_solution\_monomial\_size(ElementType\_t t, int sd, int td, cgsize\_t *sz) & r{-}{-} \\
+ierr = cg\_solution\_lagrange\_interpolation\_size(ElementType\_t t, int os, int ot, cgsize\_t *sz) & r{-}{-} \\
+ierr = cg\_solution\_monomial\_size(ElementType\_t t, int os, int ot, cgsize\_t *sz) & r{-}{-} \\
 \addlinespace
 ierr = cg\_element\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t t, int *cnt) & r{-}{-} \\
-ierr = cg\_solution\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t t, int sd, int td, int *cnt) & r{-}{-} \\
+ierr = cg\_solution\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t t, int os, int ot, int *cnt) & r{-}{-} \\
 \bottomrule
 \end{tabular}
 \caption{Helper functions: interpolation space sizes and family query counts.}
@@ -1497,8 +1497,8 @@ ierr = cg\_solution\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t 
 \textbf{Parameter} & \textbf{Description} \\
 \midrule
 \texttt{t}   & Element type \\
-\texttt{sd}  & Spatial interpolation degree \\
-\texttt{td}  & Temporal interpolation degree \\
+\texttt{os}  & Spatial interpolation degree \\
+\texttt{ot}  & Temporal interpolation degree \\
 \texttt{sz}  & Output: cardinality of the interpolation space \\
 \texttt{cnt} & Output: number of matching interpolation nodes in the family \\
 \bottomrule
@@ -1533,11 +1533,11 @@ given type (and order) are already present.
 \texttt{cg\_element\_isoparametric\_write(fn, bn, fam, name, et, *en)} & {-}wm \\
 \addlinespace
 \texttt{cg\_nsolution\_interpolation\_read(fn, bn, fam, *ns)} & r{-}{-} \\
-\texttt{cg\_solution\_interpolation\_read(fn, bn, fam, sn, name, *et, *sd, *td, *it)} & r{-}{-} \\
+\texttt{cg\_solution\_interpolation\_read(fn, bn, fam, sn, name, *et, *os, *ot, *it)} & r{-}{-} \\
 \texttt{cg\_solution\_interpolation\_points\_read(fn, bn, fam, sn, *pu, *pv, *pw, *pt)} & r{-}{-} \\
-\texttt{cg\_solution\_interpolation\_write(fn, bn, fam, name, et, sd, td, it, *sn)} & {-}wm \\
+\texttt{cg\_solution\_interpolation\_write(fn, bn, fam, name, et, os, ot, it, *sn)} & {-}wm \\
 \texttt{cg\_solution\_interpolation\_points\_write(fn, bn, fam, sn, *pu, *pv, *pw, *pt)} & {-}wm \\
-\texttt{cg\_solution\_interpolation\_find(fn, bn, fam, et, sd, td, *sn, *it)} & r{-}{-} \\
+\texttt{cg\_solution\_interpolation\_find(fn, bn, fam, et, os, ot, *sn, *it)} & r{-}{-} \\
 \addlinespace
 \texttt{cg\_solution\_interpolation\_coefficients\_read(fn, bn, fam, sn, *coeff)} & r{-}{-} \\
 \texttt{cg\_solution\_interpolation\_coefficients\_write(fn, bn, fam, sn, *coeff)} & {-}wm \\
@@ -1568,8 +1568,8 @@ given type (and order) are already present.
 \texttt{ns}   & Number of solution interpolation blocks & in/out \\
 \texttt{sn}   & Solution interpolation index number; returned as an output by
   \texttt{cg\_solution\_interpolation\_find} & in/out \\
-\texttt{sd}   & Spatial interpolation degree & in \\
-\texttt{td}   & Temporal interpolation degree & in \\
+\texttt{os}   & Spatial interpolation degree & in \\
+\texttt{ot}   & Temporal interpolation degree & in \\
 \texttt{it}   & Interpolation type (\texttt{InterpolationType\_t}) & in/out \\
 \texttt{pu}   & Control points --- $u$-coordinate & out \\
 \texttt{pv}   & Control points --- $v$-coordinate (\texttt{NULL} for 1D) & out \\
@@ -1648,22 +1648,22 @@ carries modal coefficients.
 \centering
 \small
 \rowcolors{2}{cgnslight!20}{white}
-\begin{tabular}{@{} l c @{}}
+\begin{tabular}{@{} >{\raggedright\ttfamily\small}p{0.82\linewidth} c @{}}
 \toprule
-\textbf{Function signature} & \textbf{Modes} \\
+\textbf{\normalfont Function signature} & \textbf{\normalfont Modes} \\
 \midrule
-\texttt{cg\_sol\_ptset\_info(fn, bn, zn, sn, *ptype, *npnts)} & r{-}{-} \\
-\texttt{cg\_sol\_ptset\_read(fn, bn, zn, sn, *pnts)} & r{-}{-} \\
-\texttt{cg\_sol\_ptset\_write(fn, bn, zn, name, loc, ptype, npnts, *pnts, *sn)} & {-}wm \\
+cg\_sol\_ptset\_info(fn, bn, zn, sn, *ptype, *npnts) & r{-}{-} \\
+cg\_sol\_ptset\_read(fn, bn, zn, sn, *pnts) & r{-}{-} \\
+cg\_sol\_ptset\_write(fn, bn, zn, name, loc, ptype, npnts, *pnts, *sn) & {-}wm \\
 \addlinespace
-\texttt{cg\_sol\_interpolation\_degree\_read(fn, bn, zn, sn, *sd, *td)} & r{-}{-} \\
-\texttt{cg\_sol\_interpolation\_degree\_write(fn, bn, zn, sn, sd, td)} & {-}wm \\
+cg\_sol\_interpolation\_degree\_read(fn, bn, zn, sn, *spatialDegree, *temporalDegree) & r{-}{-} \\
+cg\_sol\_interpolation\_degree\_write(fn, bn, zn, sn, spatialDegree, temporalDegree) & {-}wm \\
 \addlinespace
-\texttt{cg\_sol\_characteristic\_length\_read(fn, bn, zn, sn, *nscale, *numElements, *h\_e)} & r{-}{-} \\
-\texttt{cg\_sol\_characteristic\_length\_write(fn, bn, zn, sn, nscale, numElements, *h\_e)} & {-}wm \\
+cg\_sol\_characteristic\_length\_read(fn, bn, zn, sn, *nscale, *numElements, *h\_e) & r{-}{-} \\
+cg\_sol\_characteristic\_length\_write(fn, bn, zn, sn, nscale, numElements, *h\_e) & {-}wm \\
 \bottomrule
 \end{tabular}
-\caption{FlowSolution-level interpolation order and characteristic-length API.}
+\caption{FlowSolution-level interpolation degree and characteristic-length API.}
 \label{tab:sol-api}
 \end{table}
 
@@ -1683,8 +1683,8 @@ carries modal coefficients.
 \texttt{npnts}& Number of points in the point set & out \\
 \texttt{pnts} & Point set data & in/out \\
 \texttt{loc}  & Grid location (\texttt{InterpolationPoints} for high-order; both uniform and variable-order) & in \\
-\texttt{sd}   & Spatial interpolation degree & in/out \\
-\texttt{td}   & Temporal interpolation degree & in/out \\
+\texttt{spatialDegree}  & Spatial interpolation degree & in/out \\
+\texttt{temporalDegree} & Temporal interpolation degree & in/out \\
 \texttt{nscale} & Number of normalisation factors per element: \texttt{1} selects the
   isotropic encoding, \texttt{PhysDim} the per-axis encoding & in/out \\
 \texttt{numElements} & Number of elements covered by the solution block & in/out \\
@@ -2094,8 +2094,8 @@ A conforming reader must reject:
     parent, or one whose data is not a value named in
     Section~\ref{sec:lagrange-distribution};
   \item Duplicate \texttt{ElementInterpolation\_t} nodes (same \texttt{ElementType\_t} tag) or
-    duplicate \texttt{SolutionInterpolation\_t} nodes (same basic-type, \texttt{sd},
-    \texttt{td}) within a family;
+    duplicate \texttt{SolutionInterpolation\_t} nodes (same basic-type, \texttt{os},
+    \texttt{ot}) within a family;
   \item \texttt{CharacteristicLength} children whose data type is not \texttt{R8}, whose
     array rank is neither~1 nor~2, whose \texttt{nscale} (rank-2 only) is neither~1 nor
     \texttt{PhysDim}, whose element count disagrees with the block, or which contain a
@@ -2316,7 +2316,7 @@ the same element type in the family).  No \texttt{LagrangeControlPoints} or
 \begin{lstlisting}[language=C,basicstyle=\ttfamily\small]
 int sn;
 cg_solution_interpolation_write(fn,bn,fam,"QUAD4_IsoParam",
-    QUAD_4, /*sd=*/1, /*td=*/0, IsoParametric, &sn);
+    QUAD_4, /*os=*/1, /*ot=*/0, IsoParametric, &sn);
 /* No cg_solution_interpolation_points_write call needed */
 \end{lstlisting}
 
