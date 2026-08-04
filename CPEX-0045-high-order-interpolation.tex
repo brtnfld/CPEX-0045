@@ -173,10 +173,10 @@ E-mail            & \href{mailto:koen.hillewaert@cenaero.be}{koen.hillewaert@cen
 v3 Revision Author & M. Scot Breitenfeld, The HDF Group ---
   \href{mailto:brtnfld@hdfgroup.org}{brtnfld@hdfgroup.org} \\
 Date First Posted & Mar.\ 26, 2019 \\
-Date of Revision  & May\ 4, 2026 \\
-SIDS Status       & v2 accepted; v3 amendment pending Steering Committee vote \\
-Filemap Status    & v2 accepted; v3 amendment pending Steering Committee vote \\
-MLL Status        & v2 accepted; v3 amendment pending Steering Committee vote \\
+Date of Revision  & Aug.\ 4, 2026 \\
+SIDS Status       & accepted; awaiting implementation (v3 adopted 2026-08-04) \\
+Filemap Status    & accepted; awaiting implementation (v3 adopted 2026-08-04) \\
+MLL Status        & accepted; awaiting implementation (v3 adopted 2026-08-04) \\
 Reference impl.\  & branch \texttt{CPEX45\_high\_order\_wip} \\
 \bottomrule
 \end{tabular}
@@ -223,7 +223,7 @@ Sample: text in this style is verbatim or near-verbatim from CPEX-0045 v2.
     \texttt{ParametricLagrange}, \texttt{ParametricMonomialsPascal},
     \texttt{CartesianMonomialsPascal}, \texttt{IsoParametric}.
   \item Support for purely spatial and space-time interpolation via
-    \texttt{SpatialOrder} and \texttt{TemporalOrder} fields.
+    \texttt{SpatialDegree} and \texttt{TemporalDegree} fields.
   \item High-order solution data stored in existing \texttt{FlowSolution\_t}
     nodes; polynomial orders recorded per solution block.
   \item Scope restricted to unstructured mesh computations.
@@ -279,9 +279,26 @@ or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard
     (Section~\ref{sec:impl-spec}), but conformant \emph{writers} must use
     \texttt{InterpolationPoints} exclusively.
 
-  \item \CLARIFY{} \textbf{\texttt{InterpolationOrders} encoding.}
-    Formalises the on-disk representation of \texttt{SpatialOrder} and
-    \texttt{TemporalOrder} as a 2-element \texttt{IndexArray\_t} child of
+  \item \NEW{} \textbf{\texttt{SpatialOrder}/\texttt{TemporalOrder} renamed to
+    \texttt{SpatialDegree}/\texttt{TemporalDegree}.}
+    Renames the two solution-interpolation fields, the \texttt{FlowSolution\_t} child
+    that carries them (\texttt{InterpolationOrders} $\to$ \texttt{InterpolationDegrees}),
+    and the corresponding accessors
+    (\texttt{cg\_sol\_interpolation\_order\_\{read,write\}} $\to$
+    \texttt{cg\_sol\_interpolation\_degree\_\{read,write\}}, with scalar arguments
+    \texttt{sd}/\texttt{td}).  \textit{Rationale:} v2 used \emph{order} to mean polynomial
+    \emph{degree} throughout ---
+    the common convention calls a degree-$p$ approximation order $p+1$ --- so the field name
+    invited exactly the off-by-one misreading Section~\ref{sec:order-means-degree} exists to
+    prevent.  Renaming removes the ambiguity at its source instead of documenting around it.
+    Element-type \emph{geometric order} (Section~\ref{sec:impl-spec}) is a separate,
+    pre-existing SIDS concept and keeps its name; only the fields CPEX-0045 itself introduces
+    are renamed.  No file has ever stored the old names (Section~\ref{sec:conventions}), so
+    this is a wire-format change with no legacy data to reconcile.
+
+  \item \CLARIFY{} \textbf{\texttt{InterpolationDegrees} encoding.}
+    Formalises the on-disk representation of \texttt{SpatialDegree} and
+    \texttt{TemporalDegree} as a 2-element \texttt{IndexArray\_t} child of
     \texttt{FlowSolution\_t}.  Information content is identical to v2.
 
   \item \NEW{} \textbf{Mandatory coordinate normalisation for Cartesian modal,
@@ -396,13 +413,17 @@ space-time mesh-interpolation node.
 \begin{motionbox}
 \textbf{Motion.}
 The CGNS Steering Committee moves to adopt \textbf{CPEX-0045 version 3.0}
-(\today) as an amendment to the previously approved v2, incorporating:
+as an amendment to the previously approved v2, incorporating:
 (1)~the \texttt{LagrangeControlPointDistribution\_t} enum and its associated
-child node; (2)~\texttt{GridLocation = InterpolationPoints} for all high-order
+child node, \textbf{recommended} rather than required (D-01); (2)~the
+\texttt{GridLocation\_t} enumerator \textbf{\texttt{InterpolationPoints}},
+\textbf{retained under its existing name} (D-02), for all high-order
 solutions, both uniform-order (whole-zone) and variable-order
-(\texttt{PointRange}/\texttt{PointList} subset); (3)~the
-\texttt{InterpolationOrders} child of \texttt{FlowSolution\_t} as the normative
-on-disk encoding; (4)~mandatory coordinate normalisation for Cartesian modal
+(\texttt{PointRange}/\texttt{PointList} subset); (3)~the \textbf{rename} of
+\texttt{SpatialOrder}/\texttt{TemporalOrder} to \texttt{SpatialDegree}/
+\texttt{TemporalDegree} (D-03), and of the \texttt{FlowSolution\_t} child that
+carries them to \texttt{InterpolationDegrees}, as the normative on-disk
+encoding; (4)~mandatory coordinate normalisation for Cartesian modal
 interpolation, with a normative \texttt{CharacteristicLength} child of
 \texttt{FlowSolution\_t} supporting both an isotropic (rank-1) and a per-axis
 (rank-2) encoding, recorded by the writer rather than recomputed by the reader;
@@ -410,15 +431,15 @@ interpolation, with a normative \texttt{CharacteristicLength} child of
 Specification sections as normative components of the standard; and (6)~the
 clarifications listed above, namely that \texttt{CharacteristicLength} is
 excluded from the \texttt{FlowSolution\_t} field list and that the element tag
-stored in \texttt{SolutionInterpolation\_t} is the basic (linear) tag.
+stored in \texttt{SolutionInterpolation\_t} is the basic (linear) tag.  The
+control-point lattice helper raised alongside D-01/D-02/D-03 is
+\textbf{deferred to a future CPEX}, not adopted here.
 
 \medskip
-\noindent\textbf{Moved by:}\quad\underline{\hspace{5.8cm}}\\[0.9em]
-\quad\textbf{Seconded by:}\quad\underline{\hspace{5cm}}\\[0.9em]
-\noindent\textbf{Vote:}~~For:\underline{\hspace{1.4cm}}
-Against:\underline{\hspace{1.4cm}}
-Abstain:\underline{\hspace{1.4cm}}
-\quad\textbf{Result:}\underline{\hspace{4.5cm}}
+\noindent\textbf{Result: ADOPTED} --- SIDS, Filemap and MLL, by the CGNS
+Steering Committee on \textbf{2026-08-04}.  See the meeting minutes at
+\url{https://github.com/CGNS/CGNS/wiki/2026} (section 2026-08-04) for the roll call
+and the vote on each decision and ballot item.
 \end{motionbox}
 
 }% end \sloppy group
@@ -485,22 +506,35 @@ order, and time-dependent interpolants.
 \subsection{Conventions}
 \label{sec:conventions}
 
-\paragraph{``Order'' denotes polynomial degree.}
+\paragraph{``Order'' fields are named ``degree'' in v3.}
 \label{sec:order-means-degree}
-Throughout CPEX-0045, and in v2 before it, \emph{order} means the polynomial \emph{degree}
-of the expansion --- not the number of terms, and not the degree plus one.
-\texttt{SpatialOrder} $= p$ means the interpolation space contains the polynomials of
-degree $\le p$: $p=1$ is linear, $p=2$ is quadratic.  Likewise \texttt{TemporalOrder}
-$= q = 0$ denotes data that is constant in time, not linear in time.  This differs from the
-common convention under which a degree-$p$ approximation is called order $p+1$, so a
-``second-order'' method in that sense corresponds to $p=1$ here.
+v2 named the spatial and temporal quantities \texttt{SpatialOrder} and \texttt{TemporalOrder},
+but used \emph{order} to mean the polynomial \emph{degree} of the expansion --- not the number
+of terms, and not the degree plus one.  $p=1$ is linear, $p=2$ is quadratic; a temporal value of
+$q=0$ denotes data constant in time, not linear in time.  This differs from the common
+convention under which a degree-$p$ approximation is called order $p+1$, so a
+``second-order'' method in that sense corresponds to $p=1$ here.  v2's own text already used
+the two words for the same thing --- it describes the modal choices as ``the maximum
+\emph{degree} of a Pascal polynomial space'' while naming the recorded field \texttt{Order} ---
+so the mismatch was inherited, not introduced by v3.
 
-The v2 usage is retained because \texttt{InterpolationOrders}, \texttt{SpatialOrder} and
-\texttt{TemporalOrder} are established on-disk node and API argument names, and because v2's
-own text is already explicit that what is recorded is a degree --- it describes the modal
-choices as ``the maximum \emph{degree} of a Pascal polynomial space'' and defines $q=0$ as
-the purely spatial case.  To keep the two readings from being confused, this document writes
-``degree'' explicitly wherever the numeric value of $p$ or $q$ appears in prose.
+CPEX-0045 v3 resolves it by renaming rather than by documenting around it:
+\texttt{SpatialOrder} and \texttt{TemporalOrder} are \texttt{SpatialDegree} and
+\texttt{TemporalDegree}, and the \texttt{FlowSolution\_t} child that carries them is
+\texttt{InterpolationDegrees} rather than \texttt{InterpolationOrders}
+(Section~\ref{sec:filemap}).  The corresponding Mid-Level Library accessors are
+\texttt{cg\_sol\_interpolation\_degree\_\{read,write\}}, and their scalar arguments are named
+\texttt{sd} and \texttt{td}.  A reader no longer has to be told which convention a numeric
+field uses; the field name states it.
+
+\paragraph{``Geometric order'' is a separate, unrenamed concept.}
+The \texttt{ElementType\_t} tag numbering --- e.g.\ \texttt{TETRA\_35} versus \texttt{TETRA\_4}
+--- is conventionally called the element's \emph{geometric order} in the base SIDS, and that
+usage predates CPEX-0045 and is outside its scope: this amendment renames only the
+interpolation-degree fields it itself introduces, not the pre-existing element-type
+vocabulary.  Geometric order also denotes a degree in the sense above (a ``4th-order''
+element is degree~4, per Section~\ref{sec:impl-spec}), so the same order/degree distinction
+applies to it in prose, even though the identifier itself keeps the word ``order''.
 
 \begin{v2quote}
 \textbf{Modifications to the SIDS:}
@@ -916,11 +950,11 @@ same for every element shape of a given dimension --- the binomial coefficient
 \end{equation}
 For space-time interpolation the cardinality is multiplied by $(q+1)$ where $q$ is the temporal
 order, again a degree.  Consequently a \texttt{QUAD\_9} element used with modal interpolation of
-degree $p=2$ (quadratic; \texttt{SpatialOrder} $=2$, per
+degree $p=2$ (quadratic; \texttt{SpatialDegree} $=2$, per
 Section~\ref{sec:order-means-degree}) stores
 $\binom{4}{2} = 6$ monomial coefficients (not 9 --- 9 is the Lagrange-basis cardinality of the
 tensor-product space $\Qtp$).  The helper function \texttt{cg\_solution\_monomial\_size} returns
-$N_\mathrm{modal}$ for any supported element type and order combination.  Modal interpolation
+$N_\mathrm{modal}$ for any supported element type and degree combination.  Modal interpolation
 applies to solution data only, never to mesh geometry
 (Section~\ref{sec:element-interpolation}).
 
@@ -1275,7 +1309,7 @@ nodes.  The constraint is enforced both on write and on read.
 
 \paragraph{Scope --- spatial only.}
 \texttt{ElementInterpolation\_t} describes \emph{purely spatial} mesh interpolation;
-it carries no \texttt{TemporalOrder} attribute.  The space-time function-space
+it carries no \texttt{TemporalDegree} attribute.  The space-time function-space
 machinery of Section~\ref{sec:lagrange} therefore applies to
 \texttt{SolutionInterpolation\_t} (which does carry a temporal order) but not to
 mesh geometry under this version of the standard.  Space-time mesh geometry (e.g.\
@@ -1305,7 +1339,7 @@ are stored in a \texttt{SolutionInterpolation\_t} leaf attached to the correspon
 \end{v2quote}
 
 \begin{sidsnode}{SolutionInterpolation\_t :=}
-\textbf{int[3] InterpolationData;}                       \textrm{(r)} \quad\textrm{/* [ElementType, SpatialOrder, TemporalOrder] */}\\
+\textbf{int[3] InterpolationData;}                       \textrm{(r)} \quad\textrm{/* [ElementType, SpatialDegree, TemporalDegree] */}\\
 InterpolationType\_t InterpolationType;                  \textrm{(r)}\\
 DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
 DataArray\_t<Float,DataSize[]> MonomialCoefficients;     \textrm{(o)}\\
@@ -1320,14 +1354,14 @@ consistent with the File Mapping in Section~\ref{sec:filemap} and the
 reference implementation, is \texttt{InterpolationType}.  There is only one
 such child; the two names refer to the same node.
 
-\noindent The triple \texttt{[ElementType, SpatialOrder, TemporalOrder]} is the
+\noindent The triple \texttt{[ElementType, SpatialDegree, TemporalDegree]} is the
 node's own \texttt{I4} payload (length~3, rank~1), as detailed in
-Section~\ref{sec:filemap}.  \texttt{TemporalOrder} defaults to~0 when omitted by
+Section~\ref{sec:filemap}.  \texttt{TemporalDegree} defaults to~0 when omitted by
 the writer.
 
 \paragraph{Uniqueness.}
 At most one \texttt{SolutionInterpolation\_t} per (basic-element-type,
-\texttt{SpatialOrder}, \texttt{TemporalOrder}) triplet is permitted within a family.
+\texttt{SpatialDegree}, \texttt{TemporalDegree}) triplet is permitted within a family.
 
 \paragraph{Stored element tag is the basic tag.}
 The element type in the node's payload is \emph{normalised to the basic (linear) tag of
@@ -1386,7 +1420,7 @@ which will use the specified order.
 \quad\quad int VertexSize[IndexDimension], int CellSize[IndexDimension]$>$ :=}
 List( Descriptor\_t Descriptor1 ... DescriptorN );            \textrm{(o)}\\
 GridLocation\_t GridLocation ;                                 \textrm{(o/d)}\\
-\textcolor{red}{IndexArray\_t$<$1, 2, int$>$ InterpolationOrders ;}      \textrm{(o/d)}\\
+\textcolor{red}{IndexArray\_t$<$1, 2, int$>$ InterpolationDegrees ;}      \textrm{(o/d)}\\
 \textcolor{red}{DataArray\_t$<$R8, 1|2, [NumElements] or [PhysDim,NumElements]$>$}\\
 \quad\textcolor{red}{CharacteristicLength ;}                                   \textrm{(o)}\\
 Rind\_t<IndexDimension> Rind ;                                 \textrm{(o/d)}\\
@@ -1401,7 +1435,7 @@ List( UserDefinedData\_t UserDefinedData1 ... UserDefinedDataN ); \textrm{(o)}\\
 \end{sidsnode}
 
 \noindent The \texttt{IndexArray\_t} carries
-\texttt{[\textbf{SpatialOrder}, \textbf{TemporalOrder}]} (length~2, datatype \texttt{I4}).
+\texttt{[\textbf{SpatialDegree}, \textbf{TemporalDegree}]} (length~2, datatype \texttt{I4}).
 \texttt{CharacteristicLength} is required only for Cartesian modal interpolation; its
 rank selects the normalisation (rank~1 isotropic, rank~2 per-axis), as defined in
 Section~\ref{sec:cartesian-modal}.
@@ -1412,9 +1446,9 @@ for \texttt{TemporalOrder} is~0.
 \end{v2quote}
 
 \noindent\textbf{Implementation note 1 --- Accessor functions.}
-The \texttt{InterpolationOrders} child is read and written through
-\texttt{cg\_sol\_interpolation\_order\_\{read,write\}}, which take \texttt{spatialOrder}
-and \texttt{temporalOrder} as separate scalar arguments while persisting the underlying
+The \texttt{InterpolationDegrees} child is read and written through
+\texttt{cg\_sol\_interpolation\_degree\_\{read,write\}}, which take \texttt{spatialDegree}
+and \texttt{temporalDegree} as separate scalar arguments while persisting the underlying
 length-2 \texttt{IndexArray\_t}.  See Section~\ref{sec:filemap} for the on-disk encoding.
 
 \noindent\textbf{Implementation note 2 --- Grid location convention.}
@@ -1423,9 +1457,9 @@ InterpolationPoints} (see~Section~\ref{sec:interpolation-points-loc}), regardles
 of whether they describe the entire zone or a subset of elements.  For variable-order
 configurations, \texttt{PointRange} or \texttt{PointList} children of the
 \texttt{FlowSolution\_t} list \emph{element} indices, and the per-subset orders are
-recorded in the \texttt{InterpolationOrders} child of each \texttt{FlowSolution\_t}
+recorded in the \texttt{InterpolationDegrees} child of each \texttt{FlowSolution\_t}
 block.  The \texttt{cgnscheck} ``strict CPEX-0045'' mode flags \texttt{CellCenter}
-plus \texttt{InterpolationOrders} as a SIDS conflict.
+plus \texttt{InterpolationDegrees} as a SIDS conflict.
 
 
 %% ═════════════════════════════════════════════════════════════════════════
@@ -1443,11 +1477,11 @@ plus \texttt{InterpolationOrders} as a SIDS conflict.
 \textbf{Function signature} & \textbf{Modes} \\
 \midrule
 ierr = cg\_element\_lagrange\_interpolation\_size(ElementType\_t t, cgsize\_t *sz) & r{-}{-} \\
-ierr = cg\_solution\_lagrange\_interpolation\_size(ElementType\_t t, int os, int ot, cgsize\_t *sz) & r{-}{-} \\
-ierr = cg\_solution\_monomial\_size(ElementType\_t t, int os, int ot, cgsize\_t *sz) & r{-}{-} \\
+ierr = cg\_solution\_lagrange\_interpolation\_size(ElementType\_t t, int sd, int td, cgsize\_t *sz) & r{-}{-} \\
+ierr = cg\_solution\_monomial\_size(ElementType\_t t, int sd, int td, cgsize\_t *sz) & r{-}{-} \\
 \addlinespace
 ierr = cg\_element\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t t, int *cnt) & r{-}{-} \\
-ierr = cg\_solution\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t t, int os, int ot, int *cnt) & r{-}{-} \\
+ierr = cg\_solution\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t t, int sd, int td, int *cnt) & r{-}{-} \\
 \bottomrule
 \end{tabular}
 \caption{Helper functions: interpolation space sizes and family query counts.}
@@ -1463,8 +1497,8 @@ ierr = cg\_solution\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t 
 \textbf{Parameter} & \textbf{Description} \\
 \midrule
 \texttt{t}   & Element type \\
-\texttt{os}  & Spatial interpolation order \\
-\texttt{ot}  & Temporal interpolation order \\
+\texttt{sd}  & Spatial interpolation degree \\
+\texttt{td}  & Temporal interpolation degree \\
 \texttt{sz}  & Output: cardinality of the interpolation space \\
 \texttt{cnt} & Output: number of matching interpolation nodes in the family \\
 \bottomrule
@@ -1499,11 +1533,11 @@ given type (and order) are already present.
 \texttt{cg\_element\_isoparametric\_write(fn, bn, fam, name, et, *en)} & {-}wm \\
 \addlinespace
 \texttt{cg\_nsolution\_interpolation\_read(fn, bn, fam, *ns)} & r{-}{-} \\
-\texttt{cg\_solution\_interpolation\_read(fn, bn, fam, sn, name, *et, *os, *ot, *it)} & r{-}{-} \\
+\texttt{cg\_solution\_interpolation\_read(fn, bn, fam, sn, name, *et, *sd, *td, *it)} & r{-}{-} \\
 \texttt{cg\_solution\_interpolation\_points\_read(fn, bn, fam, sn, *pu, *pv, *pw, *pt)} & r{-}{-} \\
-\texttt{cg\_solution\_interpolation\_write(fn, bn, fam, name, et, os, ot, it, *sn)} & {-}wm \\
+\texttt{cg\_solution\_interpolation\_write(fn, bn, fam, name, et, sd, td, it, *sn)} & {-}wm \\
 \texttt{cg\_solution\_interpolation\_points\_write(fn, bn, fam, sn, *pu, *pv, *pw, *pt)} & {-}wm \\
-\texttt{cg\_solution\_interpolation\_find(fn, bn, fam, et, os, ot, *sn, *it)} & r{-}{-} \\
+\texttt{cg\_solution\_interpolation\_find(fn, bn, fam, et, sd, td, *sn, *it)} & r{-}{-} \\
 \addlinespace
 \texttt{cg\_solution\_interpolation\_coefficients\_read(fn, bn, fam, sn, *coeff)} & r{-}{-} \\
 \texttt{cg\_solution\_interpolation\_coefficients\_write(fn, bn, fam, sn, *coeff)} & {-}wm \\
@@ -1534,8 +1568,8 @@ given type (and order) are already present.
 \texttt{ns}   & Number of solution interpolation blocks & in/out \\
 \texttt{sn}   & Solution interpolation index number; returned as an output by
   \texttt{cg\_solution\_interpolation\_find} & in/out \\
-\texttt{os}   & Spatial interpolation order & in \\
-\texttt{ot}   & Temporal interpolation order & in \\
+\texttt{sd}   & Spatial interpolation degree & in \\
+\texttt{td}   & Temporal interpolation degree & in \\
 \texttt{it}   & Interpolation type (\texttt{InterpolationType\_t}) & in/out \\
 \texttt{pu}   & Control points --- $u$-coordinate & out \\
 \texttt{pv}   & Control points --- $v$-coordinate (\texttt{NULL} for 1D) & out \\
@@ -1622,8 +1656,8 @@ carries modal coefficients.
 \texttt{cg\_sol\_ptset\_read(fn, bn, zn, sn, *pnts)} & r{-}{-} \\
 \texttt{cg\_sol\_ptset\_write(fn, bn, zn, name, loc, ptype, npnts, *pnts, *sn)} & {-}wm \\
 \addlinespace
-\texttt{cg\_sol\_interpolation\_order\_read(fn, bn, zn, sn, *os, *ot)} & r{-}{-} \\
-\texttt{cg\_sol\_interpolation\_order\_write(fn, bn, zn, sn, os, ot)} & {-}wm \\
+\texttt{cg\_sol\_interpolation\_degree\_read(fn, bn, zn, sn, *sd, *td)} & r{-}{-} \\
+\texttt{cg\_sol\_interpolation\_degree\_write(fn, bn, zn, sn, sd, td)} & {-}wm \\
 \addlinespace
 \texttt{cg\_sol\_characteristic\_length\_read(fn, bn, zn, sn, *nscale, *numElements, *h\_e)} & r{-}{-} \\
 \texttt{cg\_sol\_characteristic\_length\_write(fn, bn, zn, sn, nscale, numElements, *h\_e)} & {-}wm \\
@@ -1649,8 +1683,8 @@ carries modal coefficients.
 \texttt{npnts}& Number of points in the point set & out \\
 \texttt{pnts} & Point set data & in/out \\
 \texttt{loc}  & Grid location (\texttt{InterpolationPoints} for high-order; both uniform and variable-order) & in \\
-\texttt{os}   & Spatial interpolation order & in/out \\
-\texttt{ot}   & Temporal interpolation order & in/out \\
+\texttt{sd}   & Spatial interpolation degree & in/out \\
+\texttt{td}   & Temporal interpolation degree & in/out \\
 \texttt{nscale} & Number of normalisation factors per element: \texttt{1} selects the
   isotropic encoding, \texttt{PhysDim} the per-axis encoding & in/out \\
 \texttt{numElements} & Number of elements covered by the solution block & in/out \\
@@ -1769,7 +1803,7 @@ Recommended, not required, when interpolation type is
   datatype = \texttt{I4} \\
   dimensions = 1 \\
   dimension values = 3 \\
-  data = \textless{}element type, spatial order, temporal order\textgreater{} \\
+  data = \textless{}element type, spatial degree, temporal degree\textgreater{} \\
   cardinality = 0:N
 \end{tabular}} \\
 \hline
@@ -1850,12 +1884,12 @@ A single child node is added to \texttt{FlowSolution\_t}:
 \nfullrow{\quad\ldots} \\
 \hline
 \nfullrow{\quad\begin{tabular}[t]{@{}l@{}}
-  name = InterpolationOrders \\
+  name = InterpolationDegrees \\
   type = \texttt{\textbf{IndexArray\_t}} \\
   datatype = \texttt{I4} \\
   dimensions = 1 \\
   dimension values = 2 \\
-  data = \textless{}spatial and temporal interpolation order\textgreater{} \\
+  data = \textless{}spatial and temporal interpolation degree\textgreater{} \\
   cardinality = 0:1
 \end{tabular}} \\
 \hline
@@ -1879,7 +1913,7 @@ used; readers use the recorded values and do not recompute them
 (Section~\ref{sec:cartesian-modal}).}} \\
 \hline
 \end{tabularx}
-\captionof{table}{New \texttt{InterpolationOrders} and \texttt{CharacteristicLength}
+\captionof{table}{New \texttt{InterpolationDegrees} and \texttt{CharacteristicLength}
 children of \texttt{FlowSolution\_t}.}
 }
 
@@ -1894,27 +1928,28 @@ default values that a conforming implementation must observe.  It applies to bot
 writers.
 
 % ─────────────────────────────────────────────────────────────────────────
-\subsection{Polynomial Order Limits}
+\subsection{Polynomial Degree and Geometric Order Limits}
 % ─────────────────────────────────────────────────────────────────────────
 
 \begin{itemize}
   \item \textbf{Geometric order} (encoded via \texttt{ElementType\_t}): bounded by the available
     high-order tags, currently up to degree four (e.g.\ \texttt{HEXA\_125}, the degree-4
     tensor-product hexahedron, and \texttt{TETRA\_35}, the degree-4 tetrahedron with
-    $\binom{4+3}{3} = 35$ nodes), per Section~\ref{sec:order-means-degree}.
-  \item \textbf{Solution spatial order}: non-negative integer.  The library writer
-    (\texttt{cg\_sol\_interpolation\_order\_write}) accepts any value $\ge 0$.
-    \texttt{cgnscheck} warns when the spatial order falls outside the typical range
+    $\binom{4+3}{3} = 35$ nodes), per Section~\ref{sec:order-means-degree}.  This is the
+    unrenamed, pre-existing element-type concept, not \texttt{SpatialDegree}.
+  \item \textbf{Solution spatial degree}: non-negative integer.  The library writer
+    (\texttt{cg\_sol\_interpolation\_degree\_write}) accepts any value $\ge 0$.
+    \texttt{cgnscheck} warns when the spatial degree falls outside the typical range
     $[0,100]$, and in strict CPEX-0045 mode (\texttt{cgnscheck -s}) reports values outside
     $[0,100]$ as errors.
-  \item \textbf{Solution temporal order}: non-negative integer.  \texttt{cgnscheck}
+  \item \textbf{Solution temporal degree}: non-negative integer.  \texttt{cgnscheck}
     warns when outside $[0,10]$; strict mode reports values outside $[0,10]$ as errors.
   \item \textbf{No constraint couples the two.}  Any combination of a non-negative
-    \texttt{SpatialOrder} and a non-negative \texttt{TemporalOrder} is valid.
+    \texttt{SpatialDegree} and a non-negative \texttt{TemporalDegree} is valid.
 \end{itemize}
 
 \paragraph{Degree zero is valid.}
-\texttt{SpatialOrder} $= 0$ denotes a single spatial degree of freedom per element --- a
+\texttt{SpatialDegree} $= 0$ denotes a single spatial degree of freedom per element --- a
 solution constant over the element --- and must be accepted.  It is the ``standard
 interpolation (i.e.\ constant per element)'' case of the v2 text
 (Section~\ref{sec:solution-interpolation}), and it is the natural representation of a
@@ -1924,7 +1959,7 @@ recorded in \texttt{LagrangeControlPoints}, whose nodal function is identically 
 set is unisolvent for $P_0$, so the basis is well defined
 (Section~\ref{sec:lagrange-distribution}).
 
-Consequently \texttt{TemporalOrder} $> 0$ with \texttt{SpatialOrder} $= 0$ is also valid, and
+Consequently \texttt{TemporalDegree} $> 0$ with \texttt{SpatialDegree} $= 0$ is also valid, and
 describes a per-element value that is constant in space and varies in time --- an unsteady
 finite-volume solution.  Its degree-of-freedom count is
 $N_\mathrm{DOFs} = 1 \times (q+1) = q+1$ per element, by the general rule of
@@ -1947,10 +1982,10 @@ the concatenation of $\texttt{NPoints}$ tuples, each of length \textit{Dim}:
 
 \paragraph{LagrangeControlPoints (space-time).}
 \begin{sloppypar}
-For \texttt{SolutionInterpolation\_t} with $\texttt{TemporalOrder} > 0$, the array shape becomes
+For \texttt{SolutionInterpolation\_t} with $\texttt{TemporalDegree} > 0$, the array shape becomes
 $[\textit{Dim}+1,\, \textit{NPoints}_\mathrm{ST}]$ where
 $\textit{NPoints}_\mathrm{ST} = \textit{NPoints}_\mathrm{spatial} \times (q+1)$
-and $q = \texttt{TemporalOrder}$.  Within each coordinate row, the points are ordered
+and $q = \texttt{TemporalDegree}$.  Within each coordinate row, the points are ordered
 \emph{time-major}:
 \end{sloppypar}
 \begin{equation*}
@@ -1974,13 +2009,13 @@ follow the same time-major ordering within each element's $N_\mathrm{DOFs}(e)$ b
 \paragraph{MonomialCoefficients.}
 A 1D \texttt{R8} array of length $N_\mathrm{modal} = \binom{p+d}{d}$ for purely spatial
 interpolation, or $N_\mathrm{modal}\times(q+1)$ for space-time, where $d$ is the element
-dimension, $p$ is the spatial order, and $q$ is the temporal order.  The Pascal-traversal order
+dimension, $p$ is the spatial degree, and $q$ is the temporal degree.  The Pascal-traversal order
 is given by the loops in Section~\ref{sec:parametric-modal} and is a writer convention; the
 library does not validate ordering.
 
-\paragraph{InterpolationOrders.}
+\paragraph{InterpolationDegrees.}
 A 1D \texttt{IndexArray\_t} (data type \texttt{I4}) of length~2, child of
-\texttt{FlowSolution\_t}, holding $[\texttt{spatialOrder}, \texttt{temporalOrder}]$.  Recognized
+\texttt{FlowSolution\_t}, holding $[\texttt{spatialDegree}, \texttt{temporalDegree}]$.  Recognized
 only for \texttt{Unstructured} zones.
 
 \paragraph{High-order \texttt{FlowSolution\_t} field arrays.}
@@ -2042,7 +2077,7 @@ A conforming reader must reject:
     \texttt{ElementType\_t} value);
   \item \texttt{SolutionInterpolation\_t} payloads that are not \texttt{I4}, dimension~1, with
     \texttt{dim\_vals[0] = 3} (the triple
-    $[\textit{ElementType}, \textit{SpatialOrder}, \textit{TemporalOrder}]$);
+    $[\textit{ElementType}, \textit{SpatialDegree}, \textit{TemporalDegree}]$);
   \item \texttt{LagrangeControlPoints} children whose data type is not \texttt{R8} or whose
     array dimension is not~2;
   \item \texttt{MonomialCoefficients} children whose data type is not \texttt{R8} or whose
@@ -2059,8 +2094,8 @@ A conforming reader must reject:
     parent, or one whose data is not a value named in
     Section~\ref{sec:lagrange-distribution};
   \item Duplicate \texttt{ElementInterpolation\_t} nodes (same \texttt{ElementType\_t} tag) or
-    duplicate \texttt{SolutionInterpolation\_t} nodes (same basic-type, \texttt{os},
-    \texttt{ot}) within a family;
+    duplicate \texttt{SolutionInterpolation\_t} nodes (same basic-type, \texttt{sd},
+    \texttt{td}) within a family;
   \item \texttt{CharacteristicLength} children whose data type is not \texttt{R8}, whose
     array rank is neither~1 nor~2, whose \texttt{nscale} (rank-2 only) is neither~1 nor
     \texttt{PhysDim}, whose element count disagrees with the block, or which contain a
@@ -2099,7 +2134,7 @@ adopting the named family's nodes.
     mismatch --- an error under \texttt{cgnscheck -s}, a warning otherwise.  Because the
     coordinates are authoritative (Section~\ref{sec:lagrange-distribution}), the remedy is to
     correct or omit the name, never to alter the coordinates to match it.
-  \item \texttt{cg\_sol\_interpolation\_order\_write} requires
+  \item \texttt{cg\_sol\_interpolation\_degree\_write} requires
     \texttt{GridLocation = InterpolationPoints} on the parent \texttt{FlowSolution\_t}.
     For backward compatibility with files written under earlier drafts, the library
     \emph{also} accepts \texttt{GridLocation = CellCenter} provided a
@@ -2125,8 +2160,8 @@ adopting the named family's nodes.
 \texttt{CG\_NODE\_NOT\_FOUND} & Returned by \texttt{cg\_element\_interpolation\_points\_read} and
   \texttt{cg\_solution\_interpolation\_points\_read} when the corresponding node has no
   \texttt{LagrangeControlPoints} child (i.e.\ the interpolation type is \texttt{IsoParametric}
-  or modal); also returned by \texttt{cg\_sol\_interpolation\_order\_read} when the
-  \texttt{FlowSolution\_t} has no \texttt{InterpolationOrders} child.  Callers must treat this
+  or modal); also returned by \texttt{cg\_sol\_interpolation\_degree\_read} when the
+  \texttt{FlowSolution\_t} has no \texttt{InterpolationDegrees} child.  Callers must treat this
   as a normal control-flow signal, not an error. \\
 \texttt{CG\_ERROR}           & Validation failure or I/O error.  Use \texttt{cg\_get\_error()}
   to retrieve the diagnostic message string. \\
@@ -2146,14 +2181,16 @@ the \texttt{InterpolationType} child read by \texttt{cg\_solution\_interpolation
 \subsection{Default Values}
 % ─────────────────────────────────────────────────────────────────────────
 
+{\sloppy
 \begin{itemize}
-  \item \texttt{SolutionInterpolation\_t}: \texttt{SpatialOrder} is required (no default);
-    \texttt{TemporalOrder} defaults to~0.
-  \item \texttt{FlowSolution\_t.InterpolationOrders}: when the child is absent
-    \texttt{cg\_sol\_interpolation\_order\_read} returns \texttt{CG\_NODE\_NOT\_FOUND} with
+  \item \texttt{SolutionInterpolation\_t}: \texttt{SpatialDegree} is required (no default);
+    \texttt{TemporalDegree} defaults to~0.
+  \item \texttt{FlowSolution\_t.InterpolationDegrees}: when the child is absent
+    \texttt{cg\_sol\_interpolation\_degree\_read} returns \texttt{CG\_NODE\_NOT\_FOUND} with
     output values \texttt{(0, 0)}.  Such a \texttt{FlowSolution\_t} is treated as a standard
     (non-high-order) solution.
 \end{itemize}
+\par}
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Coordinate-System Conventions}
@@ -2217,17 +2254,17 @@ for solution interpolation.
 When different subsets of cells use different polynomial orders, create one
 \texttt{FlowSolution\_t} block per subset using \texttt{cg\_sol\_ptset\_write} with
 non-overlapping \texttt{PointRange} intervals, each annotated with
-\texttt{cg\_sol\_interpolation\_order\_write}:
+\texttt{cg\_sol\_interpolation\_degree\_write}:
 
 \begin{lstlisting}[language=C,basicstyle=\ttfamily\small]
 /* Cells 1..4 at order 2, cells 5..8 at order 3 */
 cgsize_t range_p2[2] = {1, 4};
 cg_sol_ptset_write(fn,B,Z,"FS_p2",InterpolationPoints,PointRange,2,range_p2,&S1);
-cg_sol_interpolation_order_write(fn,B,Z,S1, 2,0);
+cg_sol_interpolation_degree_write(fn,B,Z,S1, 2,0);
 
 cgsize_t range_p3[2] = {5, 8};
 cg_sol_ptset_write(fn,B,Z,"FS_p3",InterpolationPoints,PointRange,2,range_p3,&S2);
-cg_sol_interpolation_order_write(fn,B,Z,S2, 3,0);
+cg_sol_interpolation_degree_write(fn,B,Z,S2, 3,0);
 \end{lstlisting}
 
 % ─────────────────────────────────────────────────────────────────────────
@@ -2240,9 +2277,9 @@ Non-contiguous subsets require \texttt{PointList} instead of \texttt{PointRange}
 cgsize_t odd[4]  = {1,3,5,7};
 cgsize_t even[4] = {2,4,6,8};
 cg_sol_ptset_write(fn,B,Z,"FS_Odd", InterpolationPoints,PointList,4,odd, &S1);
-cg_sol_interpolation_order_write(fn,B,Z,S1, 2,0);
+cg_sol_interpolation_degree_write(fn,B,Z,S1, 2,0);
 cg_sol_ptset_write(fn,B,Z,"FS_Even",InterpolationPoints,PointList,4,even,&S2);
-cg_sol_interpolation_order_write(fn,B,Z,S2, 3,0);
+cg_sol_interpolation_degree_write(fn,B,Z,S2, 3,0);
 \end{lstlisting}
 
 % ─────────────────────────────────────────────────────────────────────────
@@ -2257,12 +2294,12 @@ but distinct interpolation orders:
 cgsize_t all[2] = {1, N_ELEM};
 /* Density at order 2 */
 cg_sol_ptset_write(fn,B,Z,"FS_Density",InterpolationPoints,PointRange,2,all,&S1);
-cg_sol_interpolation_order_write(fn,B,Z,S1, 2,0);
+cg_sol_interpolation_degree_write(fn,B,Z,S1, 2,0);
 cg_field_write(fn,B,Z,S1,RealDouble,"Density",density,&fld);
 
 /* VelocityX at order 3 */
 cg_sol_ptset_write(fn,B,Z,"FS_VelocityX",InterpolationPoints,PointRange,2,all,&S2);
-cg_sol_interpolation_order_write(fn,B,Z,S2, 3,0);
+cg_sol_interpolation_degree_write(fn,B,Z,S2, 3,0);
 cg_field_write(fn,B,Z,S2,RealDouble,"VelocityX",velocity,&fld);
 \end{lstlisting}
 
@@ -2279,7 +2316,7 @@ the same element type in the family).  No \texttt{LagrangeControlPoints} or
 \begin{lstlisting}[language=C,basicstyle=\ttfamily\small]
 int sn;
 cg_solution_interpolation_write(fn,bn,fam,"QUAD4_IsoParam",
-    QUAD_4, /*os=*/1, /*ot=*/0, IsoParametric, &sn);
+    QUAD_4, /*sd=*/1, /*td=*/0, IsoParametric, &sn);
 /* No cg_solution_interpolation_points_write call needed */
 \end{lstlisting}
 
