@@ -443,7 +443,9 @@ preference between specifying and deferring.
 
 **Outcome (2026-08-04 Steering Committee meeting).** Deferred to a future CPEX (option
 2). No helper specified in this amendment. The spec's existing note that this is a
-candidate addition stands unchanged.
+candidate addition stands unchanged. Tracked in
+[CGNS/CGNS#976](https://github.com/CGNS/CGNS/issues/976) so the decision is not lost
+between meetings.
 
 ---
 
