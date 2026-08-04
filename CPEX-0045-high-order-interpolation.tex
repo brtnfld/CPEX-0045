@@ -686,6 +686,22 @@ generation for the named families, which the library does not currently contain,
 to be implemented or the requirement withdrawn --- see the note in
 Section~\ref{sec:impl-spec}.
 
+\emph{Design note: the comparison must be permutation-invariant.}  Unlike the standard-lattice
+helper discussed in Section~\ref{sec:impl-spec}, this check does \emph{not} require a canonical
+per-family node \emph{ordering} --- it requires only the 1D root-generation formulas
+(\texttt{GaussLobattoLegendre}, \texttt{GaussLegendre}), tensor-producted independently per
+parametric direction for \texttt{QUAD}/\texttt{HEXA}, or the \texttt{WarpAndBlend} algorithm for
+simplices, each a self-contained numerical computation rather than a transcription from a
+figure.  The comparison should therefore match the stored coordinates against the generated set
+as sets --- a nearest-neighbour bijection within tolerance, not an index-by-index
+comparison --- since the on-disk traversal order of \texttt{LagrangeControlPoints} is a writer
+convention (Section~\ref{sec:on-disk-layout}) and is not required to coincide with any particular
+generation order.  An index-by-index comparison would therefore falsely flag a correctly
+distributed but differently ordered file.  At $p \le 2$ several named distributions coincide
+exactly (e.g.\ \texttt{GaussLobattoLegendre} and \texttt{Equidistant} both reduce to
+$\{-1,0,1\}$ at $p=2$), so the check is inherently non-discriminating at low degree regardless of
+implementation; this is a property of the mathematics, not a defect in the comparison.
+
 \paragraph{Absent attribute.}
 If \texttt{LagrangeControlPointDistribution} is absent, a reader \emph{must} construct the
 basis from the stored \texttt{LagrangeControlPoints} coordinates directly.  It must

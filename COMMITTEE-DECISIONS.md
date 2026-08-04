@@ -116,6 +116,23 @@ Warp&Blend node generation the library does not yet contain, `Equidistant` being
 case.) And no test in the tree references the attribute at all, so the new
 `ElementInterpolation_t` branch is unexercised.
 
+**Design clarification (2026-08-04, prompted by Tobias Leicht).** Tobias asked whether this
+check faces the same obstacle as D-04's deferred lattice helper — both need "node generation for
+the named families," and D-04 was deferred specifically because the library holds neither the
+coordinates nor the node ordering. The connection is sharp but the two problems are not the same
+size. D-04's helper must return a specific point at a specific array index, so a caller can match
+it against a specific field-array degree of freedom — that needs the full canonical per-family
+node *ordering*, which is a transcription from the SIDS figures and exactly the kind of table
+that would be worse wrong than absent. This check only needs to verify that the *stored set* of
+coordinates matches the *generated set* implied by the named distribution, which needs only the
+1D root-generation formulas (tensor-producted per direction for `QUAD`/`HEXA`) or the
+`WarpAndBlend` algorithm for simplices — self-contained numerical computations, not a
+transcription — compared via nearest-neighbour bijection rather than index-by-index. Spec text
+added at §Lagrange Control Point Distribution making the permutation-invariance requirement
+explicit, so a future implementer isn't blocked on the ordering question D-04 raised. At $p \le
+2$ several named distributions coincide exactly, so the check is inherently non-discriminating
+at low degree independent of implementation — expected, not a defect.
+
 If the committee chooses option 2 or 3 under D-01, this change must be revisited.
 
 ---
