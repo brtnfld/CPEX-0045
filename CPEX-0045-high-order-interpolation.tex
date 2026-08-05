@@ -306,7 +306,7 @@ or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard
 \vspace{0.4em}
 \noindent\textit{SIDS changes:}
 \begin{enumerate}[nosep,leftmargin=1.5em]
-  \item \NEW{} \textbf{\texttt{LagrangeControlPointDistribution\_t} enum.}
+  \item \NEW{} \textbf{\texttt{ControlPointDistribution\_t} enum.}
     Records the parametric-space distribution of Lagrange control points.
     Values: \texttt{GaussLobattoLegendre}, \texttt{Equidistant},
     \texttt{GaussLegendre}, \texttt{WarpAndBlend}.
@@ -433,7 +433,7 @@ or \CLARIFY{} (formalises v2 intent; no semantic change to the approved standard
 \begin{itemize}[nosep,leftmargin=1.5em]
   \item \NEW{} \textbf{Mid-Level Library API} --- complete C and Fortran~2003
     read/write interface for all CPEX-0045 node types, including
-    \texttt{LagrangeControlPointDistribution} accessors.
+    \texttt{ControlPointDistribution} accessors.
   \item \NEW{} \textbf{SIDS File Mapping} --- exact on-disk array shapes,
     data types, and DOF-ordering conventions.
   \item \NEW{} \textbf{Implementation Specification} --- polynomial order
@@ -481,7 +481,7 @@ space-time mesh-interpolation node.
 \textbf{Motion.}
 The CGNS Steering Committee moves to adopt \textbf{CPEX-0045 version 3.0}
 as an amendment to the previously approved v2, incorporating:
-(1)~the \texttt{LagrangeControlPointDistribution\_t} enum and its associated
+(1)~the \texttt{ControlPointDistribution\_t} enum and its associated
 child node, \textbf{recommended} rather than required (D-01); (2)~the
 \texttt{GridLocation\_t} enumerator \textbf{\texttt{InterpolationPoints}},
 \textbf{retained under its existing name} (D-02), for all high-order
@@ -568,7 +568,7 @@ their own ballot.
     freedom, not the 9 of the complete $\Qtp$ space.  v4 states all three cases
     explicitly and makes what the file records authoritative where it records
     anything, consistent with the precedence rule already adopted for
-    \texttt{LagrangeControlPoints} over \texttt{LagrangeControlPointDistribution}
+    \texttt{LagrangeControlPoints} over \texttt{ControlPointDistribution}
     (Section~\ref{sec:lagrange-distribution}).
     \textit{Noted, not proposed:} a serendipity \emph{solution} basis is currently
     inexpressible, because \texttt{cg\_solution\_interpolation\_points\_write}
@@ -587,31 +587,46 @@ their own ballot.
     Section~\ref{sec:sol-api} and notes that a library refusing the out-of-order
     call is conformant.
 
-  \item \SUPERSEDESIV{} \textbf{The prescribed
-    \texttt{LagrangeControlPointDistribution\_t} label cannot be stored.}
-    The File Mapping gives the node's datatype as
-    \texttt{LagrangeControlPointDistribution\_t}, which by the CGNS enumeration
-    convention is also its on-disk label.  That string is 34 characters, and CGNS
-    limits node names and labels to 32, so a conforming writer cannot create the
-    node the adopted text requires --- the library rejects it with
-    \emph{``Name exceeds 32 characters limit''}.  Every other type name in the
-    standard respects the limit; \texttt{ParticleWallInteractionModel\_t}, at 30,
-    is the longest.  The node \emph{name}
-    \texttt{LagrangeControlPointDistribution} is legal at exactly 32 and is what
-    the validation rules key on, so only the label is affected.  v4 must choose a
-    label that fits.  Two coherent options, and the Committee should pick one:
-    \begin{itemize}[nosep,leftmargin=1.5em]
-      \item shorten the label alone, keeping the adopted node name and the
-        \texttt{LagrangeControlPointDistribution\_t} spelling of the C
-        enumeration type, at the cost of breaking the label-equals-type-name
-        convention on disk;
-      \item rename the type, and with it the label and the node name, to
-        something within the limit --- \texttt{ControlPointDistribution\_t} (26)
-        is unambiguous in context --- which keeps the convention intact and is
-        free of compatibility cost since nothing has been released.
-    \end{itemize}
-    Until this is settled the reference implementation discovers the node by
-    name rather than by label, so files written now survive either choice.
+  \item \SUPERSEDESIV{} \textbf{The control-point distribution enumeration is
+    renamed \texttt{ControlPointDistribution\_t}.}  v3 names it
+    \texttt{LagrangeControlPointDistribution\_t}.  That string is 34 characters
+    and CGNS limits node names and labels to 32, so the node the adopted text
+    requires cannot be created: the library rejects it with \emph{``Name exceeds
+    32 characters limit''}.  It is the only type name in the standard that
+    exceeds the limit --- the next longest,
+    \texttt{ParticleGoverningEquationsType\_t}, sits exactly at~32 --- so this is
+    an isolated slip rather than a limit the standard has outgrown.
+
+    The replacement is determined by two conventions the standard follows without
+    exception, so it is proposed rather than offered as a choice.  First, CGNS
+    does not abbreviate words in type names: \texttt{GridCoordinates\_t} and
+    \texttt{ParticleCoordinates\_t} are never shortened, and the only short forms
+    anywhere are the long-established domain acronyms \texttt{BC} and
+    \texttt{EM}.  Contractions such as \texttt{CP}, \texttt{Ctrl} or
+    \texttt{Dist} are therefore excluded.  Second, for an enumeration node the
+    node name is the label without \texttt{\_t} --- \texttt{AreaType} /
+    \texttt{AreaType\_t}, \texttt{GridConnectivityType} /
+    \texttt{GridConnectivityType\_t} --- so the name, the label and the C
+    enumeration type must all change together; shortening the label alone would
+    break that pairing.
+
+    A whole word must therefore go, and \emph{Lagrange} is the one that carries
+    no information here: the node exists only when \texttt{InterpolationType} is
+    \texttt{ParametricLagrange}, so the qualifier is implied by position, whereas
+    \emph{control point} is the load-bearing noun and matches the sibling
+    \texttt{LagrangeControlPoints}.  Dropping \emph{Control} instead would give
+    \texttt{LagrangePointDistribution\_t}, which is worse than merely longer:
+    ``Lagrange points'' is an established term for the $L_1$--$L_5$ orbital
+    points, an ambiguity a standard should not introduce.
+
+    v4 therefore renames the node to \texttt{ControlPointDistribution} (24) with
+    label and C type \texttt{ControlPointDistribution\_t} (26), together with the
+    enumerators \texttt{ControlPointDistributionNull} and
+    \texttt{ControlPointDistributionUserDefined}, the name table
+    \texttt{ControlPointDistributionName} and the accessor
+    \texttt{cg\_ControlPointDistributionName}.  The four accessor entries of
+    Section~\ref{sec:family-api} are unaffected, since none embeds the type name.
+    Nothing has been released, so there is no compatibility cost.
 
   \item \SUPERSEDESIV{} \textbf{The \texttt{GaussLegendre} node count is off by
     one.}  \S Lagrange Control Point Distribution defines the family as the roots
@@ -628,7 +643,7 @@ their own ballot.
 
   \item \CLARIFYIV{} \textbf{\texttt{cgnscheck -s} is stricter than conformance.}
     Section~\ref{sec:validation} states that a mismatch between
-    \texttt{LagrangeControlPointDistribution} and \texttt{LagrangeControlPoints}
+    \texttt{ControlPointDistribution} and \texttt{LagrangeControlPoints}
     is ``\emph{not} grounds for rejection'', while
     Section~\ref{sec:lagrange-distribution} and the writer rules require
     \texttt{cgnscheck -s} to report that same mismatch as an \emph{error}.  Both
@@ -650,10 +665,9 @@ high-order field-array element set to cells of the base's \texttt{CellDimension}
 (2)~the statement of $N_\mathrm{DOFs}$ for each of the four interpolation types,
 including the mesh-basis rule for \texttt{IsoParametric}; (3)~the requirement that
 the family-level \texttt{SolutionInterpolation\_t} precede dependent field arrays;
-(4)~a
-storable label for the control-point distribution enumeration node, the adopted
-\texttt{LagrangeControlPointDistribution\_t} exceeding the 32-character CGNS
-limit; (5)~the correction of the \texttt{GaussLegendre} node rule from $P_p$ to
+(4)~the rename of the
+control-point distribution enumeration to \texttt{ControlPointDistribution\_t},
+the v3 name exceeding the 32-character CGNS limit and so being unstorable; (5)~the correction of the \texttt{GaussLegendre} node rule from $P_p$ to
 $P_{p+1}$, the adopted form yielding one node too few; and (6)~the clarification that \texttt{cgnscheck -s} enforces
 recommendations beyond conformance.  The amendment adds no new capability.
 
@@ -849,9 +863,9 @@ Recording it is nonetheless recommended, for three reasons:
     $[0,1]$-versus-$[-1,1]$ domain convention --- that are otherwise invisible.
 \end{itemize}
 
-\paragraph{Recommended attribute: \texttt{LagrangeControlPointDistribution\_t}.}
+\paragraph{Recommended attribute: \texttt{ControlPointDistribution\_t}.}
 An enumeration, stored as a labelled child node named
-\texttt{LagrangeControlPointDistribution} of \texttt{ElementInterpolation\_t} or
+\texttt{ControlPointDistribution} of \texttt{ElementInterpolation\_t} or
 \texttt{SolutionInterpolation\_t} when \texttt{InterpolationType} is
 \texttt{ParametricLagrange} --- the same convention used for \texttt{InterpolationType\_t}
 (Section~\ref{sec:interpolation-type}), and not the name-matched \texttt{DataArray\_t}
@@ -882,7 +896,7 @@ applied independently in each parametric direction.  For simplex elements (\text
 equidistant points may be used at $p=2$ but become unstable at higher orders.
 
 \paragraph{Precedence: the coordinates are authoritative.}
-\texttt{LagrangeControlPoints} and \texttt{LagrangeControlPointDistribution} are
+\texttt{LagrangeControlPoints} and \texttt{ControlPointDistribution} are
 deliberately redundant, and the redundancy is resolved in favour of the data: the stored
 coordinates are normative and the distribution name is advisory metadata.  A reader
 \emph{must} construct a basis that interpolates at the coordinates actually present in
@@ -919,7 +933,7 @@ $\{-1,0,1\}$ at $p=2$), so the check is inherently non-discriminating at low deg
 implementation; this is a property of the mathematics, not a defect in the comparison.
 
 \paragraph{Absent attribute.}
-If \texttt{LagrangeControlPointDistribution} is absent, a reader \emph{must} construct the
+If \texttt{ControlPointDistribution} is absent, a reader \emph{must} construct the
 basis from the stored \texttt{LagrangeControlPoints} coordinates directly.  It must
 \emph{not} substitute an assumed distribution, and no warning is warranted, because nothing
 is ambiguous.  An implementation \emph{may} try to recognise the stored points as one of the
@@ -1490,7 +1504,7 @@ same order (cf.\ Figure~\ref{fig:coord-systems}).}
 \begin{sidsnode}{ElementInterpolation\_t :=}
 \textbf{int Element;}                                    \textrm{(r)} \quad\textrm{/* ElementType\_t */}\\
 DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
-LagrangeControlPointDistribution\_t LagrangeControlPointDistribution; \textrm{(o)}\\
+ControlPointDistribution\_t ControlPointDistribution; \textrm{(o)}\\
 \};
 \end{sidsnode}
 
@@ -1500,7 +1514,7 @@ LagrangeControlPointDistribution\_t LagrangeControlPointDistribution; \textrm{(o
 matching the File Mapping in Section~\ref{sec:filemap} and the reader-validation rule of
 Section~\ref{sec:validation}.
 
-\noindent \texttt{LagrangeControlPointDistribution} may be present when
+\noindent \texttt{ControlPointDistribution} may be present when
 \texttt{LagrangeControlPoints} is present (i.e.\ the interpolation type is
 \texttt{ParametricLagrange}).  It is recommended but not required, and carries no
 information a reader needs in order to interpret the control points; see
@@ -1575,7 +1589,7 @@ are stored in a \texttt{SolutionInterpolation\_t} leaf attached to the correspon
 InterpolationType\_t InterpolationType;                  \textrm{(r)}\\
 DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
 DataArray\_t<Float,DataSize[]> MonomialCoefficients;     \textrm{(o)}\\
-LagrangeControlPointDistribution\_t LagrangeControlPointDistribution; \textrm{(o)}\\
+ControlPointDistribution\_t ControlPointDistribution; \textrm{(o)}\\
 \};
 \end{sidsnode}
 
@@ -1808,7 +1822,7 @@ given type (and order) are already present.
 \texttt{pw}   & Control points --- $w$-coordinate (\texttt{NULL} for 1D/2D) & out \\
 \texttt{pt}    & Control points --- time coordinate (\texttt{NULL} if $q=0$) & out \\
 \texttt{coeff} & Monomial coefficients array (size from \texttt{cg\_*\_monomial\_size}) & in/out \\
-\texttt{dist} & Lagrange control point distribution (\texttt{LagrangeControlPointDistribution\_t}) & in/out \\
+\texttt{dist} & Lagrange control point distribution (\texttt{ControlPointDistribution\_t}) & in/out \\
 \bottomrule
 \end{tabular}
 \caption{Input/output parameters for family-level API.}
@@ -2013,8 +2027,8 @@ A representative Fortran usage example is provided in \texttt{src/tests/test\_hi
 \texttt{Dimension} is the spatial dimension of the element. \\
 \hline
 \quad\quad\begin{tabular}[t]{@{}l@{}}
-  name = LagrangeControlPointDistribution \\
-  datatype = \texttt{\textbf{LagrangeControlPointDistribution\_t}} \\
+  name = ControlPointDistribution \\
+  datatype = \texttt{\textbf{ControlPointDistribution\_t}} \\
   data = \textless{}choice of distribution\textgreater{} \\
   cardinality = 0:1
 \end{tabular}
@@ -2097,8 +2111,8 @@ size from \texttt{cg\_solution\_monomial\_size}.\newline\newline
 Present for \texttt{ParametricMonomialsPascal} or \texttt{CartesianMonomialsPascal}. \\
 \hline
 \quad\quad\begin{tabular}[t]{@{}l@{}}
-  name = LagrangeControlPointDistribution \\
-  datatype = \texttt{\textbf{LagrangeControlPointDistribution\_t}} \\
+  name = ControlPointDistribution \\
+  datatype = \texttt{\textbf{ControlPointDistribution\_t}} \\
   data = \textless{}choice of distribution\textgreater{} \\
   cardinality = 0:1
 \end{tabular}
@@ -2370,7 +2384,7 @@ A conforming reader must reject:
     (Section~\ref{sec:element-interpolation});
   \item \texttt{SolutionInterpolation\_t} nodes that do not contain exactly one
     \texttt{InterpolationType\_t} child named \texttt{InterpolationType};
-  \item more than one \texttt{LagrangeControlPointDistribution\_t} child under a single
+  \item more than one \texttt{ControlPointDistribution\_t} child under a single
     parent, or one whose data is not a value named in
     Section~\ref{sec:lagrange-distribution};
   \item Duplicate \texttt{ElementInterpolation\_t} nodes (same \texttt{ElementType\_t} tag) or
@@ -2387,7 +2401,7 @@ the solution-field list of its parent \texttt{FlowSolution\_t}, and must not app
 field size rule of Section~\ref{sec:on-disk-layout} to it.
 
 \noindent A mismatch between
-\texttt{Lagrange\-Control\-Point\-Distribution}\allowbreak{} and the coordinates in
+\texttt{Control\-Point\-Distribution}\allowbreak{} and the coordinates in
 \texttt{Lagrange\-Control\-Points} is \emph{not} grounds for rejection.  The coordinates are
 authoritative (Section~\ref{sec:lagrange-distribution}): a conforming reader must build the
 basis from them and should warn about the disagreement, rather than failing the file or
@@ -2417,7 +2431,7 @@ under \texttt{-s} (Section~\ref{sec:lagrange-distribution}).
   \item Re-writing an existing \texttt{LagrangeControlPoints} or \texttt{MonomialCoefficients}
     array requires the file to be opened in \texttt{CG\_MODE\_MODIFY}; in
     \texttt{CG\_MODE\_WRITE} the second write must be rejected.
-  \item A writer must not record a \texttt{LagrangeControlPointDistribution} whose family
+  \item A writer must not record a \texttt{ControlPointDistribution} whose family
     nodes disagree with the \texttt{LagrangeControlPoints} coordinates written on the same
     node.  \texttt{cgnscheck} compares the two whenever both are present and reports a
     mismatch --- an error under \texttt{cgnscheck -s}, a warning otherwise.  Because the
@@ -2705,7 +2719,7 @@ in this case.
   \item Both \texttt{Charac\-teristic\-Length} encodings handled on read: rank-1
     isotropic and rank-2 per-axis.
   \item Lagrange basis constructed from the stored \texttt{LagrangeControlPoints}
-    coordinates whether or not a \texttt{LagrangeControlPointDistribution} attribute
+    coordinates whether or not a \texttt{ControlPointDistribution} attribute
     is present, and no distribution assumed when it is absent.
 \end{itemize}
 
