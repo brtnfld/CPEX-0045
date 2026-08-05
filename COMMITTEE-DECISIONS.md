@@ -45,7 +45,7 @@ independently reasoned answer.
 Six wire-format additions. Each needs a motion; D-01 and D-02 above determine the final
 wording of B-1 and B-2 respectively.
 
-- **B-1** — `ControlPointDistribution_t` enum.
+- **B-1** — `LagrangeControlPointDistribution_t` enum.
   Wording contingent on **D-01**.
 - **B-2** — `GridLocation_t` enumerator `InterpolationPoints` (value 9).
   Name contingent on **D-02**; reclassified from `[CLARIFICATION]`, see **C-01**.
@@ -84,12 +84,12 @@ while also carrying an unsigned motion and vote block. A proposal cannot be both
 and awaiting a vote. All three tracks now read "v2 accepted; v3 amendment pending Steering
 Committee vote", with the reference implementation branch listed separately.
 
-### C-03 — Reader validation must not reject `ControlPointDistribution`
+### C-03 — Reader validation must not reject `LagrangeControlPointDistribution`
 
 `DECIDED` (editorial, no vote). The reader-validation rule required rejecting any
 `DataArray_t` child of `ElementInterpolation_t` / `SolutionInterpolation_t` not named
 `LagrangeControlPoints` or `MonomialCoefficients`. Since
-`ControlPointDistribution` *is* a `DataArray_t<Character>`, the rule as written
+`LagrangeControlPointDistribution` *is* a `DataArray_t<Character>`, the rule as written
 obliged a conforming reader to reject the very node the spec required. Added to the
 allowed-names list.
 
@@ -101,7 +101,7 @@ validation list had fallen behind the implementation, not the reverse.
 
 `DECIDED` (implementation, follows from the D-01 draft position; commit `b2ca56f` on
 `CPEX45_high_order_wip`). `cgnscheck` raised an error under `-s` when
-`ControlPointDistribution` was absent from a `ParametricLagrange` node, and otherwise
+`LagrangeControlPointDistribution` was absent from a `ParametricLagrange` node, and otherwise
 warned that "readers will have to assume a default distribution" — both contradicting the
 revised text. Replaced in the `ElementInterpolation_t` and `SolutionInterpolation_t` paths
 with a single level-2 warning stating the attribute is recommended and the basis is taken
@@ -230,6 +230,17 @@ two orders. Needs matching changes in `cg_sol_interpolation_order_write` and `cg
 
 ---
 
+## Naming note
+
+Entries below use `LagrangeControlPointDistribution_t`, the name in force when
+those decisions were taken — B-1 records the ballot item as voted. **v4 renames
+it to `ControlPointDistribution_t`**, the v3 name being 34 characters against
+CGNS's 32-character limit and therefore unstorable. The historical names are
+left as written on purpose: this file is an audit trail, and rewriting it to the
+current spelling would misrepresent what was decided and under what name.
+
+---
+
 ## Version 4 scope (recorded here, not in the spec)
 
 v3.0 was adopted 2026-08-04 and tagged `v3.4`. Version 4 is a **corrections and
@@ -265,7 +276,7 @@ solution point read has already gone, that resolution now being implemented.
 ## D. Closed
 
 
-### D-01 — Is `ControlPointDistribution` required or recommended?
+### D-01 — Is `LagrangeControlPointDistribution` required or recommended?
 
 - **Status:** `DECIDED`
 - **Raised by:** reviewer comment on the change-list entry (Overleaf); raised a second time,
@@ -329,7 +340,7 @@ cannot contradict each other, because only one of them would be present.
 argument advanced for option 2 or 3.
 
 **Outcome (2026-08-04 Steering Committee meeting).** Adopted option 1, recommended —
-not required. `ControlPointDistribution` stays optional, with the precedence
+not required. `LagrangeControlPointDistribution` stays optional, with the precedence
 rule (coordinates authoritative on conflict) as drafted. Reflected in
 `CPEX-0045-high-order-interpolation.tex` (unchanged from the draft position) and in the
 motion adopted the same day.
