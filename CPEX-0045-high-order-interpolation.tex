@@ -519,8 +519,9 @@ and the vote on each decision and ballot item.
 \addcontentsline{toc}{section}{Version 4 Amendment Package\ifvfourdraft\space(draft)\fi}
 
 Version 3.0 was adopted on 2026-08-04.  Implementing it against the reference
-library surfaced four places where the adopted text is ambiguous,
-unimplementable or under-determined.  Several further divergences were found and
+library surfaced five places where the adopted text is ambiguous,
+unimplementable, under-determined, or inconsistent with an established CGNS
+convention.  Several further divergences were found and
 deliberately excluded: where the adopted text turned out to be correct and the
 reference implementation was simply wrong, the defect belongs against the code,
 not in an amendment.  This
@@ -616,6 +617,29 @@ their own ballot.
     \textit{Impact: none.}  A writer following the v3 rule produced $p$ nodes for a
     space needing $p+1$, so its files were never unisolvent and were already
     invalid; no conformant file changes status.
+
+  \item \SUPERSEDESIV{} \textbf{The interpolation-size accessors return
+    \texttt{int}, not \texttt{cgsize\_t}.}
+    \texttt{cg\_element\_lagrange\_interpolation\_size},
+    \texttt{cg\_solution\_lagrange\_interpolation\_size} and
+    \texttt{cg\_solution\_monomial\_size} are specified with a
+    \texttt{cgsize\_t *sz} output.  \texttt{cgsize\_t} exists so that
+    \emph{mesh-scale} counts --- vertices, cells, element indices, array extents
+    --- can exceed $2^{31}$ in a 64-bit build.  What these three return is a
+    \emph{per-element} basis cardinality, fixed by the element type and the
+    degree; it cannot grow with the mesh.  The established accessors for exactly
+    this quantity, \texttt{cg\_npe} and \texttt{cg\_npe\_ho}, both return
+    \texttt{int}, and all three of these delegate to them internally, so the
+    value is already \texttt{int}-bounded before it is widened.  The wider type
+    conveys a range that does not exist and breaks the convention.
+
+    It also costs the Fortran binding: \texttt{cgsize\_t} maps to
+    \texttt{integer(cgsize\_t)}, whose kind changes between 32- and 64-bit
+    builds, so callers must match a build-dependent kind to receive a small
+    fixed number.  With \texttt{int} the argument is a plain \texttt{integer}.
+
+    \textit{Impact:} an API change, but a source-compatible one for callers that
+    pass a matching variable, and nothing has been released.
 
   \item \SUPERSEDESIV{} \textbf{\texttt{WarpAndBlend} is not uniquely determined,
     and neither is the comparison tolerance.}
@@ -1809,9 +1833,9 @@ plus \texttt{InterpolationDegrees} as a SIDS conflict.
 \toprule
 \textbf{Function signature} & \textbf{Modes} \\
 \midrule
-ierr = cg\_element\_lagrange\_interpolation\_size(ElementType\_t t, cgsize\_t *sz) & r{-}{-} \\
-ierr = cg\_solution\_lagrange\_interpolation\_size(ElementType\_t t, int os, int ot, cgsize\_t *sz) & r{-}{-} \\
-ierr = cg\_solution\_monomial\_size(ElementType\_t t, int os, int ot, cgsize\_t *sz) & r{-}{-} \\
+ierr = cg\_element\_lagrange\_interpolation\_size(ElementType\_t t, \vfour{int} *sz) & r{-}{-} \\
+ierr = cg\_solution\_lagrange\_interpolation\_size(ElementType\_t t, int os, int ot, \vfour{int} *sz) & r{-}{-} \\
+ierr = cg\_solution\_monomial\_size(ElementType\_t t, int os, int ot, \vfour{int} *sz) & r{-}{-} \\
 \addlinespace
 ierr = cg\_element\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t t, int *cnt) & r{-}{-} \\
 ierr = cg\_solution\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t t, int os, int ot, int *cnt) & r{-}{-} \\
@@ -1832,7 +1856,11 @@ ierr = cg\_solution\_lagrange\_interpolation\_count(fn, bn, fam, ElementType\_t 
 \texttt{t}   & Element type \\
 \texttt{os}  & Spatial interpolation degree \\
 \texttt{ot}  & Temporal interpolation degree \\
-\texttt{sz}  & Output: cardinality of the interpolation space \\
+\texttt{sz}  & Output: cardinality of the interpolation space.
+  \vfour{An \texttt{int}, not a \texttt{cgsize\_t}: this is a per-element count
+  fixed by the element type and degree, not a mesh-scale quantity, and it
+  matches \texttt{cg\_npe} and \texttt{cg\_npe\_ho} which return the same kind of
+  value.} \\
 \texttt{cnt} & Output: number of matching interpolation nodes in the family \\
 \bottomrule
 \end{tabular}
