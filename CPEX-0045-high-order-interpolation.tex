@@ -504,10 +504,19 @@ and the vote on each decision and ballot item.
 \addcontentsline{toc}{section}{Version 4 Amendment Package\ifvfourdraft\space(draft)\fi}
 
 Version 3.0 was adopted on 2026-08-04.  Implementing it against the reference
-library surfaced four places where the adopted text is ambiguous, self-inconsistent,
-or silent on something an implementer must decide, plus the two capabilities v3
-explicitly deferred.  This package collects them for Version 4.\ifvfourdraft{}
- Every item below is unadopted.\fi
+library surfaced four places where the adopted text is ambiguous,
+self-inconsistent, or silent on something an implementer must decide.  This
+package collects them for Version 4.\ifvfourdraft{} Every item below is
+unadopted.\fi
+
+\medskip
+\noindent\textbf{Scope.}  Version 4 is a \emph{corrections and clarifications}
+amendment.  It adds no capability, no node, no enumerator and no API entry: every
+item either fixes wording that two conforming implementations could read
+differently, or states a rule that v3 relies on without ever writing down.  New
+capabilities are deliberately out of scope --- see \emph{Not in this package}
+below --- because they carry a different kind of risk, warrant their own ballot,
+and do not share this package's rationale.
 
 \medskip
 \noindent\textit{Wording corrections to adopted v3 text:}
@@ -546,11 +555,13 @@ explicitly deferred.  This package collects them for Version 4.\ifvfourdraft{}
     anything, consistent with the precedence rule already adopted for
     \texttt{LagrangeControlPoints} over \texttt{LagrangeControlPointDistribution}
     (Section~\ref{sec:lagrange-distribution}).
-    \textit{Open question:} a serendipity \emph{solution} basis is currently
+    \textit{Noted, not proposed:} a serendipity \emph{solution} basis is currently
     inexpressible, because \texttt{cg\_solution\_interpolation\_points\_write}
-    derives the array length and takes no point count.  Allowing one would need a
-    count argument on that entry; the Committee should say whether it wants that
-    or whether solution Lagrange bases are complete by definition.
+    derives the array length and accepts no point count.  Allowing one would mean
+    adding a count argument to that entry --- a new capability, and so outside the
+    scope of this package.  v4 therefore states the rule as it stands; if the
+    Committee wants serendipity solution bases, that belongs with the other
+    deferred capabilities in a follow-up CPEX.
 
   \item \CLARIFYIV{} \textbf{The family basis must exist before the field arrays
     that depend on it.}  Because $L$ is derived from the matching
@@ -576,30 +587,6 @@ explicitly deferred.  This package collects them for Version 4.\ifvfourdraft{}
 \end{enumerate}
 
 \medskip
-\noindent\textit{Capabilities deferred by v3, now in scope:}
-
-\begin{enumerate}[leftmargin=1.4em,itemsep=0.5em,resume]
-
-  \item \NEWIV{} \textbf{Standard control-point lattice helper.}  Deferred at the
-    2026-08-04 meeting under D-04 and tracked as
-    \href{https://github.com/CGNS/CGNS/issues/976}{CGNS/CGNS\#976}.  For an
-    \texttt{IsoParametric} mesh node the control-point locations are normatively
-    defined but no API returns them, so every reader tabulates the standard node
-    ordering independently from the figures.  v4 specifies one function returning
-    the lattice for a given \texttt{ElementType\_t}.  The cost recorded when it was
-    deferred still stands: it means encoding the canonical node ordering for seven
-    element families up to degree four, checked against the normative figures, and
-    a wrong table shipped as authoritative would be worse than no table.
-
-  \item \NEWIV{} \textbf{$L^2$-orthogonal modal bases.}  Section~\ref{sec:modal-order-ceiling}
-    records that the monomial bases are limited to roughly $p\le 2$--$3$ in double
-    precision because the monomial mass matrix is Hilbert-like, and that methods
-    needing higher order use tensor-product Legendre or Dubiner/Koornwinder bases
-    instead --- which v3 has no way to name.  v4 adds the enumerators, which is the
-    smaller half of the symbolic-interpolation-function mechanism v2 anticipated.
-
-\end{enumerate}
-
 \medskip
 \noindent\textit{Not in this package.}  Divergences where the adopted v3 text is
 correct and the reference implementation is simply behind it are defects, not
@@ -610,18 +597,30 @@ comparison --- is of that kind and is to be deleted once the code catches up, no
 amended.  The companion note on the \texttt{IsoParametric} solution point read has
 already been removed, that resolution now being implemented.
 
+\medskip
+\noindent The two capabilities v3 set aside --- the standard control-point lattice
+helper and a way to name $L^2$-orthogonal modal bases --- also stay out.  D-04's
+recorded outcome is that the helper is \emph{deferred to a future CPEX}, with no
+helper specified in this amendment, tracked as
+\href{https://github.com/CGNS/CGNS/issues/976}{CGNS/CGNS\#976}; CPEX-0045~v4 is
+still CPEX-0045, so adopting it here would reverse that decision rather than
+implement it.  The orthogonal bases sit behind the explicit symbolic
+representation of interpolation functions that v2 anticipated and v3 deferred
+(Section~\ref{sec:modal-order-ceiling}), which is a new mechanism rather than a
+correction.  Both belong in a follow-up CPEX, where they can be judged on their
+own merits and voted on separately.
+
 \bigskip
 \begin{motionbox}
 \textbf{Motion (not yet moved).}
 The CGNS Steering Committee moves to adopt \textbf{CPEX-0045 version 4.0} as an
 amendment to the adopted v3, incorporating: (1)~the restriction of the
 high-order field-array element set to cells of the base's \texttt{CellDimension};
-(2)~the stored \texttt{NumberOfPoints} as the authoritative
-\texttt{ParametricLagrange} degree-of-freedom count; (3)~the requirement that the
-family-level \texttt{SolutionInterpolation\_t} precede dependent field arrays;
-(4)~the clarification that \texttt{cgnscheck -s} enforces recommendations beyond
-conformance; (5)~the standard control-point lattice helper deferred under D-04;
-and (6)~enumerators for $L^2$-orthogonal modal bases.
+(2)~the statement of $N_\mathrm{DOFs}$ for each of the four interpolation types,
+including the mesh-basis rule for \texttt{IsoParametric}; (3)~the requirement that
+the family-level \texttt{SolutionInterpolation\_t} precede dependent field arrays;
+and (4)~the clarification that \texttt{cgnscheck -s} enforces recommendations
+beyond conformance.  The amendment adds no new capability.
 
 \medskip
 \noindent\textbf{Result:
