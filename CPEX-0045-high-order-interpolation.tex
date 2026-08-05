@@ -514,9 +514,8 @@ unadopted.\fi
 amendment.  It adds no capability, no node, no enumerator and no API entry: every
 item either fixes wording that two conforming implementations could read
 differently, or states a rule that v3 relies on without ever writing down.  New
-capabilities are deliberately out of scope --- see \emph{Not in this package}
-below --- because they carry a different kind of risk, warrant their own ballot,
-and do not share this package's rationale.
+capabilities are out of scope: they carry a different kind of risk and warrant
+their own ballot.
 
 \medskip
 \noindent\textit{Wording corrections to adopted v3 text:}
@@ -587,29 +586,6 @@ and do not share this package's rationale.
 \end{enumerate}
 
 \medskip
-\medskip
-\noindent\textit{Not in this package.}  Divergences where the adopted v3 text is
-correct and the reference implementation is simply behind it are defects, not
-amendments; they are tracked against the implementation and are listed in
-\texttt{CPEX-0045-review-findings.md}.  The \emph{Implementation status} note
-still in Section~\ref{sec:lagrange-distribution} --- the coordinate-versus-distribution
-comparison --- is of that kind and is to be deleted once the code catches up, not
-amended.  The companion note on the \texttt{IsoParametric} solution point read has
-already been removed, that resolution now being implemented.
-
-\medskip
-\noindent The two capabilities v3 set aside --- the standard control-point lattice
-helper and a way to name $L^2$-orthogonal modal bases --- also stay out.  D-04's
-recorded outcome is that the helper is \emph{deferred to a future CPEX}, with no
-helper specified in this amendment, tracked as
-\href{https://github.com/CGNS/CGNS/issues/976}{CGNS/CGNS\#976}; CPEX-0045~v4 is
-still CPEX-0045, so adopting it here would reverse that decision rather than
-implement it.  The orthogonal bases sit behind the explicit symbolic
-representation of interpolation functions that v2 anticipated and v3 deferred
-(Section~\ref{sec:modal-order-ceiling}), which is a new mechanism rather than a
-correction.  Both belong in a follow-up CPEX, where they can be judged on their
-own merits and voted on separately.
-
 \bigskip
 \begin{motionbox}
 \textbf{Motion (not yet moved).}

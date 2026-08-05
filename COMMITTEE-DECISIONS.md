@@ -230,6 +230,38 @@ two orders. Needs matching changes in `cg_sol_interpolation_order_write` and `cg
 
 ---
 
+## Version 4 scope (recorded here, not in the spec)
+
+v3.0 was adopted 2026-08-04 and tagged `v3.4`. Version 4 is a **corrections and
+clarifications** amendment: it adds no capability, no node, no enumerator and no
+API entry. The four items are in the amendment package at the front of
+`CPEX-0045-high-order-interpolation.tex`.
+
+Two things deliberately stay out, and are recorded here rather than in the
+published document — naming a deferred capability inside the amendment package
+only puts it back on the agenda, and the deferral is already on record:
+
+- **The control-point lattice helper.** D-04's outcome stands unchanged:
+  deferred to a future CPEX, tracked in
+  [CGNS/CGNS#976](https://github.com/CGNS/CGNS/issues/976). CPEX-0045 v4 is
+  still CPEX-0045, so adopting it there would reverse that decision rather than
+  carry it out.
+- **A way to name L2-orthogonal modal bases.** These sit behind the explicit
+  symbolic representation of interpolation functions that v2 anticipated and v3
+  deferred. That is a new mechanism, not a correction.
+
+Separately: divergences where the adopted v3 text is correct and the reference
+implementation is simply behind it are **implementation defects, not
+amendments**. They are tracked against the code and listed in
+`CPEX-0045-review-findings.md`, and must not be folded into an amendment
+package. The one remaining *Implementation status* note in the spec — the
+coordinate-versus-distribution comparison in the Lagrange Control Point
+Distribution section — is of that kind, and is to be deleted once the code
+catches up rather than amended. The companion note on the `IsoParametric`
+solution point read has already gone, that resolution now being implemented.
+
+---
+
 ## D. Closed
 
 
