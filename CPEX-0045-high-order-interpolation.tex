@@ -519,7 +519,7 @@ and the vote on each decision and ballot item.
 \addcontentsline{toc}{section}{Version 4 Amendment Package\ifvfourdraft\space(draft)\fi}
 
 Version 3.0 was adopted on 2026-08-04.  Implementing it against the reference
-library surfaced five places where the adopted text is ambiguous,
+library surfaced six places where the adopted text is ambiguous,
 self-inconsistent, unimplementable, or silent on something an implementer must
 decide.  This
 package collects them for Version 4.\ifvfourdraft{} Every item below is
@@ -613,6 +613,19 @@ their own ballot.
     Until this is settled the reference implementation discovers the node by
     name rather than by label, so files written now survive either choice.
 
+  \item \SUPERSEDESIV{} \textbf{The \texttt{GaussLegendre} node count is off by
+    one.}  \S Lagrange Control Point Distribution defines the family as the roots
+    of $P_p(u)=0$.  A degree-$p$ basis needs $p+1$ one-dimensional nodes, and
+    $P_p$ has only $p$ roots, so the rule as written produces a set that is not
+    unisolvent for the space it is supposed to interpolate --- at $p=1$ it gives
+    the single point $u=0$ where two are required.  The companion
+    \texttt{GaussLobattoLegendre} rule is stated correctly: the roots of
+    $(1-u^2)P_p'(u)$ are the $p-1$ interior extrema plus the two endpoints,
+    which is $p+1$ points.  v4 reads $P_{p+1}(u)=0$, the only reading that
+    yields a unisolvent set of the right size.  Found while implementing the
+    coordinate-versus-distribution comparison, where the generator has to produce
+    exactly the stored point count.
+
   \item \CLARIFYIV{} \textbf{\texttt{cgnscheck -s} is stricter than conformance.}
     Section~\ref{sec:validation} states that a mismatch between
     \texttt{LagrangeControlPointDistribution} and \texttt{LagrangeControlPoints}
@@ -640,7 +653,8 @@ the family-level \texttt{SolutionInterpolation\_t} precede dependent field array
 (4)~a
 storable label for the control-point distribution enumeration node, the adopted
 \texttt{LagrangeControlPointDistribution\_t} exceeding the 32-character CGNS
-limit; and (5)~the clarification that \texttt{cgnscheck -s} enforces
+limit; (5)~the correction of the \texttt{GaussLegendre} node rule from $P_p$ to
+$P_{p+1}$, the adopted form yielding one node too few; and (6)~the clarification that \texttt{cgnscheck -s} enforces
 recommendations beyond conformance.  The amendment adds no new capability.
 
 \medskip
@@ -853,8 +867,9 @@ omitted rather than written as \texttt{Null}.  The four named values:
     endpoints $u_0 = -1$, $u_p = +1$.  Optimal conditioning and quadrature accuracy.
   \item \textbf{\texttt{Equidistant}}: $u_i = -1 + 2i/p$.  Simple uniform spacing; discouraged
     for $p>7$ due to poor conditioning of the Vandermonde matrix.
-  \item \textbf{\texttt{GaussLegendre}}: 1D points are roots of $P_p(u)=0$; does \emph{not}
-    include the endpoints.  Rarely used for element interpolation.
+  \item \textbf{\texttt{GaussLegendre}}: 1D points are roots of
+    \vfour{$P_{p+1}(u)=0$}; does \emph{not} include the endpoints.  Rarely used
+    for element interpolation.
   \item \textbf{\texttt{WarpAndBlend}} (simplices only): specialised distribution for triangles
     and tetrahedra ensuring well-conditioned Vandermonde matrices~\cite{Warburton06}.
 \end{itemize}
@@ -886,13 +901,6 @@ and reader agreeing on a computation.
 Correspondingly, a writer \emph{must not} record a distribution name that disagrees with the
 coordinates it writes.  \texttt{cgnscheck} compares the two whenever both are present and
 reports a mismatch: an error under \texttt{cgnscheck -s}, a warning otherwise.
-
-\emph{Implementation status:} this comparison is specified here but not yet implemented on the
-\texttt{CPEX45\_high\_order\_wip} branch, which validates the attribute's presence and value but
-does not check it against the stored coordinates.  Implementing the comparison requires node
-generation for the named families, which the library does not currently contain, so it is either
-to be implemented or the requirement withdrawn --- see the note in
-Section~\ref{sec:impl-spec}.
 
 \emph{Design note: the comparison must be permutation-invariant.}  Unlike the standard-lattice
 helper discussed in Section~\ref{sec:impl-spec}, this check does \emph{not} require a canonical
