@@ -519,9 +519,11 @@ and the vote on each decision and ballot item.
 \addcontentsline{toc}{section}{Version 4 Amendment Package\ifvfourdraft\space(draft)\fi}
 
 Version 3.0 was adopted on 2026-08-04.  Implementing it against the reference
-library surfaced seven places where the adopted text is ambiguous,
-self-inconsistent, unimplementable, under-determined, or silent on something an
-implementer must decide.  This
+library surfaced four places where the adopted text is ambiguous,
+unimplementable or under-determined.  Several further divergences were found and
+deliberately excluded: where the adopted text turned out to be correct and the
+reference implementation was simply wrong, the defect belongs against the code,
+not in an amendment.  This
 package collects them for Version 4.\ifvfourdraft{} Every item below is
 unadopted.\fi
 
@@ -557,51 +559,6 @@ their own ballot.
     produced a longer $L$, so such files become non-conformant; a zone whose only
     sections are volume sections --- the common case --- is unaffected, and no
     known implementation followed the literal reading.
-
-  \item \SUPERSEDESIV{} \textbf{$N_\mathrm{DOFs}$ depends on the interpolation
-    type, and for \texttt{IsoParametric} it is the mesh basis.}
-    v3 leaves $N_\mathrm{DOFs}$ to be inferred from the element type and degree.
-    That is right for \texttt{ParametricLagrange} --- where it is the
-    complete-space cardinality of the base type at that degree, per the
-    Table~\ref{tab:spaces} caption, serendipity being a classification of
-    \emph{element} interpolation --- and wrong for the other two cases.  For the
-    modal types it is $\binom{p+d}{d}(q+1)$, which is smaller (a \texttt{QUAD} at
-    $p=2$ has 6 modal coefficients, not 9).  For \texttt{IsoParametric} it is the
-    cardinality of the \emph{mesh} basis, which may be serendipity: an
-    \texttt{IsoParametric} solution on a \texttt{QUAD\_8} element has 8 degrees of
-    freedom, not the 9 of the complete $\Qtp$ space.  v4 states all three cases
-    explicitly and makes what the file records authoritative where it records
-    anything, consistent with the precedence rule already adopted for
-    \texttt{LagrangeControlPoints} over \texttt{ControlPointDistribution}
-    (Section~\ref{sec:lagrange-distribution}).
-    \textit{Noted, not proposed:} a serendipity \emph{solution} basis is currently
-    inexpressible, because \texttt{cg\_solution\_interpolation\_points\_write}
-    derives the array length and accepts no point count.  Allowing one would mean
-    adding a count argument to that entry --- a new capability, and so outside the
-    scope of this package.  v4 therefore states the rule as it stands; if the
-    Committee wants serendipity solution bases, that belongs with the other
-    deferred capabilities in a follow-up CPEX.
-
-    \textit{Impact, the largest in this package:} a writer that used the nodal
-    cardinality for a modal block emitted field arrays of the wrong length, and
-    those files are non-conformant and must be rewritten.  The reference
-    implementation did exactly that until this was found --- it derived the length
-    from the Lagrange count whatever the interpolation type --- so the files it
-    wrote for \texttt{ParametricMonomialsPascal} and
-    \texttt{CartesianMonomialsPascal} solutions are affected.  Nothing has been
-    released, so the population is pre-release files, but unlike the other items
-    this one invalidates data rather than renaming or clarifying something.
-
-  \item \CLARIFYIV{} \textbf{The family basis must exist before the field arrays
-    that depend on it.}  Because $L$ is derived from the matching
-    \texttt{SolutionInterpolation\_t}, that node must already be present when a
-    high-order field array is written.  v3 states the dependency but never states
-    the ordering, so a writer can legally produce the two nodes in an order under
-    which the length is not yet computable.  v4 records the requirement in
-    Section~\ref{sec:sol-api} and notes that a library refusing the out-of-order
-    call is conformant.
-    \textit{Impact: minor} --- a writer emitting the two nodes in the other order
-    reorders two calls; no stored data changes.
 
   \item \SUPERSEDESIV{} \textbf{The control-point distribution enumeration is
     renamed \texttt{ControlPointDistribution\_t}.}  v3 names it
@@ -718,19 +675,6 @@ their own ballot.
     fact, since such coordinates are indistinguishable from valid ones.  This
     package proposes pinning $\alpha$ because a silently wrong mesh is worse than
     a writer having to change one parameter.
-
-  \item \CLARIFYIV{} \textbf{\texttt{cgnscheck -s} is stricter than conformance.}
-    Section~\ref{sec:validation} states that a mismatch between
-    \texttt{ControlPointDistribution} and \texttt{LagrangeControlPoints}
-    is ``\emph{not} grounds for rejection'', while
-    Section~\ref{sec:lagrange-distribution} and the writer rules require
-    \texttt{cgnscheck -s} to report that same mismatch as an \emph{error}.  Both
-    are adopted text, and as written an implementer cannot tell whether such a
-    file is legal.  v4 states that strict mode enforces writer-side
-    recommendations in addition to conformance requirements, so a strict-mode
-    error does not imply non-conformance.  \textit{This resolves a contradiction
-    rather than changing any requirement.}  \textit{Impact: none} --- no requirement
-    changes; only the relationship between two diagnostics is stated.
 
 \end{enumerate}
 
@@ -2100,20 +2044,6 @@ description of the interpolation.
 not used for high-order solutions in v3.  All such \texttt{FlowSolution\_t} nodes use
 \texttt{GridLocation = InterpolationPoints}.
 
-\begin{v4block}
-\paragraph{\vfourmark Write ordering: the basis precedes the fields.}
-The length of a high-order field array is derived from the
-\texttt{SolutionInterpolation\_t} that matches each element
-(Section~\ref{sec:on-disk-layout}), and no length is passed to
-\texttt{cg\_field\_write}.  That node \emph{must} therefore already exist, in the
-\texttt{Family\_t} named by the zone's \texttt{FamilyName\_t}, before any field
-array depending on it is written, and the zone \emph{must} carry that
-\texttt{FamilyName\_t}.  A library that rejects the write when the basis cannot be
-resolved is conformant, and is to be preferred over one that assumes a
-cardinality: an assumed count silently produces an array of the wrong length,
-which re-reading the file with the same implementation will not detect.
-\end{v4block}
-
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Fortran Bindings}
 % ─────────────────────────────────────────────────────────────────────────
@@ -2449,35 +2379,6 @@ runs from $0$ to $N_\mathrm{DOFs}(e_i)-1$ in the ordering established by the ass
 \texttt{LagrangeControlPoints}, or modal coefficients in the Pascal traversal of
 Section~\ref{sec:parametric-modal}).
 
-\begin{v4block}
-\paragraph{\vfourmark $N_\mathrm{DOFs}$ per interpolation type.}
-$N_\mathrm{DOFs}(e)$ is determined by the \emph{interpolation type} of the
-matching \texttt{SolutionInterpolation\_t}, not by the element type and degree
-alone:
-
-\begin{itemize}[nosep,leftmargin=1.5em]
-  \item \texttt{ParametricLagrange}: the \texttt{NumberOfPoints} extent of the
-    node's \texttt{LagrangeControlPoints} array, which equals the
-    complete-space cardinality of the base type at that degree.  Serendipity is a
-    classification of \emph{element} interpolation
-    (Table~\ref{tab:spaces} caption), not of solution interpolation.
-  \item \texttt{ParametricMonomialsPascal}, \texttt{CartesianMonomialsPascal}:
-    $\binom{p+d}{d}\,(q+1)$, which is not stored anywhere and must be computed.
-    It is smaller than the nodal count --- a \texttt{QUAD} at $p=2$ has 6 modal
-    coefficients, not 9.
-  \item \texttt{IsoParametric}: the cardinality of the mesh basis, i.e.\ the
-    \texttt{NumberOfPoints} of the referenced \texttt{ElementInterpolation\_t}, or
-    the node count of the element's own tag when that node stores no control
-    points.  A serendipity mesh basis carries through: an \texttt{IsoParametric}
-    solution on a \texttt{QUAD\_8} has 8 degrees of freedom, not the 9 of the
-    complete $\Qtp$ space.
-\end{itemize}
-
-\noindent In every case the spatial count is multiplied by $(q+1)$, and where the
-file records a count that record governs, so reconstruction never depends on
-writer and reader agreeing on a computation.
-\end{v4block}
-
 \paragraph{Metadata arrays are not solution fields.}
 \texttt{CharacteristicLength} is a \texttt{DataArray\_t} child of
 \texttt{FlowSolution\_t}, but it is interpolation \emph{metadata} and carries its own
@@ -2549,15 +2450,6 @@ field size rule of Section~\ref{sec:on-disk-layout} to it.
 authoritative (Section~\ref{sec:lagrange-distribution}): a conforming reader must build the
 basis from them and should warn about the disagreement, rather than failing the file or
 adopting the named family's nodes.
-
-\begin{v4block}
-\noindent\vfourmark\textbf{Strict mode is stricter than conformance.}
-\texttt{cgnscheck -s} enforces writer-side \emph{recommendations} in addition to
-conformance requirements, so a strict-mode error does not imply non-conformance.
-A file whose only defect is a distribution name disagreeing with the stored
-coordinates is conformant and must be readable; the mismatch is an error only
-under \texttt{-s} (Section~\ref{sec:lagrange-distribution}).
-\end{v4block}
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Cross-Validation Rules (Writer)}
