@@ -504,8 +504,9 @@ and the vote on each decision and ballot item.
 \addcontentsline{toc}{section}{Version 4 Amendment Package\ifvfourdraft\space(draft)\fi}
 
 Version 3.0 was adopted on 2026-08-04.  Implementing it against the reference
-library surfaced four places where the adopted text is ambiguous,
-self-inconsistent, or silent on something an implementer must decide.  This
+library surfaced five places where the adopted text is ambiguous,
+self-inconsistent, unimplementable, or silent on something an implementer must
+decide.  This
 package collects them for Version 4.\ifvfourdraft{} Every item below is
 unadopted.\fi
 
@@ -571,6 +572,32 @@ their own ballot.
     Section~\ref{sec:sol-api} and notes that a library refusing the out-of-order
     call is conformant.
 
+  \item \SUPERSEDESIV{} \textbf{The prescribed
+    \texttt{LagrangeControlPointDistribution\_t} label cannot be stored.}
+    The File Mapping gives the node's datatype as
+    \texttt{LagrangeControlPointDistribution\_t}, which by the CGNS enumeration
+    convention is also its on-disk label.  That string is 34 characters, and CGNS
+    limits node names and labels to 32, so a conforming writer cannot create the
+    node the adopted text requires --- the library rejects it with
+    \emph{``Name exceeds 32 characters limit''}.  Every other type name in the
+    standard respects the limit; \texttt{ParticleWallInteractionModel\_t}, at 30,
+    is the longest.  The node \emph{name}
+    \texttt{LagrangeControlPointDistribution} is legal at exactly 32 and is what
+    the validation rules key on, so only the label is affected.  v4 must choose a
+    label that fits.  Two coherent options, and the Committee should pick one:
+    \begin{itemize}[nosep,leftmargin=1.5em]
+      \item shorten the label alone, keeping the adopted node name and the
+        \texttt{LagrangeControlPointDistribution\_t} spelling of the C
+        enumeration type, at the cost of breaking the label-equals-type-name
+        convention on disk;
+      \item rename the type, and with it the label and the node name, to
+        something within the limit --- \texttt{ControlPointDistribution\_t} (26)
+        is unambiguous in context --- which keeps the convention intact and is
+        free of compatibility cost since nothing has been released.
+    \end{itemize}
+    Until this is settled the reference implementation discovers the node by
+    name rather than by label, so files written now survive either choice.
+
   \item \CLARIFYIV{} \textbf{\texttt{cgnscheck -s} is stricter than conformance.}
     Section~\ref{sec:validation} states that a mismatch between
     \texttt{LagrangeControlPointDistribution} and \texttt{LagrangeControlPoints}
@@ -595,8 +622,11 @@ high-order field-array element set to cells of the base's \texttt{CellDimension}
 (2)~the statement of $N_\mathrm{DOFs}$ for each of the four interpolation types,
 including the mesh-basis rule for \texttt{IsoParametric}; (3)~the requirement that
 the family-level \texttt{SolutionInterpolation\_t} precede dependent field arrays;
-and (4)~the clarification that \texttt{cgnscheck -s} enforces recommendations
-beyond conformance.  The amendment adds no new capability.
+(4)~a
+storable label for the control-point distribution enumeration node, the adopted
+\texttt{LagrangeControlPointDistribution\_t} exceeding the 32-character CGNS
+limit; and (5)~the clarification that \texttt{cgnscheck -s} enforces
+recommendations beyond conformance.  The amendment adds no new capability.
 
 \medskip
 \noindent\textbf{Result:
