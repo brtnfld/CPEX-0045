@@ -553,6 +553,10 @@ their own ballot.
     cells; lower-dimensional sections are not part of it.  No implementation ever
     intended the literal reading, and under it a conformant writer and a
     conformant reader disagree on $L$ for the most ordinary zone layout.
+    \textit{Impact:} a writer that summed over every \texttt{Elements\_t} section
+    produced a longer $L$, so such files become non-conformant; a zone whose only
+    sections are volume sections --- the common case --- is unaffected, and no
+    known implementation followed the literal reading.
 
   \item \SUPERSEDESIV{} \textbf{$N_\mathrm{DOFs}$ depends on the interpolation
     type, and for \texttt{IsoParametric} it is the mesh basis.}
@@ -578,6 +582,16 @@ their own ballot.
     Committee wants serendipity solution bases, that belongs with the other
     deferred capabilities in a follow-up CPEX.
 
+    \textit{Impact, the largest in this package:} a writer that used the nodal
+    cardinality for a modal block emitted field arrays of the wrong length, and
+    those files are non-conformant and must be rewritten.  The reference
+    implementation did exactly that until this was found --- it derived the length
+    from the Lagrange count whatever the interpolation type --- so the files it
+    wrote for \texttt{ParametricMonomialsPascal} and
+    \texttt{CartesianMonomialsPascal} solutions are affected.  Nothing has been
+    released, so the population is pre-release files, but unlike the other items
+    this one invalidates data rather than renaming or clarifying something.
+
   \item \CLARIFYIV{} \textbf{The family basis must exist before the field arrays
     that depend on it.}  Because $L$ is derived from the matching
     \texttt{SolutionInterpolation\_t}, that node must already be present when a
@@ -586,6 +600,8 @@ their own ballot.
     which the length is not yet computable.  v4 records the requirement in
     Section~\ref{sec:sol-api} and notes that a library refusing the out-of-order
     call is conformant.
+    \textit{Impact: minor} --- a writer emitting the two nodes in the other order
+    reorders two calls; no stored data changes.
 
   \item \SUPERSEDESIV{} \textbf{The control-point distribution enumeration is
     renamed \texttt{ControlPointDistribution\_t}.}  v3 names it
@@ -640,6 +656,9 @@ their own ballot.
     yields a unisolvent set of the right size.  Found while implementing the
     coordinate-versus-distribution comparison, where the generator has to produce
     exactly the stored point count.
+    \textit{Impact: none.}  A writer following the v3 rule produced $p$ nodes for a
+    space needing $p+1$, so its files were never unisolvent and were already
+    invalid; no conformant file changes status.
 
   \item \SUPERSEDESIV{} \textbf{\texttt{WarpAndBlend} is not uniquely determined,
     and neither is the comparison tolerance.}
@@ -677,6 +696,29 @@ their own ballot.
     --- which covers every geometric order \texttt{ElementType\_t} can express.
     It bites only high-degree solution bases, and only the validation rule.
 
+    \textit{Cost of the fix, stated plainly:} pinning $\alpha$ narrows the family,
+    so a writer that currently emits Warp\&Blend nodes with a different blending
+    parameter --- $\alpha = 0$, the unoptimised construction, being the obvious
+    case --- becomes non-conformant under that name.  The Committee is being asked
+    to impose that, and should do so knowingly rather than on the nod.  Three
+    things bound it.  No file has to be rewritten and no data is invalidated: the
+    coordinates remain authoritative, so the remedy is either to adopt the
+    tabulated $\alpha$ or simply to drop the distribution name, which is
+    recommended rather than required.  The ambiguity is unreachable at degrees
+    $\le 3$, so only high-degree solution bases are affected at all.  And nothing
+    has been released, so the population concerned is whatever exists on
+    pre-release branches.
+
+    \textit{The alternative, for completeness:} leave $\alpha$ free and instead
+    withdraw the comparison that \S Lagrange Control Point Distribution mandates,
+    removing the ambiguity by removing the requirement.  That costs no writer
+    anything, but it also gives up the only check that catches a
+    $[0,1]$-versus-$[-1,1]$ simplex convention --- an error
+    Section~\ref{sec:coord-conventions} itself describes as undetectable after the
+    fact, since such coordinates are indistinguishable from valid ones.  This
+    package proposes pinning $\alpha$ because a silently wrong mesh is worse than
+    a writer having to change one parameter.
+
   \item \CLARIFYIV{} \textbf{\texttt{cgnscheck -s} is stricter than conformance.}
     Section~\ref{sec:validation} states that a mismatch between
     \texttt{ControlPointDistribution} and \texttt{LagrangeControlPoints}
@@ -687,7 +729,8 @@ their own ballot.
     file is legal.  v4 states that strict mode enforces writer-side
     recommendations in addition to conformance requirements, so a strict-mode
     error does not imply non-conformance.  \textit{This resolves a contradiction
-    rather than changing any requirement.}
+    rather than changing any requirement.}  \textit{Impact: none} --- no requirement
+    changes; only the relationship between two diagnostics is stated.
 
 \end{enumerate}
 
