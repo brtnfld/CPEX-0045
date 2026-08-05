@@ -144,11 +144,18 @@
   \textcolor{v4violet}{\textbf{[CLARIFICATION v4]}}\else
   \textcolor{clarifybrown}{\textbf{[CLARIFICATION v4]}}\fi}
 
-% Marker for a v4 passage that replaces adopted v3 wording, so the reader can
-% tell an addition from a substitution.
+% Marker for a change-list entry that replaces adopted v3 wording, so a reviewer
+% can tell an addition from a substitution.  Change-list only: it lives in the
+% amendment package, which is deleted once v4 is adopted.
 \newcommand{\SUPERSEDESIV}{\ifvfourdraft
   \textcolor{v4violet}{\textbf{[SUPERSEDES v3 TEXT]}}\else
   \textcolor{clarifybrown}{\textbf{[SUPERSEDES v3 TEXT]}}\fi}
+
+% Inline marker for normative text carrying a v4 change.  Draft-only by design:
+% the body of the standard must read as a single self-contained version, not as a
+% diff against an earlier one, so this renders nothing once v4 is adopted.  All
+% "what changed and why" belongs in the amendment package instead.
+\newcommand{\vfourmark}{\ifvfourdraft\textcolor{v4violet}{\textbf{[v4]}}\ \fi}
 
 %% ── SIDS-style node definition environment ──────────────────────────────
 \newenvironment{sidsnode}[1]{%
@@ -203,10 +210,17 @@
 \textcolor{v4violet}{\textbf{Reading this draft.}}  Version 3.0 was adopted by the
 CGNS Steering Committee on 2026-08-04 and is the normative standard; it is
 typeset in the usual body colour.  Text proposed by the \textbf{Version 4
-amendment is not adopted} and is typeset \vfour{in this colour}.  Badges
-\NEWIV{} and \CLARIFYIV{} mark v4 change-list entries, and \SUPERSEDESIV{}
-marks a v4 passage that replaces adopted v3 wording rather than adding to it.
-Nothing in the v4 colour is binding until the Committee votes on it.}}
+amendment is not adopted} and is typeset \vfour{in this colour}, marked
+\vfourmark in the body of the standard.  Nothing in the v4 colour is binding
+until the Committee votes on it.
+
+\smallskip
+The body of the standard is written to read as \emph{one} self-contained version:
+it states what conforms, never what an earlier version said.  All comparison with
+v3 --- what changed, and why --- is confined to the Version 4 Amendment Package
+overleaf, where the \NEWIV{}, \CLARIFYIV{} and \SUPERSEDESIV{} badges appear.
+On adoption that package and these markers are deleted, the colour reverts, and
+what remains is a single standard with no trace of the amendment history.}}
 \end{center}
 \fi
 
@@ -1921,20 +1935,17 @@ not used for high-order solutions in v3.  All such \texttt{FlowSolution\_t} node
 \texttt{GridLocation = InterpolationPoints}.
 
 \begin{v4block}
-\paragraph{\vfour{Write ordering: the basis precedes the fields.}}
-\CLARIFYIV{}\ \ The length of a high-order field array is derived from the
+\paragraph{\vfourmark Write ordering: the basis precedes the fields.}
+The length of a high-order field array is derived from the
 \texttt{SolutionInterpolation\_t} that matches each element
 (Section~\ref{sec:on-disk-layout}), and no length is passed to
-\texttt{cg\_field\_write}.  That node must therefore already exist, in the
+\texttt{cg\_field\_write}.  That node \emph{must} therefore already exist, in the
 \texttt{Family\_t} named by the zone's \texttt{FamilyName\_t}, before any field
-array depending on it is written; and the zone must carry that
-\texttt{FamilyName\_t}.  A library that rejects the call when the basis cannot be
+array depending on it is written, and the zone \emph{must} carry that
+\texttt{FamilyName\_t}.  A library that rejects the write when the basis cannot be
 resolved is conformant, and is to be preferred over one that assumes a
-cardinality: an assumed nodal count silently produces an array of the wrong
-length, which is not detectable by re-reading the file with the same
-implementation.  v3 states the dependency but never states the ordering, so a
-writer could legally emit the two nodes in an order under which $L$ is not yet
-computable.
+cardinality: an assumed count silently produces an array of the wrong length,
+which re-reading the file with the same implementation will not detect.
 \end{v4block}
 
 % ─────────────────────────────────────────────────────────────────────────
@@ -2250,10 +2261,15 @@ When \texttt{GridLocation = InterpolationPoints}, each field \texttt{DataArray\_
 \begin{equation*}
   L \;=\; \sum_{e \in \mathcal{E}} N_\mathrm{DOFs}(e),
 \end{equation*}
-where $\mathcal{E}$ is the set of elements covered by the block (all zone elements
-when no \texttt{PointRange}\allowbreak/\texttt{PointList} is present, or the listed elements
+where $\mathcal{E}$ is the set of elements covered by the block
+(\vfour{all \emph{cells} of the zone} when no
+\texttt{PointRange}\allowbreak/\texttt{PointList} is present, or the listed elements
 otherwise) and $N_\mathrm{DOFs}(e)$ is the per-element DOF count from the
-matching \texttt{SolutionInterpolation\_t} for element~$e$.  For a homogeneous block this
+matching \texttt{SolutionInterpolation\_t} for element~$e$.
+\vfour{A cell is an element whose dimension equals the base's
+\texttt{CellDimension}; sections holding lower-dimensional elements --- boundary
+faces or edges --- are not part of the location domain and contribute no degrees
+of freedom.}  For a homogeneous block this
 collapses to $|\mathcal{E}| \cdot N_\mathrm{DOFs}$.  Within the array, the DOFs of
 the first listed element are stored contiguously, followed by all DOFs of the
 second listed element, and so on:
@@ -2268,44 +2284,31 @@ runs from $0$ to $N_\mathrm{DOFs}(e_i)-1$ in the ordering established by the ass
 Section~\ref{sec:parametric-modal}).
 
 \begin{v4block}
-\paragraph{\vfour{$\mathcal{E}$ contains cells only.}}
-\SUPERSEDESIV{}\ \ When no \texttt{PointRange}/\texttt{PointList} is present,
-$\mathcal{E}$ is the set of elements of the zone whose dimension equals the base's
-\texttt{CellDimension}.  Sections holding lower-dimensional elements --- boundary
-faces or edges, commonly stored alongside the volume sections so that boundary
-conditions can reference them --- are not part of the location domain and
-contribute no degrees of freedom.  The v3 wording ``all zone elements'' read
-literally includes them, under which a conformant writer and a conformant reader
-compute different $L$ for an entirely ordinary zone layout.
-
-\paragraph{\vfour{$N_\mathrm{DOFs}$ per interpolation type.}}
-\SUPERSEDESIV{}\ \ $N_\mathrm{DOFs}(e)$ is determined by the \emph{interpolation
-type} of the matching \texttt{SolutionInterpolation\_t}, not by the element type and
-degree alone:
+\paragraph{\vfourmark $N_\mathrm{DOFs}$ per interpolation type.}
+$N_\mathrm{DOFs}(e)$ is determined by the \emph{interpolation type} of the
+matching \texttt{SolutionInterpolation\_t}, not by the element type and degree
+alone:
 
 \begin{itemize}[nosep,leftmargin=1.5em]
   \item \texttt{ParametricLagrange}: the \texttt{NumberOfPoints} extent of the
-    node's \texttt{LagrangeControlPoints} array.  Under the API of
-    Section~\ref{sec:family-api} this necessarily equals the complete-space
-    cardinality of the base type at that degree, since
-    \texttt{cg\_solution\_interpolation\_points\_write} derives the array length
-    and accepts no point count; serendipity is a classification of \emph{element}
-    interpolation (Table~\ref{tab:spaces} caption), not of solution interpolation.
+    node's \texttt{LagrangeControlPoints} array, which equals the
+    complete-space cardinality of the base type at that degree.  Serendipity is a
+    classification of \emph{element} interpolation
+    (Table~\ref{tab:spaces} caption), not of solution interpolation.
   \item \texttt{ParametricMonomialsPascal}, \texttt{CartesianMonomialsPascal}:
     $\binom{p+d}{d}\,(q+1)$, which is not stored anywhere and must be computed.
-    This is smaller than the nodal count --- a \texttt{QUAD} at $p=2$ has 6 modal
-    coefficients, not 9 --- so a reader that assumes the nodal cardinality
-    computes the wrong $L$ for every modal file.
+    It is smaller than the nodal count --- a \texttt{QUAD} at $p=2$ has 6 modal
+    coefficients, not 9.
   \item \texttt{IsoParametric}: the cardinality of the mesh basis, i.e.\ the
     \texttt{NumberOfPoints} of the referenced \texttt{ElementInterpolation\_t}, or
     the node count of the element's own tag when that node stores no control
-    points.  This is the one solution case where a serendipity count arises: an
-    \texttt{IsoParametric} solution on a \texttt{QUAD\_8} has 8 degrees of freedom,
-    not the 9 of the complete $\Qtp$ space.
+    points.  A serendipity mesh basis carries through: an \texttt{IsoParametric}
+    solution on a \texttt{QUAD\_8} has 8 degrees of freedom, not the 9 of the
+    complete $\Qtp$ space.
 \end{itemize}
 
-\noindent In all three cases the spatial count is multiplied by $(q+1)$, and where
-the file records a count that record governs, so reconstruction never depends on
+\noindent In every case the spatial count is multiplied by $(q+1)$, and where the
+file records a count that record governs, so reconstruction never depends on
 writer and reader agreeing on a computation.
 \end{v4block}
 
@@ -2382,16 +2385,12 @@ basis from them and should warn about the disagreement, rather than failing the 
 adopting the named family's nodes.
 
 \begin{v4block}
-\noindent\SUPERSEDESIV{}\ \ \vfour{\textbf{Strict mode is stricter than conformance.}}
-The paragraph above and the rule in Section~\ref{sec:lagrange-distribution} --- which
-requires \texttt{cgnscheck -s} to report the same mismatch as an \emph{error} --- are
-both adopted v3 text, and taken together they leave an implementer unable to say
-whether a mismatched file is legal.  They are reconciled as follows:
+\noindent\vfourmark\textbf{Strict mode is stricter than conformance.}
 \texttt{cgnscheck -s} enforces writer-side \emph{recommendations} in addition to
-conformance requirements, so a strict-mode error does not imply non-conformance.  A
-file whose only defect is a disagreeing distribution name is conformant, must be
-readable, and is reported as an error only under \texttt{-s}.  No requirement
-changes; only the relationship between the two diagnostics is stated.
+conformance requirements, so a strict-mode error does not imply non-conformance.
+A file whose only defect is a distribution name disagreeing with the stored
+coordinates is conformant and must be readable; the mismatch is an error only
+under \texttt{-s} (Section~\ref{sec:lagrange-distribution}).
 \end{v4block}
 
 % ─────────────────────────────────────────────────────────────────────────
