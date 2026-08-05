@@ -241,47 +241,6 @@ current spelling would misrepresent what was decided and under what name.
 
 ---
 
-## Version 4 — items considered and withdrawn
-
-Seven candidate items were drafted from implementing v3 against the reference
-library. Each was then re-checked against the **adopted** v3 text rather than
-against the working copy. Three did not survive, and are recorded here so they
-are not raised again:
-
-- **`N_DOFs` depends on the interpolation type.** *Withdrawn — no defect.* The
-  adopted text already reads "`N_DOFs(e)` is the per-element DOF count from the
-  matching `SolutionInterpolation_t` for element *e*", which is already
-  type-dependent and correctly sourced; the modal cardinality is defined in
-  §Parametric Modal Interpolation and the `IsoParametric` basis in §7.4. A
-  careful reader gets the right answer from v3. The reference implementation
-  derived the length from the Lagrange count whatever the type — a serious
-  defect, but in the code, not the standard. Fixed there.
-
-- **The family basis must precede dependent field arrays.** *Withdrawn —
-  over-constrains.* The ordering is an artifact of the MLL API, where
-  `cg_field_write` derives the length at the point of call. A library that
-  deferred sizing to `cg_close`, or that took an explicit length, could accept
-  any order, and the resulting file is conformant either way. The standard should
-  constrain the file and the required behaviour, not one API's call sequence. That
-  the matching node must *exist* is already implied by the field-length rule.
-
-- **`cgnscheck -s` is stricter than conformance.** *Withdrawn — misreading.* The
-  two passages address different actors and are already coherent: §Validation
-  Requirements binds a **reader** (a mismatch is not grounds for rejection),
-  §Cross-Validation binds a **writer** (must not record a disagreeing name), and
-  `cgnscheck` reports the writer-side violation. A validator flagging something is
-  not the same as a file being non-conformant. No contradiction to resolve.
-
-The four that survived are each demonstrable: the field-array element set is
-genuinely ambiguous and the reference implementation took the literal reading;
-the v3 enumeration name is 34 characters against a 32-character ADF/CGIO limit on
-labels, so the node cannot be created at all; the `GaussLegendre` rule yields *p*
-nodes where *p*+1 are needed and is never unisolvent; and `WarpAndBlend` is given
-only by citation to a construction with a free parameter, measured to move the
-interior nodes by up to 3e-2.
-
----
-
 ## Version 4 scope (recorded here, not in the spec)
 
 v3.0 was adopted 2026-08-04 and tagged `v3.4`. Version 4 is a **corrections and
@@ -301,16 +260,6 @@ only puts it back on the agenda, and the deferral is already on record:
 - **A way to name L2-orthogonal modal bases.** These sit behind the explicit
   symbolic representation of interpolation functions that v2 anticipated and v3
   deferred. That is a new mechanism, not a correction.
-
-Separately: divergences where the adopted v3 text is correct and the reference
-implementation is simply behind it are **implementation defects, not
-amendments**. They are tracked against the code and listed in
-`CPEX-0045-review-findings.md`, and must not be folded into an amendment
-package. The one remaining *Implementation status* note in the spec — the
-coordinate-versus-distribution comparison in the Lagrange Control Point
-Distribution section — is of that kind, and is to be deleted once the code
-catches up rather than amended. The companion note on the `IsoParametric`
-solution point read has already gone, that resolution now being implemented.
 
 ---
 
