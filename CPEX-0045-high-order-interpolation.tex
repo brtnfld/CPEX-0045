@@ -641,32 +641,41 @@ their own ballot.
     coordinate-versus-distribution comparison, where the generator has to produce
     exactly the stored point count.
 
-  \item \SUPERSEDESIV{} \textbf{\texttt{WarpAndBlend} is not uniquely determined.}
+  \item \SUPERSEDESIV{} \textbf{\texttt{WarpAndBlend} is not uniquely determined,
+    and neither is the comparison tolerance.}
     The other three families are pinned by a closed-form rule --- $u_i = -1+2i/p$,
-    the roots of $(1-u^2)P_p'$, the roots of $P_{p+1}$ --- so a reader can
-    reproduce them exactly.  \texttt{WarpAndBlend} is specified only by citation,
-    and Warburton's construction carries a free blending parameter $\alpha$ that
-    moves the interior nodes: measured against $\alpha = 0$, the optimised values
-    displace them by $6\times10^{-5}$ at degree~4, $7\times10^{-4}$ at degree~5
-    and $3\times10^{-2}$ by degree~10.  Two conforming writers can therefore
-    disagree under the same name.
+    the roots of $(1-u^2)P_p'$, the roots of $P_{p+1}$ --- so any two readers
+    reproduce them identically.  \texttt{WarpAndBlend} is given only by citation,
+    and the construction cited carries a free blending parameter $\alpha$ that
+    moves the interior nodes: against $\alpha = 0$, displacements are
+    $6\times10^{-5}$ at degree~4, $7\times10^{-4}$ at degree~5 and
+    $3\times10^{-2}$ by degree~10.  Two conforming writers can place the nodes
+    differently under the same name.
 
-    This matters because \S Lagrange Control Point Distribution \emph{requires}
-    \texttt{cgnscheck} to compare the stored coordinates against the named family
-    and report a mismatch.  That rule cannot be implemented exactly for a family
-    the standard leaves under-determined --- an exact comparison would reject a
-    conformant file.  v4 pins $\alpha$ to the optimised values of the cited
-    reference, noting that the triangle and the tetrahedron use different tables.
+    Separately, the tolerance for comparing a stored set against a named family
+    is left to ``its chosen tolerance'' in two places.  A tolerance chosen per
+    implementation is the same defect in a second guise: two conforming
+    validators can disagree about whether one file matches, and one of them
+    reports an error.
 
-    \textit{Scope of the risk:} none for the data itself, since the coordinates
-    are authoritative and a reader always builds the basis from them, and none
-    at all for degrees $\le 3$, where $\alpha$ has no effect by symmetry --- which
-    covers every geometric order \texttt{ElementType\_t} can express.  It bites
-    only on high-degree solution bases, and only for the validation rule.
-    Pending the pin, the reference implementation confirms a set that matches the
-    optimised values, reports one that agrees only loosely as inconclusive, and
-    flags only a set outside that band --- which still catches the permuted list
-    and $[0,1]$-domain errors the section names, both being $O(1)$.
+    An ambiguity here is not harmless, because \S Lagrange Control Point
+    Distribution \emph{requires} \texttt{cgnscheck} to perform this comparison
+    and report a mismatch.  A mandated check on an under-determined family
+    cannot be implemented without the risk of rejecting a conformant file.
+
+    v4 closes it in Section~\ref{sec:wb-determinacy} by fixing three things: the
+    $\alpha$ values, tabulated in the standard itself rather than left to the
+    cited paper, and separately for the triangle and the tetrahedron; the
+    comparison tolerance, at $10^{-8}$; and the behaviour of an implementation
+    that cannot generate a named family, which must report the comparison as
+    \emph{not performed} and must never report a mismatch.  That last rule is
+    what lets a reader conform without implementing every construction.
+
+    \textit{Scope of the risk, for the record:} none to the data, since the
+    coordinates are authoritative and a reader always builds the basis from them;
+    and none at all at degrees $\le 3$, where $\alpha$ has no effect by symmetry
+    --- which covers every geometric order \texttt{ElementType\_t} can express.
+    It bites only high-degree solution bases, and only the validation rule.
 
   \item \CLARIFYIV{} \textbf{\texttt{cgnscheck -s} is stricter than conformance.}
     Section~\ref{sec:validation} states that a mismatch between
@@ -695,10 +704,11 @@ the family-level \texttt{SolutionInterpolation\_t} precede dependent field array
 (4)~the rename of the
 control-point distribution enumeration to \texttt{ControlPointDistribution\_t},
 the v3 name exceeding the 32-character CGNS limit and so being unstorable; (5)~the correction of the \texttt{GaussLegendre} node rule from $P_p$ to
-$P_{p+1}$, the adopted form yielding one node too few; (6)~pinning the
-\texttt{WarpAndBlend} blending parameter, without which the family is not
-uniquely determined and the comparison the standard mandates cannot be
-implemented; and (7)~the clarification that \texttt{cgnscheck -s} enforces
+$P_{p+1}$, the adopted form yielding one node too few; (6)~the measures that make
+\texttt{WarpAndBlend} and the comparison tolerance determinate --- tabulated
+$\alpha$ values, a fixed tolerance, and a not-performed report where a family
+cannot be generated --- without which the comparison the standard mandates cannot
+be implemented; and (7)~the clarification that \texttt{cgnscheck -s} enforces
 recommendations beyond conformance.  The amendment adds no new capability.
 
 \medskip
@@ -916,12 +926,8 @@ omitted rather than written as \texttt{Null}.  The four named values:
     for element interpolation.
   \item \textbf{\texttt{WarpAndBlend}} (simplices only): specialised distribution for triangles
     and tetrahedra ensuring well-conditioned Vandermonde matrices~\cite{Warburton06},
-    \vfour{with the blending parameter $\alpha$ taking the per-degree optimised
-    values tabulated in that reference (and $\alpha$ as given there for the
-    triangle and the tetrahedron respectively, which differ).  Fixing $\alpha$ is
-    what makes the family well defined: it is a free parameter of the
-    construction, and leaving it open would leave two conforming writers able to
-    place the interior nodes differently under the same name.}
+    \vfour{with the blending parameter $\alpha$ taking the values of
+    Table~\ref{tab:wbalpha}.  See Section~\ref{sec:wb-determinacy}.}
 \end{itemize}
 \par}
 
@@ -938,7 +944,8 @@ coordinates are normative and the distribution name is advisory metadata.  A rea
 \emph{must} construct a basis that interpolates at the coordinates actually present in
 \texttt{LagrangeControlPoints}.  It \emph{may} use the named family to obtain those nodes by
 the better-conditioned or higher-precision route described above, but only after confirming
-that the family's nodes agree with the stored coordinates to within its chosen tolerance; if
+that the family's nodes agree with the stored coordinates to within the tolerance
+\vfour{of Section~\ref{sec:wb-determinacy}}; if
 they do not, it \emph{must} fall back to the stored coordinates and \emph{should} warn.  It
 must never silently substitute the named family's nodes for the stored ones.
 
@@ -968,13 +975,70 @@ exactly (e.g.\ \texttt{GaussLobattoLegendre} and \texttt{Equidistant} both reduc
 $\{-1,0,1\}$ at $p=2$), so the check is inherently non-discriminating at low degree regardless of
 implementation; this is a property of the mathematics, not a defect in the comparison.
 
+\begin{v4block}
+\paragraph{\vfourmark Determinacy of \texttt{WarpAndBlend}.}
+\label{sec:wb-determinacy}
+The other three families are each fixed by a closed-form rule, so any two readers
+reproduce them identically.  \texttt{WarpAndBlend} is a \emph{construction} rather
+than a formula, and it carries a free blending parameter $\alpha$ which moves the
+interior nodes --- against $\alpha = 0$ the values below displace them by
+$6\times10^{-5}$ at degree~4 and $3\times10^{-2}$ by degree~10.  Three things are
+therefore fixed here, so that the family denotes one point set and only one.
+
+\smallskip
+\noindent\textbf{(a) The blending parameter.}  $\alpha$ takes the values of
+Table~\ref{tab:wbalpha}, which differ between the triangle and the tetrahedron.
+For degrees beyond the table, $\alpha = 5/3$ for the triangle and $\alpha = 1$ for
+the tetrahedron.
+
+\begin{table}[htbp]
+\centering\small
+\rowcolors{2}{cgnslight!20}{white}
+\begin{tabular}{@{} l *{8}{c} @{}}
+\toprule
+degree $p$      & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 \\
+\midrule
+\texttt{TRI}    & 0 & 0 & 1.4152 & 0.1001 & 0.2751 & 0.9800 & 1.0999 & 1.2832 \\
+\texttt{TETRA}  & 0 & 0 & 0      & 0.1002 & 1.1332 & 1.5608 & 1.3413 & 1.2577 \\
+\midrule
+degree $p$      & 9 & 10 & 11 & 12 & 13 & 14 & 15 & $>15$ \\
+\midrule
+\texttt{TRI}    & 1.3648 & 1.4773 & 1.4959 & 1.5743 & 1.5770 & 1.6223 & 1.6258 & $5/3$ \\
+\texttt{TETRA}  & 1.1603 & 1.10153 & 0.6080 & 0.4523 & 0.8856 & 0.8717 & 0.9655 & $1$ \\
+\bottomrule
+\end{tabular}
+\caption{\vfour{Blending parameter $\alpha$ for the \texttt{WarpAndBlend}
+distribution.  At $p \le 2$ (\texttt{TRI}) and $p \le 3$ (\texttt{TETRA})
+$\alpha$ has no effect by symmetry, so those entries are informative only.}}
+\label{tab:wbalpha}
+\end{table}
+
+\noindent\textbf{(b) The comparison tolerance.}  Wherever this standard requires a
+stored point set to be compared against a named family --- the reader's optional
+better-conditioned path above, and the \texttt{cgnscheck} comparison --- the sets
+agree when a bijection exists pairing each stored point with a generated point at
+a distance of at most $10^{-8}$ in the parametric coordinates.  Fixing the
+tolerance matters as much as fixing $\alpha$: with it left to each
+implementation, two conforming validators could disagree about whether the same
+file matches, and one of them would report an error.
+
+\noindent\textbf{(c) When the family cannot be reproduced.}  An implementation
+that does not generate a named family --- \texttt{WarpAndBlend} in particular
+requires a specific construction, not merely a root-finder --- \emph{must} report
+the comparison as \emph{not performed} and \emph{must not} report a mismatch.
+Silence about an unperformed check is a gap; reporting it as a disagreement is a
+false accusation against a conformant file, and the coordinates are authoritative
+in any case.
+\end{v4block}
+
 \paragraph{Absent attribute.}
 If \texttt{ControlPointDistribution} is absent, a reader \emph{must} construct the
 basis from the stored \texttt{LagrangeControlPoints} coordinates directly.  It must
 \emph{not} substitute an assumed distribution, and no warning is warranted, because nothing
 is ambiguous.  An implementation \emph{may} try to recognise the stored points as one of the
 named families in order to take the better-conditioned path described above, but must fall
-back to the general construction when no family matches within its chosen tolerance.
+back to the general construction when no family matches within the tolerance
+\vfour{of Section~\ref{sec:wb-determinacy}}.
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsubsection{New \texttt{GridLocation\_t} Value: \texttt{InterpolationPoints}}
