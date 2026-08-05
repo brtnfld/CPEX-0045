@@ -530,16 +530,27 @@ explicitly deferred.  This package collects them for Version 4.\ifvfourdraft{}
     intended the literal reading, and under it a conformant writer and a
     conformant reader disagree on $L$ for the most ordinary zone layout.
 
-  \item \SUPERSEDESIV{} \textbf{For \texttt{ParametricLagrange}, $N_\mathrm{DOFs}$
-    is the \texttt{NumberOfPoints} actually stored in \texttt{LagrangeControlPoints}.}
-    v3 leaves $N_\mathrm{DOFs}$ to be inferred from the element type and degree,
-    which silently assumes the \emph{complete} polynomial space.  That assumption
-    fails for the serendipity spaces the standard itself lists in
-    Table~\ref{tab:spaces}: an edge-serendipity \texttt{QUAD} at $p=2$ has 8
-    control points, not 9.  v4 makes the stored count authoritative, consistent
-    with the precedence rule already adopted for \texttt{LagrangeControlPoints}
-    over \texttt{LagrangeControlPointDistribution} (Section~\ref{sec:lagrange-distribution}):
-    where the file records the data, the record wins over anything derivable.
+  \item \SUPERSEDESIV{} \textbf{$N_\mathrm{DOFs}$ depends on the interpolation
+    type, and for \texttt{IsoParametric} it is the mesh basis.}
+    v3 leaves $N_\mathrm{DOFs}$ to be inferred from the element type and degree.
+    That is right for \texttt{ParametricLagrange} --- where it is the
+    complete-space cardinality of the base type at that degree, per the
+    Table~\ref{tab:spaces} caption, serendipity being a classification of
+    \emph{element} interpolation --- and wrong for the other two cases.  For the
+    modal types it is $\binom{p+d}{d}(q+1)$, which is smaller (a \texttt{QUAD} at
+    $p=2$ has 6 modal coefficients, not 9).  For \texttt{IsoParametric} it is the
+    cardinality of the \emph{mesh} basis, which may be serendipity: an
+    \texttt{IsoParametric} solution on a \texttt{QUAD\_8} element has 8 degrees of
+    freedom, not the 9 of the complete $\Qtp$ space.  v4 states all three cases
+    explicitly and makes what the file records authoritative where it records
+    anything, consistent with the precedence rule already adopted for
+    \texttt{LagrangeControlPoints} over \texttt{LagrangeControlPointDistribution}
+    (Section~\ref{sec:lagrange-distribution}).
+    \textit{Open question:} a serendipity \emph{solution} basis is currently
+    inexpressible, because \texttt{cg\_solution\_interpolation\_points\_write}
+    derives the array length and takes no point count.  Allowing one would need a
+    count argument on that entry; the Committee should say whether it wants that
+    or whether solution Lagrange bases are complete by definition.
 
   \item \CLARIFYIV{} \textbf{The family basis must exist before the field arrays
     that depend on it.}  Because $L$ is derived from the matching
@@ -2260,18 +2271,35 @@ contribute no degrees of freedom.  The v3 wording ``all zone elements'' read
 literally includes them, under which a conformant writer and a conformant reader
 compute different $L$ for an entirely ordinary zone layout.
 
-\paragraph{\vfour{$N_\mathrm{DOFs}$ for \texttt{ParametricLagrange} is the stored point count.}}
-\SUPERSEDESIV{}\ \ For a \texttt{ParametricLagrange} block, $N_\mathrm{DOFs}$ is the
-\texttt{NumberOfPoints} extent of the matching node's \texttt{LagrangeControlPoints}
-array, not a cardinality recomputed from the element type and degree.  The two
-coincide for the complete spaces but not for the serendipity spaces of
-Table~\ref{tab:spaces}: an edge-serendipity \texttt{QUAD} at $p=2$ stores $4p=8$
-points where the complete space $\Qtp$ has $(p+1)^2=9$.  This follows the same
-principle as the \texttt{LagrangeControlPoints}-over-\texttt{LagrangeControlPointDistribution}
-precedence rule of Section~\ref{sec:lagrange-distribution}: what the file records
-governs, so reconstruction never depends on writer and reader agreeing on a
-computation.  For the modal types $N_\mathrm{DOFs}$ remains $\binom{p+d}{d}(q+1)$,
-which is not stored anywhere and must be computed.
+\paragraph{\vfour{$N_\mathrm{DOFs}$ per interpolation type.}}
+\SUPERSEDESIV{}\ \ $N_\mathrm{DOFs}(e)$ is determined by the \emph{interpolation
+type} of the matching \texttt{SolutionInterpolation\_t}, not by the element type and
+degree alone:
+
+\begin{itemize}[nosep,leftmargin=1.5em]
+  \item \texttt{ParametricLagrange}: the \texttt{NumberOfPoints} extent of the
+    node's \texttt{LagrangeControlPoints} array.  Under the API of
+    Section~\ref{sec:family-api} this necessarily equals the complete-space
+    cardinality of the base type at that degree, since
+    \texttt{cg\_solution\_interpolation\_points\_write} derives the array length
+    and accepts no point count; serendipity is a classification of \emph{element}
+    interpolation (Table~\ref{tab:spaces} caption), not of solution interpolation.
+  \item \texttt{ParametricMonomialsPascal}, \texttt{CartesianMonomialsPascal}:
+    $\binom{p+d}{d}\,(q+1)$, which is not stored anywhere and must be computed.
+    This is smaller than the nodal count --- a \texttt{QUAD} at $p=2$ has 6 modal
+    coefficients, not 9 --- so a reader that assumes the nodal cardinality
+    computes the wrong $L$ for every modal file.
+  \item \texttt{IsoParametric}: the cardinality of the mesh basis, i.e.\ the
+    \texttt{NumberOfPoints} of the referenced \texttt{ElementInterpolation\_t}, or
+    the node count of the element's own tag when that node stores no control
+    points.  This is the one solution case where a serendipity count arises: an
+    \texttt{IsoParametric} solution on a \texttt{QUAD\_8} has 8 degrees of freedom,
+    not the 9 of the complete $\Qtp$ space.
+\end{itemize}
+
+\noindent In all three cases the spatial count is multiplied by $(q+1)$, and where
+the file records a count that record governs, so reconstruction never depends on
+writer and reader agreeing on a computation.
 \end{v4block}
 
 \paragraph{Metadata arrays are not solution fields.}
