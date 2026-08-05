@@ -2607,12 +2607,6 @@ points are stored anywhere and the reference domain of
 Section~\ref{sec:coord-conventions} with the node order of
 Figure~\ref{fig:coord-systems} applies.
 
-\emph{Implementation status:} this resolution is specified here but not yet implemented on the
-\texttt{CPEX45\_high\_order\_wip} branch, where the call still reports
-\texttt{CG\_NODE\_NOT\_FOUND} from the solution node's own missing array.  Like the
-coordinate-versus-distribution comparison of Section~\ref{sec:lagrange-distribution}, this is a
-normative statement the reference implementation has yet to catch up with.
-
 Returning the referenced points is not synthesis: the data is in the file, one documented
 indirection away, and the indirection is exactly what \texttt{IsoParametric} means.  A caller
 that needs to know the interpolation type asks for it directly through
