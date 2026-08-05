@@ -519,9 +519,9 @@ and the vote on each decision and ballot item.
 \addcontentsline{toc}{section}{Version 4 Amendment Package\ifvfourdraft\space(draft)\fi}
 
 Version 3.0 was adopted on 2026-08-04.  Implementing it against the reference
-library surfaced six places where the adopted text is ambiguous,
-self-inconsistent, unimplementable, or silent on something an implementer must
-decide.  This
+library surfaced seven places where the adopted text is ambiguous,
+self-inconsistent, unimplementable, under-determined, or silent on something an
+implementer must decide.  This
 package collects them for Version 4.\ifvfourdraft{} Every item below is
 unadopted.\fi
 
@@ -641,6 +641,33 @@ their own ballot.
     coordinate-versus-distribution comparison, where the generator has to produce
     exactly the stored point count.
 
+  \item \SUPERSEDESIV{} \textbf{\texttt{WarpAndBlend} is not uniquely determined.}
+    The other three families are pinned by a closed-form rule --- $u_i = -1+2i/p$,
+    the roots of $(1-u^2)P_p'$, the roots of $P_{p+1}$ --- so a reader can
+    reproduce them exactly.  \texttt{WarpAndBlend} is specified only by citation,
+    and Warburton's construction carries a free blending parameter $\alpha$ that
+    moves the interior nodes: measured against $\alpha = 0$, the optimised values
+    displace them by $6\times10^{-5}$ at degree~4, $7\times10^{-4}$ at degree~5
+    and $3\times10^{-2}$ by degree~10.  Two conforming writers can therefore
+    disagree under the same name.
+
+    This matters because \S Lagrange Control Point Distribution \emph{requires}
+    \texttt{cgnscheck} to compare the stored coordinates against the named family
+    and report a mismatch.  That rule cannot be implemented exactly for a family
+    the standard leaves under-determined --- an exact comparison would reject a
+    conformant file.  v4 pins $\alpha$ to the optimised values of the cited
+    reference, noting that the triangle and the tetrahedron use different tables.
+
+    \textit{Scope of the risk:} none for the data itself, since the coordinates
+    are authoritative and a reader always builds the basis from them, and none
+    at all for degrees $\le 3$, where $\alpha$ has no effect by symmetry --- which
+    covers every geometric order \texttt{ElementType\_t} can express.  It bites
+    only on high-degree solution bases, and only for the validation rule.
+    Pending the pin, the reference implementation confirms a set that matches the
+    optimised values, reports one that agrees only loosely as inconclusive, and
+    flags only a set outside that band --- which still catches the permuted list
+    and $[0,1]$-domain errors the section names, both being $O(1)$.
+
   \item \CLARIFYIV{} \textbf{\texttt{cgnscheck -s} is stricter than conformance.}
     Section~\ref{sec:validation} states that a mismatch between
     \texttt{ControlPointDistribution} and \texttt{LagrangeControlPoints}
@@ -668,7 +695,10 @@ the family-level \texttt{SolutionInterpolation\_t} precede dependent field array
 (4)~the rename of the
 control-point distribution enumeration to \texttt{ControlPointDistribution\_t},
 the v3 name exceeding the 32-character CGNS limit and so being unstorable; (5)~the correction of the \texttt{GaussLegendre} node rule from $P_p$ to
-$P_{p+1}$, the adopted form yielding one node too few; and (6)~the clarification that \texttt{cgnscheck -s} enforces
+$P_{p+1}$, the adopted form yielding one node too few; (6)~pinning the
+\texttt{WarpAndBlend} blending parameter, without which the family is not
+uniquely determined and the comparison the standard mandates cannot be
+implemented; and (7)~the clarification that \texttt{cgnscheck -s} enforces
 recommendations beyond conformance.  The amendment adds no new capability.
 
 \medskip
@@ -885,7 +915,13 @@ omitted rather than written as \texttt{Null}.  The four named values:
     \vfour{$P_{p+1}(u)=0$}; does \emph{not} include the endpoints.  Rarely used
     for element interpolation.
   \item \textbf{\texttt{WarpAndBlend}} (simplices only): specialised distribution for triangles
-    and tetrahedra ensuring well-conditioned Vandermonde matrices~\cite{Warburton06}.
+    and tetrahedra ensuring well-conditioned Vandermonde matrices~\cite{Warburton06},
+    \vfour{with the blending parameter $\alpha$ taking the per-degree optimised
+    values tabulated in that reference (and $\alpha$ as given there for the
+    triangle and the tetrahedron respectively, which differ).  Fixing $\alpha$ is
+    what makes the family well defined: it is a free parameter of the
+    construction, and leaving it open would leave two conforming writers able to
+    place the interior nodes differently under the same name.}
 \end{itemize}
 \par}
 
