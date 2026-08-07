@@ -519,7 +519,7 @@ and the vote on each decision and ballot item.
 \addcontentsline{toc}{section}{Version 4 Amendment Package\ifvfourdraft\space(draft)\fi}
 
 Version 3.0 was adopted on 2026-08-04.  Implementing it against the reference
-library, and auditing the result, surfaced fifteen places where the adopted text
+library, and auditing the result, surfaced seventeen places where the adopted text
 is ambiguous, unimplementable, under-determined, silent on something a reader
 needs, or inconsistent with an established CGNS convention.  Several further
 divergences were found and deliberately excluded: where the adopted text turned
@@ -529,7 +529,7 @@ package collects them for Version 4.\ifvfourdraft{} Every item below is
 unadopted.\fi
 
 \smallskip
-\noindent Items~1--6 came out of implementing v3.  Items~7--15 came out of a
+\noindent Items~1--6 came out of implementing v3.  Items~7--17 came out of a
 subsequent audit, and most share a character worth naming: each is a rule the
 adopted text \emph{uses} without ever stating.  The reference implementation
 arrived at these rules independently and, where both exist, at the same answers
@@ -964,6 +964,35 @@ derivation no longer has to be made independently by each implementer.
     base carrying nothing else is sufficient.  And the four bibliography entries
     that were never cited now are.
 
+  \item \CLARIFYIV{} \textbf{\texttt{LagrangeControlPoints} extents are
+    validated.}  v3 checks the array's datatype and rank and stops there, so a
+    file whose extents contradict the node declaring them is accepted and
+    surfaces later as a mis-sized field array, far from its cause.  Three
+    conditions are exactly checkable from data already in the file and v4
+    requires them: the fast axis equals the element dimension (plus one for
+    space-time), the slow axis is a positive multiple of $q+1$, and the spatial
+    count does not exceed the complete-space cardinality of the declared degree
+    (Section~\ref{sec:validation}).
+
+    The third is an \emph{upper bound}, deliberately.  An earlier review asked for
+    equality against \texttt{cg\_solution\_lagrange\_interpolation\_size}; that
+    would reject the serendipity spaces this standard supports, since an
+    edge-serendipity \texttt{QUAD} at $p=2$ carries $4p=8$ control points against
+    a complete-space $(p+1)^2=9$.  A set larger than the complete space cannot be
+    unisolvent for a degree-$p$ space and is always an error; a smaller one is an
+    incomplete space and is legal.  \textit{Impact:} none to conformant files.
+
+  \item \CLARIFYIV{} \textbf{The Rationale states what the extension costs to do
+    without.}  Section~\ref{sec:rationale} carried a single paragraph inherited
+    from v2, describing the mechanism but never the problem.  v4 adds the case a
+    reader deciding whether to implement this actually needs: that a high-order
+    solver writing CGNS today must either interpolate down and discard what the
+    method computed, write degrees of freedom under a location whose length rule
+    contradicts them, or hide them in \texttt{UserDefinedData\_t} where every
+    consumer needs a bespoke reader.  It also names the thread that connects
+    several decisions in this document --- the missing thing is not the data but
+    the description of the space it lives in.  No normative content.
+
   \item \CLARIFYIV{} \textbf{Three corrections that carry no argument.}
     \emph{(a)} \texttt{Equidistant} was defined only by the 1D formula
     $u_i = -1+2i/p$, which does not describe the nodes on a simplex; v4 states the
@@ -1166,6 +1195,7 @@ Section~\ref{sec:modal-order-ceiling} gives the detail.
 
 %% ═════════════════════════════════════════════════════════════════════════
 \section{Rationale}
+\label{sec:rationale}
 %% ═════════════════════════════════════════════════════════════════════════
 
 \begin{v2quote}
@@ -1176,6 +1206,44 @@ integrated as metadata in the CGNS file in order to allow high flexibility as to
 interpolants or even coordinates, an automatic procedure to allow for very high interpolation
 order, and time-dependent interpolants.
 \end{v2quote}
+
+\begin{v4block}
+\paragraph{\vfourmark What this costs today.}
+The passage above states the mechanism.  What it does not state is the cost of
+doing without it, which is the part a reader deciding whether to implement this
+needs, so it is set down here.
+
+A high-order solver writing CGNS today has three options and none of them
+survives contact with a second tool.  It can \emph{interpolate down} to the
+vertex or cell-centre values the standard already understands, which discards
+exactly the information the method exists to produce: a degree-4 tetrahedral
+element carries 35 degrees of freedom, and a vertex dump keeps~4.  The file
+round-trips, and the solution it describes is not the solution that was
+computed.  It can write the degrees of freedom into a \texttt{FlowSolution\_t}
+anyway, under \texttt{CellCenter} or \texttt{Vertex}, where the array length
+contradicts what the location means --- \texttt{cgnscheck} rejects such a file,
+and a reader that trusts the location reads the wrong values without any
+indication that it has.  Or it can put them in \texttt{UserDefinedData\_t},
+which is honest but private: the basis, the point ordering and the
+degree-of-freedom layout live in the writing code, and every consumer needs a
+bespoke reader built against that one solver.
+
+The common thread is that the missing information is not the data but the
+\emph{description of the space the data lives in}.  Without somewhere to record
+the interpolation --- which basis, at what degree, with control points where ---
+the numbers are uninterpretable to anyone who did not write them, and the
+standard's usual guarantee, that a conforming reader can recover what a
+conforming writer meant, does not hold for this class of solver at all.
+
+That is what this proposal supplies, and why it is worth the two node types.
+It also explains the shape of several decisions that would otherwise look
+fussy: why the stored coordinates are authoritative over any named
+distribution, why the writer records the normalisation factors it actually
+used rather than a formula both sides must agree on, and why $N_\mathrm{DOFs}$
+is pinned per interpolation type.  In each case the alternative leaves the
+reader reconstructing something the writer already knew, which is the failure
+this section describes.
+\end{v4block}
 
 
 %% ═════════════════════════════════════════════════════════════════════════
@@ -3236,6 +3304,24 @@ A conforming reader must reject:
     $[\textit{ElementType}, \textit{SpatialDegree}, \textit{TemporalDegree}]$);
   \item \texttt{LagrangeControlPoints} children whose data type is not \texttt{R8} or whose
     array dimension is not~2;
+  \item \vfour{\texttt{LagrangeControlPoints} whose \emph{extents} are inconsistent
+    with the node that declares them.  Three conditions are exactly checkable from
+    data already in the file, and a reader must reject a violation of any of them:
+    the fast axis must equal the element dimension~$d$, or $d+1$ when
+    \texttt{TemporalDegree} $>0$ (the extra row carries parametric time); the slow
+    axis must be a positive multiple of $q+1$, since the space-time set is the
+    spatial set replicated over $q+1$ time levels; and the resulting spatial count
+    must not exceed the cardinality of the \emph{complete} space of degree~$p$ for
+    that element type.
+    %
+    The last is an upper bound, not an equality, and the distinction is the whole
+    of the rule.  This standard supports serendipity spaces (Table~\ref{tab:spaces}):
+    an edge-serendipity \texttt{QUAD} at $p=2$ carries $4p = 8$ control points where
+    the complete space has $(p+1)^2 = 9$.  Requiring equality would reject those
+    files.  A set \emph{larger} than the complete space, by contrast, cannot be
+    unisolvent for a degree-$p$ space at all, so it is always an error --- which is
+    the case worth catching, since it otherwise surfaces as a mis-sized field array
+    far from its cause;}
   \item \vfour{any \texttt{DataArray\_t} child of a \texttt{SolutionInterpolation\_t}
     or \texttt{ElementInterpolation\_t} named anything other than
     \texttt{LagrangeControlPoints} --- in particular a \texttt{MonomialCoefficients}
