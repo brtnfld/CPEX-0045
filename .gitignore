@@ -5,3 +5,5 @@
 *.pdf
 CPEX-0045-high-order-interpolation.md
 *.tex~
+*.fdb_latexmk
+*.fls

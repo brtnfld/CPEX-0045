@@ -519,7 +519,7 @@ and the vote on each decision and ballot item.
 \addcontentsline{toc}{section}{Version 4 Amendment Package\ifvfourdraft\space(draft)\fi}
 
 Version 3.0 was adopted on 2026-08-04.  Implementing it against the reference
-library surfaced five places where the adopted text is ambiguous,
+library surfaced six places where the adopted text is ambiguous,
 unimplementable, under-determined, or inconsistent with an established CGNS
 convention.  Several further divergences were found and
 deliberately excluded: where the adopted text turned out to be correct and the
@@ -529,12 +529,20 @@ package collects them for Version 4.\ifvfourdraft{} Every item below is
 unadopted.\fi
 
 \medskip
-\noindent\textbf{Scope.}  Version 4 is a \emph{corrections and clarifications}
-amendment.  It adds no capability, no node, no enumerator and no API entry: every
-item either fixes wording that two conforming implementations could read
-differently, or states a rule that v3 relies on without ever writing down.  New
-capabilities are out of scope: they carry a different kind of risk and warrant
-their own ballot.
+\noindent\textbf{Scope.}  Version 4 is a \emph{corrections} amendment.  It adds
+no capability, no node type, no enumerator and no API entry: every item either
+fixes wording that two conforming implementations could read differently, states
+a rule that v3 relies on without ever writing down, or repairs an adopted
+provision that cannot be implemented without changing the meaning of an
+established API.  New capabilities remain out of scope: they carry a different
+kind of risk and warrant their own ballot.
+
+\noindent One item --- the sixth, relocating \texttt{CharacteristicLength} ---
+changes the on-disk layout.  It is a correction rather than a capability, since
+it removes a node from a position v3 placed it in and adds nothing, but the
+Committee should weigh it as a wire-format change and not on the nod.  It is
+raised now because nothing has been released, and the cost of moving the node
+rises sharply once it has been.
 
 \medskip
 \noindent\textit{Wording corrections to adopted v3 text:}
@@ -700,6 +708,77 @@ their own ballot.
     package proposes pinning $\alpha$ because a silently wrong mesh is worse than
     a writer having to change one parameter.
 
+  \item \SUPERSEDESIV{} \textbf{\texttt{CharacteristicLength} moves out of the
+    \texttt{FlowSolution\_t} field list and into a normative
+    \texttt{UserDefinedData\_t} container.}  v3 stores it as a
+    \texttt{DataArray\_t} child of \texttt{FlowSolution\_t} and repairs the
+    resulting collision by rule: Section~\ref{sec:on-disk-layout} requires a
+    reader to exclude it \emph{by name} from the field list.  The rule is
+    correct, and it was adopted knowingly.  What was not put to the Committee is
+    that it cannot be honoured where implementations actually read.
+
+    \textit{What we checked.}  The Mid-Level Library enumerates solution fields
+    by node \emph{label}, not by name: \texttt{cgi\_read\_sol} calls
+    \texttt{cgi\_get\_nodes(id, "DataArray\_t", \&nfields, ...)} and takes the
+    result as the field list, then requires every entry to match the shape
+    derived from \texttt{GridLocation}, returning \texttt{CG\_ERROR} on
+    mismatch.  A name-based exception to a label-based invariant has nowhere to
+    attach.  The consequences are three, and all were confirmed against the
+    released 4.5.1 sources and the reference branch rather than reasoned about:
+    \begin{itemize}[nosep,leftmargin=1.2em]
+      \item \texttt{cg\_nfields} reports \texttt{CharacteristicLength} as a
+        solution field, and \texttt{cg\_field\_info} indices shift accordingly.
+      \item Honouring the exclusion requires a hardcoded name test inside
+        \texttt{cgi\_read\_sol}.  The reference implementation duly added one
+        --- \texttt{cgi\_is\_sol\_metadata\_array()}, a \texttt{strcmp} against
+        the literal string --- together with a filtering pass that calls
+        \texttt{cgio\_get\_name} on every \texttt{DataArray\_t} child of every
+        \texttt{FlowSolution\_t} in every file, including files with no
+        high-order data.  Its own comment records why: otherwise the field size
+        check ``rejects the file outright''.
+      \item Independent readers that walk \texttt{DataArray\_t} children
+        directly never receive that fix, and no wording in this document
+        reaches them.
+    \end{itemize}
+
+    \textit{Rationale.}  \texttt{cg\_nfields} has meant ``the number of
+    \texttt{DataArray\_t} children of this \texttt{FlowSolution\_t}'' for the
+    life of the library.  v3 redefines it as ``\ldots minus a table of excluded
+    names'', and the table is extensible by construction --- the next extension
+    wanting per-element metadata adds an entry.  A standard should not require
+    an established API to change meaning in order to accommodate one node, and
+    should not make correct field enumeration depend on a name list that
+    third-party implementations have no way to learn.  CGNS already provides the
+    mechanism for data that is not the container's primary payload, and v3's own
+    \texttt{FlowSolution\_t} definition (Section~\ref{sec:flowsolution}) already
+    admits \texttt{UserDefinedData\_t} children.
+
+    \textit{What v4 does.}  \texttt{CharacteristicLength} becomes a
+    \texttt{DataArray\_t} child of a \texttt{UserDefinedData\_t} child of
+    \texttt{FlowSolution\_t}, named \texttt{InterpolationMetadata}.  Its data
+    type, rank, shape and positivity requirements are unchanged
+    (Section~\ref{sec:filemap}); only its parent changes.  Both the container
+    and the array are required when the associated
+    \texttt{SolutionInterpolation\_t} uses \texttt{CartesianMonomialsPascal},
+    and absent otherwise --- a \texttt{UserDefinedData\_t} node carries no
+    normative meaning of its own, so this document supplies it, exactly as it
+    already does for the normatively-named \texttt{DataArray\_t} of v3.
+
+    \textit{Impact.}  No API breaks and none is added.
+    \texttt{cg\_sol\_characteristic\_length\_\{read,write\}} keep their
+    signatures; only the node they address changes.  \texttt{cgi\_read\_sol}
+    reverts to the released form --- the name predicate and the filtering pass
+    are deleted, not rewritten --- because released \texttt{cgi\_read\_sol}
+    already reads \texttt{UserDefinedData\_t} children of
+    \texttt{FlowSolution\_t}, so the container needs no new traversal.
+    \texttt{cg\_nfields} returns to its established meaning for every caller,
+    and a reader that has never heard of CPEX-0045 sees a solution with the
+    fields it expects and one user-defined node it may ignore.  It is a
+    wire-format change, which is why it is drawn to the Committee's attention
+    rather than folded in as a clarification: files written under the v3 layout
+    must move the node.  Nothing has been released, so the population is
+    pre-release branches, and this is the last point at which the move is free.
+
 \end{enumerate}
 
 \medskip
@@ -708,19 +787,29 @@ their own ballot.
 \textbf{Motion (not yet moved).}
 The CGNS Steering Committee moves to adopt \textbf{CPEX-0045 version 4.0} as an
 amendment to the adopted v3, incorporating: (1)~the restriction of the
-high-order field-array element set to cells of the base's \texttt{CellDimension};
-(2)~the statement of $N_\mathrm{DOFs}$ for each of the four interpolation types,
-including the mesh-basis rule for \texttt{IsoParametric}; (3)~the requirement that
-the family-level \texttt{SolutionInterpolation\_t} precede dependent field arrays;
-(4)~the rename of the
-control-point distribution enumeration to \texttt{ControlPointDistribution\_t},
-the v3 name exceeding the 32-character CGNS limit and so being unstorable; (5)~the correction of the \texttt{GaussLegendre} node rule from $P_p$ to
-$P_{p+1}$, the adopted form yielding one node too few; (6)~the measures that make
-\texttt{WarpAndBlend} and the comparison tolerance determinate --- tabulated
-$\alpha$ values, a fixed tolerance, and a not-performed report where a family
-cannot be generated --- without which the comparison the standard mandates cannot
-be implemented; and (7)~the clarification that \texttt{cgnscheck -s} enforces
-recommendations beyond conformance.  The amendment adds no new capability.
+high-order field-array element set to elements whose dimension equals the base's
+\texttt{CellDimension}, the adopted wording admitting a reading under which
+boundary sections count as solution degrees of freedom; (2)~the rename of the
+control-point distribution enumeration, its node name, its enumerators and its
+name table to \texttt{ControlPointDistribution\_t}, the v3 name exceeding the
+32-character CGNS limit and so being unstorable; (3)~the correction of the
+\texttt{GaussLegendre} node rule from $P_p$ to $P_{p+1}$, the adopted form
+yielding one node too few for the space it interpolates; (4)~the change of the
+\texttt{sz} output of \texttt{cg\_element\_lagrange\_interpolation\_size},
+\texttt{cg\_solution\_lagrange\_interpolation\_size} and
+\texttt{cg\_solution\_monomial\_size} from \texttt{cgsize\_t *} to \texttt{int *},
+these returning a per-element basis cardinality rather than a mesh-scale count;
+and (5)~the measures that make \texttt{WarpAndBlend} and the comparison tolerance
+determinate --- tabulated $\alpha$ values, a fixed tolerance of $10^{-8}$, and a
+not-performed report where a family cannot be generated --- without which the
+comparison the standard mandates cannot be implemented; and (6)~the relocation of
+\texttt{CharacteristicLength} from a \texttt{DataArray\_t} child of
+\texttt{FlowSolution\_t} to a \texttt{DataArray\_t} child of a normative
+\texttt{UserDefinedData\_t} child named \texttt{InterpolationMetadata}, the v3
+position colliding with the label-based field enumeration of
+\texttt{cg\_nfields} and being honourable only by a hardcoded name test inside
+the library.  The amendment adds no new capability, no node type, no enumerator
+and no API entry; clause~(6) alone changes the on-disk layout.
 
 \medskip
 \noindent\textbf{Result:
@@ -1472,9 +1561,14 @@ output, and would leave the reconstruction exposed to any disagreement between t
 writer's and the reader's evaluation of that formula.
 
 \paragraph{On-disk encoding.}
-The scale factors are recorded in a \texttt{DataArray\_t} child of the parent
-\texttt{FlowSolution\_t} node, named \texttt{CharacteristicLength}, of \texttt{R8}
-datatype.  \emph{The array rank selects the normalisation}:
+The scale factors are recorded in an \texttt{R8} \texttt{DataArray\_t} named
+\texttt{CharacteristicLength}, held in a \texttt{UserDefinedData\_t} child of the
+parent \texttt{FlowSolution\_t} node named \texttt{InterpolationMetadata}.
+\vfourmark The container is required: the factors are \emph{not} a
+\texttt{DataArray\_t} child of \texttt{FlowSolution\_t}, because such children are
+the solution fields and are enumerated as such by label
+(Section~\ref{sec:on-disk-layout}).  \emph{The array rank selects the
+normalisation}:
 
 {\sloppy
 \begin{itemize}
@@ -1492,19 +1586,38 @@ the zone for a whole-zone block, or the number of elements listed by
 \texttt{PointRange}/\texttt{PointList} for a subset block.  Element ordering within the
 array matches the element ordering of the corresponding field arrays
 (Section~\ref{sec:filemap}).  All factors must be strictly positive.  The
-\texttt{CharacteristicLength} child is mandatory when the associated
-\texttt{SolutionInterpolation\_t} carries \texttt{CartesianMonomialsPascal}, and is
-otherwise omitted.
+\texttt{InterpolationMetadata} container and its \texttt{CharacteristicLength}
+child are mandatory when the associated \texttt{SolutionInterpolation\_t} carries
+\texttt{CartesianMonomialsPascal}, and are otherwise omitted.
+
+\vfourmark A \texttt{UserDefinedData\_t} node carries no meaning of its own in the
+SIDS, so this section supplies it: within a \texttt{FlowSolution\_t}, the name
+\texttt{InterpolationMetadata} is reserved for the use defined here, and a writer
+must not use it for anything else.  The container may hold no children other than
+those this document defines, so that its contents remain enumerable by a reader
+that knows only this section.
 
 \paragraph{Implementation status.}
-The node name and both on-disk shapes are normative.  The MLL helpers
+Both node names and both on-disk shapes are normative.  The MLL helpers
 \texttt{cg\_sol\_characteristic\_length\_read} and
 \texttt{cg\_sol\_characteristic\_length\_write} (Section~\ref{sec:sol-api}) carry an
-explicit \texttt{nscale} argument selecting the encoding, and write and read this node
-directly.  \texttt{cgnscheck} validates the datatype, the rank, that \texttt{nscale} is
+explicit \texttt{nscale} argument selecting the encoding and address this node
+directly; \vfourmark the writer creates the \texttt{InterpolationMetadata}
+container on demand, so a caller never manages it, and the accessor signatures are
+unchanged by the v4 relocation.  A reader that finds no container receives
+\texttt{CG\_NODE\_NOT\_FOUND}, the same result as a missing array.
+\texttt{cgnscheck} validates the datatype, the rank, that \texttt{nscale} is
 either~1 or \texttt{PhysDim}, and the element count, whenever the node is present; it
 also reports a missing \texttt{CharacteristicLength} on a \texttt{CartesianMonomialsPascal}
 solution (an error under \texttt{cgnscheck -s}, a warning otherwise).
+\vfourmark It additionally rejects a \texttt{CharacteristicLength} found directly
+under a \texttt{FlowSolution\_t}, which is the superseded v3 position.
+
+\vfourmark The library validates the container's contents when the file is opened,
+not when the array is first read, so a malformed node is reported at
+\texttt{cg\_open} rather than at the point of use.  The check runs over structures
+the \texttt{UserDefinedData\_t} traversal has already populated and issues no
+additional I/O.
 
 \subsubsection{Cartesian Modal Interpolants}
 
@@ -1778,8 +1891,10 @@ which will use the specified order.
 List( Descriptor\_t Descriptor1 ... DescriptorN );            \textrm{(o)}\\
 GridLocation\_t GridLocation ;                                 \textrm{(o/d)}\\
 \textcolor{red}{IndexArray\_t$<$1, 2, int$>$ InterpolationDegrees ;}      \textrm{(o/d)}\\
-\textcolor{red}{DataArray\_t$<$R8, 1|2, [NumElements] or [PhysDim,NumElements]$>$}\\
-\quad\textcolor{red}{CharacteristicLength ;}                                   \textrm{(o)}\\
+\textcolor{red}{UserDefinedData\_t InterpolationMetadata :=}                \textrm{(o)}\\
+\quad\textcolor{red}{DataArray\_t$<$R8, 1|2, [NumElements] or [PhysDim,NumElements]$>$}\\
+\quad\quad\textcolor{red}{CharacteristicLength ;}                           \textrm{(r)}\\
+\textcolor{red}{\} ;}\\
 Rind\_t<IndexDimension> Rind ;                                 \textrm{(o/d)}\\
 IndexRange<IndexDimension> PointRange ;                        \textrm{(o)}\\
 IndexArray<IndexDimension, ListLength[], int> PointList ;      \textrm{(o)}\\
@@ -1793,9 +1908,12 @@ List( UserDefinedData\_t UserDefinedData1 ... UserDefinedDataN ); \textrm{(o)}\\
 
 \noindent The \texttt{IndexArray\_t} carries
 \texttt{[\textbf{SpatialDegree}, \textbf{TemporalDegree}]} (length~2, datatype \texttt{I4}).
-\texttt{CharacteristicLength} is required only for Cartesian modal interpolation; its
+The \texttt{InterpolationMetadata} container is required only for Cartesian modal
+interpolation, and carries \texttt{CharacteristicLength} when present; the array
 rank selects the normalisation (rank~1 isotropic, rank~2 per-axis), as defined in
-Section~\ref{sec:cartesian-modal}.
+Section~\ref{sec:cartesian-modal}.  \vfourmark The container is what keeps the
+scale factors out of the \texttt{DataArray1 \ldots DataArrayN} list above, which
+is the solution field list and is enumerated by label.
 
 \begin{v2quote}
 The default value for \texttt{SpatialOrder} depends on the type of interpolation; the default
@@ -2231,9 +2349,13 @@ Recommended, not required, when interpolation type is
 
 \newpage
 % ─────────────────────────────────────────────────────────────────────────
-\subsection{\texttt{FlowSolution\_t}: Added Child Node}
+\subsection{\texttt{FlowSolution\_t}: Added Child Nodes}
 
-A single child node is added to \texttt{FlowSolution\_t}:
+Two child nodes are added to \texttt{FlowSolution\_t}: the
+\texttt{InterpolationDegrees} index array, and the \texttt{InterpolationMetadata}
+container holding \texttt{CharacteristicLength}.  \vfourmark The scale factors sit
+one level down, inside a \texttt{UserDefinedData\_t} node, so that they are not
+enumerated among the solution fields (Section~\ref{sec:on-disk-layout}).
 
 {\small\setlength{\extrarowheight}{2pt}
 \begin{tabularx}{\linewidth}{|N|M|}
@@ -2255,6 +2377,15 @@ A single child node is added to \texttt{FlowSolution\_t}:
 \end{tabular}} \\
 \hline
 \nfullrow{\quad\begin{tabular}[t]{@{}l@{}}
+  name = InterpolationMetadata \\
+  type = \texttt{\textbf{UserDefinedData\_t}} \\
+  datatype = \texttt{MT} \\
+  cardinality = 0:1
+\end{tabular}} \\
+\hline
+\nfullrow{\cellcolor{cgnssalmon}\quad\quad\textbf{Children of \texttt{InterpolationMetadata}}} \\
+\hline
+\nfullrow{\quad\quad\begin{tabular}[t]{@{}l@{}}
   name = CharacteristicLength \\
   type = \texttt{\textbf{DataArray\_t}} \\
   datatype = \texttt{R8} \\
@@ -2263,18 +2394,20 @@ A single child node is added to \texttt{FlowSolution\_t}:
   \quad\quad\quad\quad\quad\quad\quad\ \ $[\texttt{PhysDim}, |\mathcal{E}|]$ \ \ per-axis: \texttt{PhysDim} factors \\
   \quad\quad\quad\quad\quad\quad\quad\ \ \quad\quad\quad\quad\quad\quad\ \ \ per element, \texttt{PhysDim} fast-varying \\
   data = \textless{}per-element normalisation factors\textgreater{} \\
-  cardinality = 0:1
+  cardinality = 1:1
 \end{tabular}} \\
 \hline
-\nfullrow{\textit{Mandatory when the associated \texttt{SolutionInterpolation\_t}
-has \texttt{InterpolationType = CartesianMonomialsPascal}; element ordering matches
+\nfullrow{\textit{The \texttt{InterpolationMetadata} container is mandatory when the
+associated \texttt{SolutionInterpolation\_t} has
+\texttt{InterpolationType = CartesianMonomialsPascal}, and absent otherwise; when
+present it must carry \texttt{CharacteristicLength}.  Element ordering matches
 the field-array ordering.  All factors must be strictly positive.  $|\mathcal{E}|$ is
 the number of elements covered by the block.  Writers record the factors they actually
 used; readers use the recorded values and do not recompute them
 (Section~\ref{sec:cartesian-modal}).}} \\
 \hline
 \end{tabularx}
-\captionof{table}{New \texttt{InterpolationDegrees} and \texttt{CharacteristicLength}
+\captionof{table}{New \texttt{InterpolationDegrees} and \texttt{InterpolationMetadata}
 children of \texttt{FlowSolution\_t}.}
 }
 
@@ -2407,22 +2540,37 @@ runs from $0$ to $N_\mathrm{DOFs}(e_i)-1$ in the ordering established by the ass
 \texttt{LagrangeControlPoints}, or modal coefficients in the Pascal traversal of
 Section~\ref{sec:parametric-modal}).
 
-\paragraph{Metadata arrays are not solution fields.}
-\texttt{CharacteristicLength} is a \texttt{DataArray\_t} child of
-\texttt{FlowSolution\_t}, but it is interpolation \emph{metadata} and carries its own
-shape rather than the field length $L$ above.  Readers that enumerate the
-\texttt{DataArray\_t} children of a \texttt{FlowSolution\_t} to build the list of
-solution fields \emph{must exclude it by name}, and must not apply the field
-size rule to it.  A reader that does not exclude it will both report a spurious extra
-field and reject a conformant file, because the metadata length
-($\texttt{nscale}\times|\mathcal{E}|$) does not equal $L$.  Implementations should note
-that this failure is invisible on test files that contain no element sections, since
-field size checking cannot be performed at all in that case.
+\paragraph{\vfourmark Metadata arrays are not solution fields, and are not stored
+as though they were.}
+Every \texttt{DataArray\_t} child of a \texttt{FlowSolution\_t} is a solution field
+and has length $L$.  Interpolation metadata carries its own shape, so it is not
+stored there: \texttt{CharacteristicLength} lives in the
+\texttt{InterpolationMetadata} container (Section~\ref{sec:cartesian-modal}), one
+level below.  A reader building its field list by enumerating
+\texttt{DataArray\_t} children therefore needs no exception, and the rule that
+every such child has length $L$ holds without qualification.
+
+\smallskip
+\noindent\textit{Why the container, and not a rule.}  v3 placed
+\texttt{CharacteristicLength} directly under \texttt{FlowSolution\_t} and required
+readers to exclude it \emph{by name}.  That cannot be honoured where
+implementations read: the Mid-Level Library enumerates fields by node \emph{label},
+via \texttt{cgi\_get\_nodes(id, "DataArray\_t", ...)}, and then requires each entry
+to match the shape implied by \texttt{GridLocation}, failing the read otherwise.
+Under the v3 layout \texttt{cg\_nfields} counts the metadata array as a field, and
+honouring the exclusion means a hardcoded name test inside the library --- which
+redefines a long-established API for every caller, extends by one entry each time a
+future extension adds metadata, and never reaches independent readers that walk
+\texttt{DataArray\_t} children themselves.  Storing the array one level down
+removes the collision instead of documenting it, and leaves \texttt{cg\_nfields}
+meaning what it has always meant.
 
 \paragraph{CharacteristicLength.}
-An \texttt{R8} \texttt{DataArray\_t} child of \texttt{FlowSolution\_t} holding the
-per-element coordinate normalisation factors used by Cartesian modal interpolation
-(Section~\ref{sec:cartesian-modal}).  The array rank selects the normalisation:
+An \texttt{R8} \texttt{DataArray\_t} child of the \texttt{InterpolationMetadata}
+\texttt{UserDefinedData\_t} node, itself a child of \texttt{FlowSolution\_t},
+holding the per-element coordinate normalisation factors used by Cartesian modal
+interpolation (Section~\ref{sec:cartesian-modal}).  The array rank selects the
+normalisation:
 rank~1 with shape $[|\mathcal{E}|]$ is isotropic (one factor per element); rank~2 with
 shape $[\texttt{PhysDim}, |\mathcal{E}|]$ is per-axis (\texttt{PhysDim} factors per
 element, \texttt{PhysDim} fast-varying, so one element's factors are contiguous).  All
@@ -2465,12 +2613,14 @@ A conforming reader must reject:
   \item \texttt{CharacteristicLength} children whose data type is not \texttt{R8}, whose
     array rank is neither~1 nor~2, whose \texttt{nscale} (rank-2 only) is neither~1 nor
     \texttt{PhysDim}, whose element count disagrees with the block, or which contain a
-    non-positive factor.
+    non-positive factor;
+  \item \vfour{a \texttt{CharacteristicLength} \texttt{DataArray\_t} appearing directly
+    under a \texttt{FlowSolution\_t} rather than under
+    \texttt{InterpolationMetadata} --- the v3 position, which places a
+    non-conforming array in the solution-field list;}
+  \item \vfour{an \texttt{InterpolationMetadata} container holding any child other
+    than \texttt{CharacteristicLength}, or lacking it.}
 \end{itemize}
-
-\noindent A conforming reader must also \emph{exclude} \texttt{CharacteristicLength} from
-the solution-field list of its parent \texttt{FlowSolution\_t}, and must not apply the
-field size rule of Section~\ref{sec:on-disk-layout} to it.
 
 \noindent A mismatch between
 \texttt{Control\-Point\-Distribution}\allowbreak{} and the coordinates in

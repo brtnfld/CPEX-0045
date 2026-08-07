@@ -243,10 +243,48 @@ current spelling would misrepresent what was decided and under what name.
 
 ## Version 4 scope (recorded here, not in the spec)
 
-v3.0 was adopted 2026-08-04 and tagged `v3.4`. Version 4 is a **corrections and
-clarifications** amendment: it adds no capability, no node, no enumerator and no
-API entry. The four items are in the amendment package at the front of
+v3.0 was adopted 2026-08-04 and tagged `v3.4`. Version 4 is a **corrections**
+amendment: it adds no capability, no node type, no enumerator and no API entry.
+The six items are in the amendment package at the front of
 `CPEX-0045-high-order-interpolation.tex`.
+
+**Item 6 changes the on-disk layout** — the only one that does. It relocates
+`CharacteristicLength` out of the `FlowSolution_t` field list into a normative
+`InterpolationMetadata` container. It is filed as a correction rather than a
+capability because it removes a node from where v3 put it and adds nothing, but
+it should be presented to the Committee as a wire-format change and voted
+knowingly.
+
+Why it was raised after v3 was adopted, for the record. The v3 clarification
+(change-list item 6) states the collision with the `FlowSolution_t` field
+convention and adopts an exclusion-by-name rule to resolve it. The committee was
+asked *how to handle the collision* and answered; it was never asked *whether
+there should be one*. Checking against the library showed the rule cannot be
+honoured where implementations read:
+
+- `cgi_read_sol` enumerates fields by node **label** —
+  `cgi_get_nodes(id, "DataArray_t", &nfields, ...)` — then requires every entry to
+  match the shape from `GridLocation`, returning `CG_ERROR` otherwise. A
+  name-based exception has nowhere to attach.
+- `cg_nfields` has meant "count of `DataArray_t` children" for the life of the
+  library. The v3 layout redefines it as "…minus a name table", for all callers.
+- The reference branch had to add `cgi_is_sol_metadata_array()` — a `strcmp`
+  against the literal string — plus a `cgio_get_name` pass over every
+  `DataArray_t` child of every `FlowSolution_t` in every file. Its own comment
+  records that without it the size check "rejects the file outright".
+- The predicate is written as an extensible name list, so the next extension
+  wanting per-element metadata adds an entry. Independent readers never get any
+  of it.
+
+`UserDefinedData_t` is already a permitted child of `FlowSolution_t` in v3's own
+node definition, and released `cgi_read_sol` already traverses it
+(`cgns_internals.c:1833`), so the relocation needs no library addition — the name
+predicate and filter pass are deleted, not rewritten, and
+`cg_sol_characteristic_length_{read,write}` keep their signatures.
+
+Weighed and rejected: a dedicated typed node. Cleaner, but a genuine addition,
+which would push this to a new CPEX and past the point where nothing has been
+released.
 
 Two things deliberately stay out, and are recorded here rather than in the
 published document — naming a deferred capability inside the amendment package
