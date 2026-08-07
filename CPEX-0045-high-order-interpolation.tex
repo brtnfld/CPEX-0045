@@ -524,7 +524,7 @@ and the vote on each decision and ballot item.
 \addcontentsline{toc}{section}{Version 4 Amendment Package\ifvfourdraft\space(draft)\fi}
 
 Version 3.0 was adopted on 2026-08-04.  Implementing it against the reference
-library, and auditing the result, surfaced seventeen places where the adopted text
+library, and auditing the result, surfaced nineteen places where the adopted text
 is ambiguous, unimplementable, under-determined, silent on something a reader
 needs, or inconsistent with an established CGNS convention.  Several further
 divergences were found and deliberately excluded: where the adopted text turned
@@ -534,7 +534,7 @@ package collects them for Version 4.\ifvfourdraft{} Every item below is
 unadopted.\fi
 
 \smallskip
-\noindent Items~1--6 came out of implementing v3.  Items~7--17 came out of a
+\noindent Items~1--6 came out of implementing v3.  Items~7--19 came out of a
 subsequent audit, and most share a character worth naming: each is a rule the
 adopted text \emph{uses} without ever stating.  The reference implementation
 arrived at these rules independently and, where both exist, at the same answers
@@ -546,7 +546,7 @@ with until it disagrees in the file.
 
 \medskip
 \noindent\textbf{Scope.}  Version 4 is a \emph{corrections} amendment.  It adds
-no capability, no node type and no enumerator: every item either fixes wording
+no capability, no node type and no enumerator, and one API entry: every item either fixes wording
 that two conforming implementations could read differently, states a rule that v3
 relies on without ever writing down, or repairs an adopted provision that cannot
 be implemented without changing the meaning of an established API.  New
@@ -998,6 +998,45 @@ derivation no longer has to be made independently by each implementer.
     several decisions in this document --- the missing thing is not the data but
     the description of the space it lives in.  No normative content.
 
+  \item \NEWIV{} \textbf{A ranged writer for \texttt{CharacteristicLength}.}
+    The scale factors are per-element data --- \texttt{PhysDim} values per cell in
+    the per-axis encoding, the same order of magnitude as a solution field --- but
+    \texttt{cg\_sol\_characteristic\_length\_write} takes the whole array in one
+    call, and no rank of a partitioned run holds the whole array.  A distributed
+    writer therefore had to gather to one rank and write serially, on the one path
+    in this standard that is otherwise fully collective.
+
+    v4 adds \texttt{cg\_sol\_characteristic\_length\_partial\_write}, taking
+    \texttt{rmin} and \texttt{rmax} over the element axis while
+    \texttt{numElements} still declares the full extent, so every rank creates the
+    same array and writes only what it owns.  Since \texttt{nscale} is the
+    fast-varying axis an element range is contiguous, so a rank holding a
+    contiguous run writes one hyperslab (Section~\ref{sec:parallel}).
+
+    This is the one item in v4 that adds an API entry, so the scope note above is
+    qualified accordingly.  It is in scope for \emph{this} proposal rather than a
+    later one because the node, its encodings and its existing accessors are all
+    defined here: an accessor that cannot be called from the kind of writer this
+    standard is aimed at is an incomplete API for a node this document
+    introduces, not a new capability.  \textit{Impact:} none --- nothing is
+    changed or removed, the whole-array writer is untouched, and the on-disk
+    layout is identical.
+
+  \item \CLARIFYIV{} \textbf{Three API shapes are explained rather than left to
+    look like oversights.}  The \texttt{*\_count} helpers return $0$ or~$1$ by
+    construction, since the uniqueness rules admit at most one matching node; they
+    are existence predicates, and \texttt{cg\_solution\_interpolation\_find}
+    answers the different question of resolving a triplet to an index.  The
+    control-point calls take one array per coordinate against an interleaved
+    on-disk layout, which is what lets a caller pass \texttt{NULL} for a
+    coordinate it does not have and keeps the Fortran binding free of a rank-2
+    array whose fast axis varies with element dimension.  And
+    \texttt{InterpolationDegrees} carries an \texttt{IndexArray\_t} label where
+    \texttt{DataArray\_t} would fit the contents better; it is kept because
+    changing it is a wire-format change for no functional gain, readers filtering
+    \texttt{IndexArray\_t} children by name being unaffected by an extra sibling.
+    No normative content.
+
   \item \CLARIFYIV{} \textbf{Three corrections that carry no argument.}
     \emph{(a)} \texttt{Equidistant} was defined only by the 1D formula
     $u_i = -1+2i/p$, which does not describe the nodes on a simplex; v4 states the
@@ -1119,8 +1158,10 @@ and omitted rank and dimension values; and (14)~three corrections carrying no
 argument --- \texttt{Equidistant} on simplices, Fekete nodes recorded as
 \texttt{UserDefined}, and a modal compliance test whose expected values held only
 on an element of unit size.  The amendment adds no new capability, no node type
-and no enumerator; clauses~(6) and~(11) change the on-disk layout, and~(11) alone
-removes API entries.
+and no enumerator; clauses~(6) and~(11) change the on-disk layout, (11) alone
+removes API entries, and (16) adds the single new API entry --- a ranged writer
+for \texttt{CharacteristicLength}, without which a distributed writer must gather
+the whole array to one rank.
 
 \medskip
 \noindent\textbf{Status:
@@ -2565,6 +2606,17 @@ space for a given element type and orders.  The \texttt{*\_count} functions quer
 count how many \texttt{ElementInterpolation\_t} or \texttt{SolutionInterpolation\_t} nodes of a
 given type (and order) are already present.
 
+\vfour{The uniqueness rules of Sections~\ref{sec:element-interpolation}
+and~\ref{sec:solution-interpolation} bound the \texttt{*\_count} results to $0$
+or~$1$, so they are existence predicates rather than counts.  They are retained
+under that name because a caller testing ``has this family already got a basis
+for this element type?'' before writing one reads naturally as a count, and
+because \texttt{cg\_solution\_interpolation\_find} answers a different question ---
+it resolves a triplet to an index, applying the basic-tag fallback, and reports
+\texttt{CG\_NODE\_NOT\_FOUND} rather than zero.  A writer checking whether to
+create uses the count; a reader resolving an element to its basis uses
+\texttt{find}.}
+
 % ─────────────────────────────────────────────────────────────────────────
 \subsection{Reading and Writing Interpolation Characteristics via the Family Interface}
 \label{sec:family-api}
@@ -2680,6 +2732,20 @@ given \texttt{ElementType\_t}, alongside the existing element-type queries such 
 inclusion rather than a hypothetical one.  It is deliberately left open here: the choice is
 whether to specify it in this amendment or defer it, not whether it would be useful.
 
+\paragraph{\vfourmark Why the control-point calls take one array per coordinate.}
+\texttt{cg\_element\_interpolation\_points\_\{read,write\}} and their solution-side
+counterparts pass \texttt{pu}, \texttt{pv}, \texttt{pw} (and \texttt{pt})
+separately, whereas the array is stored interleaved as
+$[\textit{Dim}, \textit{NPoints}]$, so the library de-interleaves on every call.
+That is deliberate: it lets a caller omit a coordinate it does not have by
+passing \texttt{NULL} --- \texttt{pv} on a 1D element, \texttt{pt} when $q=0$ ---
+which an interleaved buffer cannot express, and it keeps the Fortran binding free
+of a rank-2 array whose fast axis varies with element dimension.  The cost is one
+copy of a per-family array whose size is a basis cardinality, not a mesh-scale
+quantity, so it does not grow with the problem.  The bulk arrays that do ---
+\texttt{CharacteristicLength} and the \texttt{FlowSolution\_t} fields --- take a
+single flat buffer and support ranged writes.
+
 \paragraph{\vfourmark Modal interpolation needs no coefficient access.}
 A modal \texttt{SolutionInterpolation\_t} stores no data array, so there is nothing
 for a coefficient accessor to address (Section~\ref{sec:no-monomial-coeff}).  A
@@ -2710,6 +2776,7 @@ cg\_sol\_interpolation\_degree\_write(fn, bn, zn, sn, spatialDegree, temporalDeg
 \addlinespace
 cg\_sol\_characteristic\_length\_read(fn, bn, zn, sn, *nscale, *numElements, *h\_e) & r{-}{-} \\
 cg\_sol\_characteristic\_length\_write(fn, bn, zn, sn, nscale, numElements, *h\_e) & {-}wm \\
+\vfour{cg\_sol\_characteristic\_length\_partial\_write(fn, bn, zn, sn, nscale, numElements, rmin, rmax, *h\_e)} & \vfour{{-}wm} \\
 \bottomrule
 \end{tabular}
 \caption{FlowSolution-level interpolation degree and characteristic-length API.}
@@ -2738,7 +2805,13 @@ cg\_sol\_characteristic\_length\_write(fn, bn, zn, sn, nscale, numElements, *h\_
   isotropic encoding, \texttt{PhysDim} the per-axis encoding & in/out \\
 \texttt{numElements} & Number of elements covered by the solution block & in/out \\
 \texttt{h\_e} & Normalisation factors, total length \texttt{nscale}$\times$\texttt{numElements}
-  (\texttt{NULL} on read for a shape-only query) & in/out \\
+  (\texttt{NULL} on read for a shape-only query).  \vfour{For the partial writer,
+  \texttt{nscale}$\times(\texttt{rmax}-\texttt{rmin}+1)$ factors covering the
+  supplied range only.} & in/out \\
+\vfour{\texttt{rmin}, \texttt{rmax}} & \vfour{First and last element of the range
+  being written, 1-based and inclusive.  \texttt{numElements} remains the
+  \emph{full} extent, so every caller declares the same array and only the range
+  differs.} & \vfour{in} \\
 \bottomrule
 \end{tabular}
 \caption{Input/output parameters for FlowSolution-level API.}
@@ -3140,6 +3213,16 @@ degree-of-freedom count used to size the \texttt{FlowSolution\_t} field arrays
 A 1D \texttt{IndexArray\_t} (data type \texttt{I4}) of length~2, child of
 \texttt{FlowSolution\_t}, holding $[\texttt{spatialDegree}, \texttt{temporalDegree}]$.  Recognized
 only for \texttt{Unstructured} zones.
+
+\vfour{\emph{On the label.}  \texttt{IndexArray\_t} elsewhere in the SIDS denotes a
+set of grid indices, and these are polynomial degrees, so \texttt{DataArray\_t}
+would fit the contents better.  The label is kept because it is what exists on
+disk and changing it would be a wire-format change for no functional gain: the
+node is found by name, and readers that enumerate \texttt{IndexArray\_t} children
+of a \texttt{FlowSolution\_t} filter by name before use --- the released reader
+looks for \texttt{PointList} and \texttt{ElementList} and skips anything else ---
+so an extra sibling is inert.  It is recorded here so the mismatch reads as a
+decision rather than an oversight.}
 
 \begin{v4block}
 \paragraph{\vfourmark The per-element degree-of-freedom count $N_\mathrm{DOFs}(e)$.}
@@ -3571,18 +3654,22 @@ sense that the interpolation descriptions are.  But
 \texttt{cg\_sol\_characteristic\_length\_write} takes the whole array in one
 call, and no distributed rank holds the whole array.
 
-Until a partial-write entry point exists, a conforming parallel writer gathers
-the factors to one rank and writes them there, collectively with respect to node
-creation.  This is stated as the current requirement, not as good practice: it is
-a genuine limitation of the present API, it costs an $O(|\mathcal{E}|)$ gather
-and a serial write on the path that the rest of this section is at pains to keep
-collective, and a future amendment adding a ranged variant --- taking
-\texttt{rmin}/\texttt{rmax} over the element axis, as
-\texttt{cgp\_field\_write\_data} does --- would remove it without changing the
-on-disk layout.  Writers using the isotropic (rank-1) encoding are affected less
-than those using per-axis (rank-2) by a factor of \texttt{PhysDim}, which is a
-reason to prefer it where the elements are not stretched, but not a reason to
-prefer it where they are.
+\texttt{cg\_sol\_characteristic\_length\_partial\_write} exists for this: it takes
+\texttt{rmin} and \texttt{rmax} over the element axis and writes that range only,
+while \texttt{numElements} still declares the full extent so every rank creates
+the same array.  A rank writes the elements it owns and nothing else.  Because
+\texttt{nscale} is the fast-varying axis, an element range is contiguous in
+storage, so a rank holding a contiguous run of elements writes a single
+hyperslab.
+
+Node creation is collective, as for any other node; the range writes are
+independent.  A rank that owns no elements of the block still participates in
+the create.  Ranges must together cover $[1, |\mathcal{E}|]$: an element left
+unwritten has undefined factors, which \texttt{cgnscheck} reports when it
+validates the array, rather than silently reading as zero.
+
+The whole-array \texttt{cg\_sol\_characteristic\_length\_write} remains the
+simpler call for a serial writer and is unchanged.
 
 \end{v4block}
 
