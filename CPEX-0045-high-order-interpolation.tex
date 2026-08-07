@@ -7,7 +7,7 @@
 \setlength{\headheight}{22pt}
 \addtolength{\topmargin}{-10pt}
 \usepackage{graphicx}
-\usepackage{hyperref}
+\usepackage[hyperfootnotes=false]{hyperref}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{booktabs}
@@ -55,6 +55,11 @@
   urlcolor=cgnsteal,
   citecolor=cgnsblue,
 }
+
+%% The node-structure tables are set with \captionof outside a float, where
+%% there is no float top for hypcap to anchor to.  Point the anchor at the
+%% caption itself rather than let the package warn on every such table.
+\captionsetup{hypcap=false}
 
 %% ── Code listing style ──────────────────────────────────────────────────
 \lstset{
@@ -1629,6 +1634,15 @@ mapping iterates that table and the value is otherwise unreadable.
 Nothing in the file format depends on the number: \texttt{GridLocation} is stored
 on disk as a \texttt{C1} string, so a disagreement over the numeric value is a
 source and ABI clash between the two extensions, never a file-compatibility one.
+
+The same caution applies to \emph{section numbering}.  This document adds SIDS
+sections 12.10 and 12.11 and displaces \texttt{UserDefinedData\_t} and
+\texttt{Gravity\_t} to 12.12 and 12.13, and it inserts a new enumeration into
+Chapter~4.  CPEX-0047 and CPEX-0050 also insert into Chapter~4, and CPEX-0047 adds
+its own Chapter~12 entry.  Section numbers are therefore assigned at adoption in
+the order the proposals are adopted, exactly as the enumerator value is, and the
+minutes should record that order.  As with the enumerator, nothing on disk depends
+on it: SIDS section numbers are prose organisation, not file structure.
 \end{v4block}
 
 
@@ -3485,7 +3499,16 @@ value is accepted --- which is precisely why conformance is the writer's respons
 
 {\sloppy
 \texttt{GridLocation\_t = InterpolationPoints} is valid only on \texttt{FlowSolution\_t} nodes.
-\texttt{ArbitraryGridMotion\_t} and \texttt{DiscreteData\_t} nodes must not use this location.
+\texttt{ArbitraryGridMotion\_t}, \texttt{DiscreteData\_t} \vfour{and
+\texttt{ZoneSubRegion\_t}} nodes must not use this location.
+\vfour{The exclusion of \texttt{DiscreteData\_t} and \texttt{ZoneSubRegion\_t} is
+a deliberate scope limit rather than an oversight, and it has a consequence worth
+stating: derived quantities --- gradients, sensors, wall distance --- have no
+high-order representation under this version, and a code needing them must either
+carry them at reduced order or wait for a later extension.  The two nodes are
+excluded because neither is sized by the location domain the way a
+\texttt{FlowSolution\_t} is, so the length rule of
+Section~\ref{sec:on-disk-layout} has nothing to attach to.}
 \vfour{Neither may a \texttt{Structured} zone: the sizing rule is defined over an
 element list, which such a zone does not have, and \texttt{InterpolationDegrees} is
 recognised only for \texttt{Unstructured} zones (Section~\ref{sec:on-disk-layout}).
