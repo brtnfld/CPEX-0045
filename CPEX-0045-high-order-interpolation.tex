@@ -944,7 +944,7 @@ derivation no longer has to be made independently by each implementer.
     \texttt{cg\_InterpolationTypeName}.  An implementer working from that text
     ships a type that cannot round-trip a file written by one that has them, and
     cannot represent a value a later extension adds.  v3 closed exactly this gap
-    for the control-point distribution enumeration; item~12 closes it for the
+    for the control-point distribution enumeration; this item closes it for the
     original (Section~\ref{sec:interpolation-type-enum}).  \textit{Impact:} none
     to files --- the on-disk representation is the enumerator's name either way.
 
@@ -1154,14 +1154,20 @@ implementation stores it uninterpreted; (12)~the definition of
 \texttt{UserDefined}, a count constant, a name table and a name accessor, v3
 having given only four values in prose; (13)~the completion of the File Mapping
 rows for both enumeration nodes, which named the label where the datatype belongs
-and omitted rank and dimension values; and (14)~three corrections carrying no
+and omitted rank and dimension values; (14)~the validation of
+\texttt{LagrangeControlPoints} extents against the node that declares them, as
+three exactly-checkable conditions, the last an upper bound rather than an
+equality so that the serendipity spaces this standard supports are not rejected;
+(15)~the addition of
+\texttt{cg\_sol\_characteristic\_length\_partial\_write}, taking an element range
+so that a distributed writer need not gather the whole array to one rank; and
+(16)~three corrections carrying no
 argument --- \texttt{Equidistant} on simplices, Fekete nodes recorded as
 \texttt{UserDefined}, and a modal compliance test whose expected values held only
 on an element of unit size.  The amendment adds no new capability, no node type
 and no enumerator; clauses~(6) and~(11) change the on-disk layout, (11) alone
-removes API entries, and (16) adds the single new API entry --- a ranged writer
-for \texttt{CharacteristicLength}, without which a distributed writer must gather
-the whole array to one rank.
+removes API entries, and (15) adds the single new API entry, without which the
+one bulk array this standard introduces cannot be written from a partitioned run.
 
 \medskip
 \noindent\textbf{Status:
