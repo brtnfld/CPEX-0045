@@ -1597,6 +1597,23 @@ must not use it for anything else.  The container may hold no children other tha
 those this document defines, so that its contents remain enumerable by a reader
 that knows only this section.
 
+\paragraph{\vfourmark Dimensionality of the scale factors.}
+The factors are lengths in the coordinate system of \texttt{GridCoordinates\_t}:
+they divide element-local coordinates taken from that system, so they carry
+whatever units it carries, and are dimensionless when the grid coordinates are.
+A reader reconstructing the polynomial never needs this --- it forms
+$(x-x^e_c)/h^e$ from coordinates it has already read, and the units cancel --- but
+a units-aware tool reporting the factors does.
+
+\emph{The \texttt{DataClass\_t} and \texttt{DimensionalUnits\_t} of the enclosing
+\texttt{FlowSolution\_t} do not apply to them.}  Those describe the solution
+fields, which are densities, pressures and the like; inheriting them here would
+attribute the units of a flow variable to a length.  A writer that wants the
+factors self-describing should attach \texttt{DimensionalUnits\_t} to the
+\texttt{InterpolationMetadata} container or to the \texttt{CharacteristicLength}
+array itself, where the normal SIDS inheritance rules then make it the nearest
+enclosing declaration.
+
 \paragraph{Implementation status.}
 Both node names and both on-disk shapes are normative.  The MLL helpers
 \texttt{cg\_sol\_characteristic\_length\_read} and
@@ -1690,6 +1707,25 @@ for (int h=0; h<=q; h++)
   \item renumber sections~12.10 \texttt{UserDefinedData\_t} and~12.11 \texttt{Gravity\_t}.
 \end{itemize}
 \end{v2quote}
+
+\paragraph{\vfourmark Which \texttt{Family\_t} a zone binds to.}
+The interpolation nodes hang off \texttt{Family\_t}, so every lookup in this
+section begins by resolving a zone to its family.  That binding is the standard
+SIDS one and this document adds nothing to it: a \texttt{Zone\_t} names its family
+in a \texttt{FamilyName\_t} string child, and the named family is sought among the
+\texttt{Family\_t} children of the \texttt{CGNSBase\_t}.  Where the name contains
+\texttt{/} separators it is a family-tree path (CPEX-0034) and is resolved one
+level at a time through the nested \texttt{Family\_t} lists.
+
+It is stated here only because it is load-bearing and otherwise unwritten: the
+interpolation lookup is defined per zone, so the resolution is
+\emph{zone-level}.  A \texttt{FamilyName\_t} on an individual \texttt{Elements\_t}
+section --- which the SIDS also permits --- does \emph{not} select a different
+interpolation family for that section.  A zone with no \texttt{FamilyName\_t}, or
+one naming a family that does not exist or that carries no interpolation nodes,
+has no override, and the standard definitions of
+Section~\ref{sec:coord-systems} apply throughout, exactly as for an absent block
+(Section~\ref{sec:element-interpolation}).
 
 % ─────────────────────────────────────────────────────────────────────────
 \subsubsection{Modification of Section~12.6 (\texttt{Family\_t})}
@@ -2539,6 +2575,33 @@ runs from $0$ to $N_\mathrm{DOFs}(e_i)-1$ in the ordering established by the ass
 \texttt{SolutionInterpolation\_t} (Lagrange control points listed in
 \texttt{LagrangeControlPoints}, or modal coefficients in the Pascal traversal of
 Section~\ref{sec:parametric-modal}).
+
+\paragraph{\vfourmark Computing the offset in parallel (informative).}
+This paragraph adds no requirement; it records a consequence of the layout above
+for implementers of collective I/O.
+
+At uniform order the offset is computable locally: every element contributes the
+same $N_\mathrm{DOFs}$, so a rank owning elements $[e_0, e_1)$ writes at
+$e_0 \cdot N_\mathrm{DOFs}$ and needs nothing from its neighbours.  Variable order
+breaks that.  The inner sum $\sum_{k<i} N_\mathrm{DOFs}(e_k)$ runs over elements
+that may belong to other ranks, so no rank can determine where its own block
+begins from local information alone.
+
+The offset of a rank's first element is the exclusive prefix sum of the
+per-element DOF counts over the global element ordering.  In practice each rank
+totals the DOFs of the elements it owns, an exclusive scan
+(\texttt{MPI\_Exscan} with \texttt{MPI\_SUM}, or the equivalent) turns those
+totals into the rank's starting offset, and the within-rank offsets follow by
+running the sum locally from there.  The result is one contiguous hyperslab per
+rank, which is what the collective \texttt{pcgns} write path wants.
+
+Two things are worth noting.  The scan must run over the same element ordering
+the field array uses --- the zone's cells for a whole-zone block, or the order
+given by \texttt{PointRange}/\texttt{PointList} for a subset block
+(Section~\ref{sec:variable-order}) --- since it is that ordering the index
+formula above is defined against.  And the DOF counts must come from the
+interpolation type actually declared for each element, not from its element type
+and degree, which do not determine the count on their own.
 
 \paragraph{\vfourmark Metadata arrays are not solution fields, and are not stored
 as though they were.}
