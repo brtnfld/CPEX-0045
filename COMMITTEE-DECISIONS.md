@@ -108,13 +108,15 @@ with a single level-2 warning stating the attribute is recommended and the basis
 from the coordinates. `cgnscheck -s` on `high_order.cgns` went from 1 error to 0; the 8
 high-order, modal and characteristic-length tests pass.
 
-Two gaps remain. The coordinates-versus-distribution consistency check that
-§Lagrange Control Point Distribution assigns to `cgnscheck` is **not implemented**, so the spec
-currently asserts behaviour that does not exist; it must either be implemented or the sentence
-withdrawn. (For scoping only, not as an argument either way: it would need Legendre and
-Warp&Blend node generation the library does not yet contain, `Equidistant` being the one trivial
-case.) And no test in the tree references the attribute at all, so the new
-`ElementInterpolation_t` branch is unexercised.
+**Both gaps recorded here are now closed** (verified 2026-08-06 against
+`work/cgns.develop`). The coordinates-versus-distribution consistency check is
+implemented in `cgnscheck.c`: `ho_gen_1d` generates the `Equidistant`,
+`GaussLobattoLegendre` and `GaussLegendre` families, the Warburton construction
+covers `WarpAndBlend` on `TRI` and `TETRA` with the tabulated blending
+parameters, and comparison runs at `HO_DIST_TOL = 1.0e-8`. The attribute is also
+exercised — `test_distribution.c`, with `cgnscheck` fixtures including
+`test_dist_match.cgns`. The spec no longer asserts behaviour that does not exist,
+so neither implementing it nor withdrawing the sentence is outstanding.
 
 **Design clarification (2026-08-04, prompted by Tobias Leicht).** Tobias asked whether this
 check faces the same obstacle as D-04's deferred lattice helper — both need "node generation for
@@ -245,15 +247,70 @@ current spelling would misrepresent what was decided and under what name.
 
 v3.0 was adopted 2026-08-04 and tagged `v3.4`. Version 4 is a **corrections**
 amendment: it adds no capability, no node type, no enumerator and no API entry.
-The six items are in the amendment package at the front of
+The ten items are in the amendment package at the front of
 `CPEX-0045-high-order-interpolation.tex`.
+
+Items 1–6 came out of implementing v3. **Items 7–10 came out of a later audit
+(2026-08-06)** against `origin/CPEX45_high_order_wip` and the released
+`origin/develop`, and are of one kind: rules the adopted text *uses* without ever
+stating. Three of the four were guessed at by the reference implementation, and
+guessed wrong — which is the argument for writing them down rather than leaving
+them to be inferred a second time by someone else.
+
+- **Item 7 — `N_DOFs(e)` defined per interpolation type.** Every sizing rule in
+  the standard is written in terms of a quantity v3 never defines; it says only
+  that the count comes "from the matching `SolutionInterpolation_t`", which is a
+  pointer, not a formula.
+- **Item 8 — a missing `SolutionInterpolation_t` is a rejection.** v3 calls a
+  failed lookup "a normal result"; for an element inside a high-order block it
+  leaves `L` uncomputable.
+- **Item 9 — `IsoParametric` resolves by exact element tag.** The basic-tag
+  normalisation adopted in v3 (change-list item 7 of that package) discards
+  exactly the distinction `IsoParametric` needs when a family holds both
+  `TETRA_10` and `TETRA_35`.
+- **Item 10 — sequencing and scope.** `GridLocation_t = 9` collides with
+  CPEX-0047's `IntegrationPoint`; traversal order anchored to `ElementRange`;
+  `Structured` and `Rind_t` excluded.
+- **Item 11 — `MonomialCoefficients` withdrawn**, with
+  `cg_solution_interpolation_coefficients_{read,write}`. See below.
+- **Item 12 — `InterpolationType_t` defined as an enumeration.** v3 gave four
+  values in prose: no `Null`, no `UserDefined`, no count constant, no name table,
+  no accessor. v3 closed this same gap for the distribution enum (M1/M2 in the
+  review log) and left the original open.
+- **Item 13 — File Mapping rows for both enumeration nodes completed.** They gave
+  the label where the datatype belongs and omitted rank and dimension values.
+- **Item 14 — front-matter orientation.** Which method families the standard
+  serves; the practical consequence of hanging everything off `Family_t`; the
+  four uncited bibliography entries.
+- **Item 15 — three small corrections.** `Equidistant` on simplices (the 1D
+  formula does not describe simplex nodes); Fekete recorded as `UserDefined`;
+  the modal compliance test, whose expected coefficients held only for `h = 1`.
+
+Plus three new sections: **Parallel I/O**, **Worked example**, **Compatibility**,
+and a Fortran argument-mapping table.
+
+**On the reference implementation.** Items 7–9 were derived from the specification
+text, not from a defect report. `CPEX45_high_order_wip` had already arrived at the
+same rules independently — the sizing path branches on `InterpolationType`, reads
+the Lagrange count from the stored array, filters sections on element dimension,
+and accepts degree 0. That agreement is worth recording twice over: it is evidence
+the rules are right, and evidence that they were being supplied by the implementer
+rather than by the standard. A second implementation has nothing to agree with
+until the text states them.
+
+**Correction to item 5's risk statement.** It put the range where the Warp\&Blend
+α is inert at "degrees ≤ 3 … which covers every geometric order `ElementType_t`
+can express". Both halves were wrong: α is inert at p ≤ 2 for `TRI` and p ≤ 3 for
+`TETRA` (per the table's own caption), and `ElementType_t` reaches geometric
+degree 4 (`TRI_15`, `TETRA_35`), where α is 0.1001/0.1002 and the displacement is
+6×10⁻⁵ — four orders above the 10⁻⁸ tolerance the item fixes. The ambiguity does
+reach mesh control points. Corrected in the package.
 
 **Item 6 changes the on-disk layout** — the only one that does. It relocates
 `CharacteristicLength` out of the `FlowSolution_t` field list into a normative
 `InterpolationMetadata` container. It is filed as a correction rather than a
-capability because it removes a node from where v3 put it and adds nothing, but
-it should be presented to the Committee as a wire-format change and voted
-knowingly.
+capability because it removes a node from where v3 put it and adds nothing, and
+it is labelled a wire-format change so that it reads as one.
 
 Why it was raised after v3 was adopted, for the record. The v3 clarification
 (change-list item 6) states the collision with the `FlowSolution_t` field
@@ -302,7 +359,6 @@ only puts it back on the agenda, and the deferral is already on record:
 ---
 
 ## D. Closed
-
 
 ### D-01 — Is `LagrangeControlPointDistribution` required or recommended?
 
