@@ -524,12 +524,12 @@ and the vote on each decision and ballot item.
 \addcontentsline{toc}{section}{Version 4 Amendment Package\ifvfourdraft\space(draft)\fi}
 
 Version 3.0 was adopted on 2026-08-04.  Implementing it against the reference
-library, and auditing the result, surfaced nineteen places where the adopted text
-is ambiguous, unimplementable, under-determined, silent on something a reader
-needs, or inconsistent with an established CGNS convention.  Several further
-divergences were found and deliberately excluded: where the adopted text turned
-out to be correct and the reference implementation was simply wrong, the defect
-belongs against the code, not in an amendment.  This
+library, and auditing the result, surfaced twenty-four places where the adopted
+text is ambiguous, unimplementable, under-determined, silent on something a
+reader needs, or inconsistent with an established CGNS convention.  Several
+further divergences were found and deliberately excluded: where the adopted text
+turned out to be correct and the reference implementation was simply wrong, the
+defect belongs against the code, not in an amendment.  This
 package collects them for Version 4.\ifvfourdraft{} Every item below is
 unadopted.\fi
 
@@ -544,17 +544,40 @@ items most likely to produce divergent readers, because an unstated rule leaves
 no trace of its own absence: a second implementation has nothing to disagree
 with until it disagrees in the file.
 
+\smallskip
+\noindent Items~20--24 came out of a final pre-vote audit that read the adopted
+text against the reference implementation line by line rather than reasoning
+about either alone.  They are of a third kind again: in each the standard and the
+code say different things, and in four of the five the \emph{code} is what has to
+change.  The exception is item~21, where the standard describes a capability ---
+serendipity solution spaces, which it inherits from the approved v2 text --- that
+no sequence of API calls can produce, so the correction lands on both.
+
 \medskip
 \noindent\textbf{Scope.}  Version 4 is a \emph{corrections} amendment.  It adds
-no capability, no node type and no enumerator, and one API entry: every item either fixes wording
-that two conforming implementations could read differently, states a rule that v3
-relies on without ever writing down, or repairs an adopted provision that cannot
-be implemented without changing the meaning of an established API.  New
+no capability, no node type and no enumerator.  It touches the API in three
+places --- two entries added and one existing signature changed, all in
+items~17 and~21 and each argued there --- and every other item either fixes
+wording that two conforming implementations could read differently, states a rule
+that v3 relies on without ever writing down, or repairs an adopted provision that
+cannot be implemented without changing the meaning of an established API.  New
 capabilities are out of scope and belong in their own proposal.  Where an item was
 tempting to turn into one --- the withdrawn \texttt{MonomialCoefficients} array
 could have been redefined into the mechanism for naming $L^2$-orthogonal modal
 bases, which is the standard's largest present limitation --- it was not, and
-item~11 records why.
+item~11 records why.  Item~21 is the one place the line was hard to draw, and it
+falls on the corrections side for a reason stated there: the capability is
+already in the standard, and what is missing is the means to exercise it.
+
+\noindent \emph{None of this reaches a released interface.}  Every API entry
+CPEX-0045 introduces exists only on the reference branch: the whole set ---
+the family-level interpolation calls, the \texttt{FlowSolution\_t} accessors, the
+\texttt{GridLocation\_t} enumerator and both new enumerations --- appears zero
+times on \texttt{origin/master}, on \texttt{origin/develop} and in the v4.5.2
+release.  Adding, removing or reshaping one of them is therefore a drafting
+decision about what the API should be, not a compatibility question, and the
+items below that touch the API --- 4, 11, 17 and~21 --- are argued on that
+footing alone.
 
 \noindent \textbf{Two items change the on-disk layout.}  The sixth relocates
 \texttt{CharacteristicLength} into a container; the eleventh withdraws the
@@ -1051,6 +1074,119 @@ derivation no longer has to be made independently by each implementer.
     since Cartesian coefficients are those of the \emph{normalised} basis.  A test
     written as stated passes only where the defect it exists to catch is absent.
 
+  \item \CLARIFYIV{} \textbf{\texttt{CartesianMonomialsPascal} requires
+    \texttt{CellDimension} $=$ \texttt{PhysDim}.}  The modal cardinality is
+    $\binom{p+d}{d}$ with $d$ the \emph{element} dimension
+    (Section~\ref{sec:parametric-modal}), while the basis of this type is built on
+    coordinates ``parallel to the main axes'' of the physical frame and its
+    normalisation factors are \texttt{PhysDim} per element
+    (Section~\ref{sec:cartesian-modal}).  Where the two differ --- a surface mesh
+    with \texttt{CellDimension} $=2$ and \texttt{PhysDim} $=3$, which the SIDS
+    permits --- the type is not merely ambiguous but ill-posed: monomials in three
+    global coordinates restricted to a two-dimensional manifold are linearly
+    dependent, so no set of $\binom{p+2}{2}$ of them is determined, and nothing
+    says which two axes the element-local frame keeps.  v4 states the restriction
+    rather than inventing a projection rule, since a projected frame would no
+    longer be parallel to the global axes and would break the property the type
+    exists for --- that the coefficients are directional derivatives a
+    Taylor-basis limiter can act on component-wise.
+    \textit{Impact:} none to any file that could have been written, the
+    configuration having had no defined meaning.  The parametric types are
+    unaffected: they live in the reference domain, whose dimension \emph{is} the
+    element dimension.
+
+  \item \CLARIFYIV{} \textbf{An absent \texttt{LagrangeControlPoints} is given a
+    meaning, and a present one's \emph{length} is made reachable.}  v3 gives the
+    array cardinality $0{:}1$ on a \texttt{ParametricLagrange} node but never says
+    what its absence means --- while defining $N_\mathrm{DOFs}$ for the type as
+    the array's own slow axis (Section~\ref{sec:ndofs}), which absence leaves with
+    nothing to read.  v4 states the rule the reference implementation has been
+    supplying: an absent array denotes the \emph{complete} space of the declared
+    degree, with the points at the standard lattice of
+    Section~\ref{sec:coord-conventions} in the node order of
+    Figure~\ref{fig:coord-systems}, so $N_\mathrm{DOFs} = \texttt{cg\_npe\_ho}$ of
+    the basic tag at degree~$p$, times $q+1$.  Nothing about a file changes; what
+    changes is that a second reader no longer has to invent that rule.
+
+    \textit{What the array adds, and why its length is data.}  Writing it buys two
+    things: freedom to place the points anywhere unisolvent, and --- because the
+    count is then whatever the array says --- the ability to describe an
+    \emph{incomplete} space.  That second one is load-bearing and was
+    unreachable.  The stored tag is normalised to the basic one
+    (Section~\ref{sec:solution-interpolation}), so a solution node is keyed by
+    (basic type, $p$, $q$), and that key does \emph{not} determine the space:
+    Table~\ref{tab:spaces}, inherited from v2 and applying to solution
+    interpolation as well as to the mesh, offers a complete space and an
+    edge-serendipity space at the same element and the same degree --- a
+    \texttt{QUAD} at $p=2$ carries $(p+1)^2 = 9$ points complete and $4p = 8$
+    edge-serendipity.  The stored count is the only record of the difference.
+    This is the same fact that makes item~15's extent check an upper bound, seen
+    from the other side.
+
+    \textit{The API consequence.}  In v3 that count can be neither written nor
+    read.  \texttt{cg\_solution\_interpolation\_points\_write} derives the length
+    from (type, $p$, $q$), so it can only ever write a complete space, and
+    \texttt{cg\_solution\_interpolation\_points\_read} \emph{rejects} any node
+    whose count differs from that formula --- so the serendipity spaces this
+    standard offers can be neither produced nor consumed through the Mid-Level
+    Library.  v4 gives the writer an explicit \texttt{npts} argument and adds
+    \texttt{cg\_solution\_interpolation\_npoints\_read}, which returns the stored
+    count (Section~\ref{sec:family-api}).  The writer argument also bounds the
+    read of the caller's buffers, which v3 left to a formula the caller never
+    supplied.
+
+    \textit{Impact:} no file changes --- the on-disk layout is identical, and a
+    complete-space file passes \texttt{npts} equal to what the library previously
+    computed for it.  An API change and an API addition; the changed call has
+    never been released, so the only callers are on the reference branch and in
+    this document's own examples, and both are updated here.
+    \textit{Why here rather than in a later proposal:} the capability is already
+    in the standard, adopted with v2 and relied on by item~15; what v3 lacks is
+    any means of exercising it, which is a defect in this document's API, not a
+    new feature.
+
+  \item \CLARIFYIV{} \textbf{The extent rule for an \texttt{ElementInterpolation\_t}
+    is stated separately.}  Item~15's three conditions are written in terms of $p$
+    and $q$, and a mesh node has neither: it carries no degree field and no
+    temporal degree, its geometric degree being implied by its
+    \texttt{ElementType\_t} tag.  Read literally the rule is inapplicable there.
+    The mesh case is in fact the stricter and simpler one, and v4 states it: the
+    fast axis is the element dimension, and the slow axis is exactly
+    \texttt{cg\_npe} of the node's own tag.  Equality holds here, where the
+    solution side needs an upper bound, because the tag itself names the space ---
+    \texttt{QUAD\_8} and \texttt{QUAD\_9} are different tags --- and because the
+    count must match the element's connectivity entry, which Section~7.3 requires
+    to be listed in the order of these control points.
+    \textit{Impact:} none to conformant files.
+
+  \item \CLARIFYIV{} \textbf{Which mesh node a family-level
+    \texttt{IsoParametric} points read resolves to.}  Item~9 fixes
+    \texttt{IsoParametric} resolution per element, by exact tag.  That rule needs
+    an element, and \texttt{cg\_solution\_interpolation\_points\_read} has none:
+    it addresses a \texttt{SolutionInterpolation\_t} by index and the stored tag
+    is the basic one, so where a family holds both \texttt{TETRA\_10} and
+    \texttt{TETRA\_35} the call cannot say which basis is meant.  The reference
+    implementation returned whichever node it met first, which is a traversal
+    order the SIDS does not constrain.  v4 requires the call to resolve only when
+    exactly one \texttt{ElementInterpolation\_t} shares the basic tag, and to
+    report \texttt{CG\_ERROR} naming the ambiguity otherwise; a caller that needs a
+    specific geometric order reads the mesh node directly, by exact tag, where the
+    question has an answer.  \textit{Impact:} none to files; it replaces an
+    arbitrary answer with a diagnostic.
+
+  \item \CLARIFYIV{} \textbf{Two corrections to \S Fortran Bindings.}  The section
+    states that the control-point bindings declare the optional coordinate
+    arguments \texttt{optional} so that an omitted argument reaches C as
+    \texttt{NULL}.  They did not; the reference bindings took all four as
+    mandatory assumed-size arrays, so a Fortran caller on a 1D element, or with
+    $q=0$, had to supply an array it had no data for.  The rule is right and the
+    bindings now implement it.  The \emph{reason} given for it was not: the
+    section says a dummy array ``would cause the library to read past the data it
+    has'', and it would not --- the library reads only the coordinates the element
+    dimension calls for, so a surplus array is never touched.  The argument is
+    ergonomic and about clarity of intent, not about memory safety, and v4 says
+    so.  \textit{No normative change} beyond making the stated binding shape true.
+
 \end{enumerate}
 
 \medskip
@@ -1160,14 +1296,32 @@ three exactly-checkable conditions, the last an upper bound rather than an
 equality so that the serendipity spaces this standard supports are not rejected;
 (15)~the addition of
 \texttt{cg\_sol\_characteristic\_length\_partial\_write}, taking an element range
-so that a distributed writer need not gather the whole array to one rank; and
+so that a distributed writer need not gather the whole array to one rank;
 (16)~three corrections carrying no
 argument --- \texttt{Equidistant} on simplices, Fekete nodes recorded as
 \texttt{UserDefined}, and a modal compliance test whose expected values held only
-on an element of unit size.  The amendment adds no new capability, no node type
-and no enumerator; clauses~(6) and~(11) change the on-disk layout, (11) alone
-removes API entries, and (15) adds the single new API entry, without which the
-one bulk array this standard introduces cannot be written from a partitioned run.
+on an element of unit size; (17)~the restriction of
+\texttt{CartesianMonomialsPascal} to bases whose \texttt{CellDimension} equals
+\texttt{PhysDim}, the type being ill-posed where they differ; (18)~the meaning of an absent
+\texttt{LagrangeControlPoints} on a \texttt{ParametricLagrange} node --- the
+complete space of the declared degree on the standard lattice --- together with
+the \texttt{npts} argument to
+\texttt{cg\_solution\_interpolation\_points\_write} and the new
+\texttt{cg\_solution\_interpolation\_npoints\_read}, without which the stored
+point count --- the only record of whether a stored space is complete or
+serendipity --- can be neither written nor read; (19)~the extent rule for an
+\texttt{ElementInterpolation\_t}, stated separately because the rule of
+clause~(14) is written in degrees a mesh node does not carry; (20)~the resolution
+rule for a family-level \texttt{IsoParametric} points read, which must report an
+ambiguity rather than pick a node; and (21)~two corrections to the Fortran
+bindings section, whose optional-argument rule the bindings did not implement and
+whose stated justification for it was wrong.  The amendment adds no new
+capability, no node type and no enumerator; clauses~(6) and~(11) change the
+on-disk layout, (11) alone removes API entries, and (15) and~(18) between them add
+two API entries and change one existing signature --- (15) because the one bulk
+array this standard introduces cannot otherwise be written from a partitioned
+run, and (18) because a capability the standard already grants cannot otherwise
+be exercised at all.
 
 \medskip
 \noindent\textbf{Status:
@@ -1507,7 +1661,8 @@ applied independently in each parametric direction.  For simplex elements (\text
 equidistant points may be used at $p=2$ but become unstable at higher orders.
 
 \vfour{Fekete nodes have no enumerator of their own.  A writer using them records
-\texttt{ControlPointDistributionUserDefined}, or omits the attribute entirely,
+\texttt{Control\-Point\-Distribution\-User\-Defined}, or omits the attribute
+entirely,
 which is equivalent in effect: the stored coordinates are authoritative in both
 cases (below), so nothing about the file's interpretation depends on the choice.
 The recommendation above is therefore about conditioning, not about conformance
@@ -2054,6 +2209,23 @@ the modal coefficients of this basis are interpretable as scaled directional der
 at the element barycentre, and slope limiters in the Taylor-basis family act on them
 component-wise along the global axes.
 
+\paragraph{\vfourmark The base must have \texttt{CellDimension} $=$ \texttt{PhysDim}.}
+\texttt{CartesianMonomialsPascal} is defined only where the two agree, and a
+writer \emph{must not} use it otherwise.  The reason is that the basis is built
+in the physical frame while its cardinality $\binom{p+d}{d}$ counts monomials in
+$d$ = the \emph{element} dimension (Section~\ref{sec:parametric-modal}).  On a
+surface mesh --- \texttt{CellDimension} $=2$ with \texttt{PhysDim} $=3$, which
+the SIDS permits --- those disagree, and not merely by a convention that could be
+fixed: monomials in three global coordinates, restricted to a two-dimensional
+manifold, are linearly dependent, so no subset of $\binom{p+2}{2}$ of them spans
+a determined space, and nothing selects which two of the three axes the
+element-local frame retains.  Projecting onto a fitted plane would resolve the
+count but would give up the property the type exists for, since the axes would no
+longer be parallel to the global ones.  The parametric types carry no such
+restriction: they are defined on the reference domain, whose dimension is the
+element dimension by construction, and they may be used on a surface mesh
+freely.
+
 \paragraph{Recorded, not recomputed.}
 Writers \emph{must record the scale factors they actually used}, and readers
 \emph{must use the recorded values} rather than recomputing any geometric formula.
@@ -2067,8 +2239,9 @@ writer's and the reader's evaluation of that formula.
 
 \paragraph{On-disk encoding.}
 The scale factors are recorded in an \texttt{R8} \texttt{DataArray\_t} named
-\texttt{CharacteristicLength}, held in a \texttt{UserDefinedData\_t} child of the
-parent \texttt{FlowSolution\_t} node named \texttt{InterpolationMetadata}.
+\texttt{Charac\-teristic\-Length}, held in a \texttt{UserDefinedData\_t} child of
+the parent \texttt{FlowSolution\_t} node named
+\texttt{Interpolation\-Metadata}.
 \vfourmark The container is required: the factors are \emph{not} a
 \texttt{DataArray\_t} child of \texttt{FlowSolution\_t}, because such children are
 the solution fields and are enumerated as such by label
@@ -2142,11 +2315,15 @@ solution (an error under \texttt{cgnscheck -s}, a warning otherwise).
 \vfourmark It additionally rejects a \texttt{CharacteristicLength} found directly
 under a \texttt{FlowSolution\_t}, which is the superseded v3 position.
 
-\vfourmark The library validates the container's contents when the file is opened,
-not when the array is first read, so a malformed node is reported at
-\texttt{cg\_open} rather than at the point of use.  The check runs over structures
-the \texttt{UserDefinedData\_t} traversal has already populated and issues no
-additional I/O.
+\vfourmark The library validates the container's \emph{structure and shape} ---
+which children it holds, the datatype, the rank, \texttt{nscale} and the element
+count --- when the file is opened, so a malformed node is reported at
+\texttt{cg\_open} rather than at the point of use.  That check runs over
+structures the \texttt{UserDefinedData\_t} traversal has already populated and
+issues no additional I/O.  Positivity of the factors is a check on the
+\emph{values}, which are not read at open, so it is applied when the array is
+read; both are required of a conforming reader
+(Section~\ref{sec:validation}), only the timing differs.
 
 \subsubsection{Cartesian Modal Interpolants}
 
@@ -2370,10 +2547,40 @@ are stored in a \texttt{SolutionInterpolation\_t} leaf attached to the correspon
 \begin{sidsnode}{SolutionInterpolation\_t :=}
 \textbf{int[3] InterpolationData;}                       \textrm{(r)} \quad\textrm{/* [ElementType, SpatialDegree, TemporalDegree] */}\\
 InterpolationType\_t InterpolationType;                  \textrm{(r)}\\
-DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o)}\\
+DataArray\_t<Float,DataSize[]> LagrangeControlPoints;    \textrm{(o/r)}\\
 ControlPointDistribution\_t ControlPointDistribution; \textrm{(o)}\\
 \};
 \end{sidsnode}
+
+\begin{v4block}
+\paragraph{\vfourmark \texttt{LagrangeControlPoints}: what its absence means,
+and why its length is data.}
+\label{sec:lagrange-required}
+The array may appear only on a \texttt{ParametricLagrange} node; the other three
+types store none (Section~\ref{sec:validation}).  On such a node it is optional,
+and both cases are defined.
+
+\emph{Absent.}  The basis is the \emph{complete} space of the declared degree
+(Table~\ref{tab:spaces}), with the control points at the standard lattice on the
+element's reference domain (Section~\ref{sec:coord-conventions}), traversed in
+the standard node order of Figure~\ref{fig:coord-systems}.  Both are normative,
+so the basis is fully determined without the array, and
+$N_\mathrm{DOFs} = \texttt{cg\_npe\_ho}$ of the basic tag at degree~$p$, times
+$q+1$.
+
+\emph{Present.}  The stored coordinates are the basis, wherever they lie, and
+the number of them is normative data rather than a consequence of the key.  A
+solution node is keyed by the basic element type and the two degrees, and that
+key does not determine which space of Table~\ref{tab:spaces} is meant: at $p=2$ a
+\texttt{QUAD} has $(p+1)^2 = 9$ control points in the complete space and $4p = 8$
+in the edge-serendipity space, under the same key.  The stored count is the only
+record of the difference, so a reader takes $N_\mathrm{DOFs}$ from the array and
+never from $(p, q)$.  \texttt{cg\_solution\_interpolation\_npoints\_read}
+(Section~\ref{sec:family-api}) reports it; a writer states it, as the
+\texttt{npts} argument of \texttt{cg\_solution\_interpolation\_points\_write}.
+This is the same fact that makes the extent check of Section~\ref{sec:validation}
+an upper bound rather than an equality.
+\end{v4block}
 
 \begin{v4block}
 \paragraph{\vfourmark No \texttt{MonomialCoefficients} child.}
@@ -2630,7 +2837,7 @@ create uses the count; a reader resolving an element to its basis uses
 
 \begin{table}[htbp]
 \centering
-\small
+\footnotesize
 \rowcolors{2}{cgnslight!20}{white}
 \begin{tabular}{@{} l c @{}}
 \toprule
@@ -2647,8 +2854,9 @@ create uses the count; a reader resolving an element to its basis uses
 \texttt{cg\_nsolution\_interpolation\_read(fn, bn, fam, *ns)} & r{-}{-} \\
 \texttt{cg\_solution\_interpolation\_read(fn, bn, fam, sn, name, *et, *os, *ot, *it)} & r{-}{-} \\
 \texttt{cg\_solution\_interpolation\_points\_read(fn, bn, fam, sn, *pu, *pv, *pw, *pt)} & r{-}{-} \\
+\vfour{\texttt{cg\_solution\_interpolation\_npoints\_read(fn, bn, fam, sn, *npts)}} & \vfour{r{-}{-}} \\
 \texttt{cg\_solution\_interpolation\_write(fn, bn, fam, name, et, os, ot, it, *sn)} & {-}wm \\
-\texttt{cg\_solution\_interpolation\_points\_write(fn, bn, fam, sn, *pu, *pv, *pw, *pt)} & {-}wm \\
+\texttt{cg\_solution\_interpolation\_points\_write(fn, bn, fam, sn, \vfour{npts,} *pu, *pv, *pw, *pt)} & {-}wm \\
 \texttt{cg\_solution\_interpolation\_find(fn, bn, fam, et, os, ot, *sn, *it)} & r{-}{-} \\
 \addlinespace
 \texttt{cg\_element\_interpolation\_distribution\_read(fn, bn, fam, en, *dist)} & r{-}{-} \\
@@ -2684,6 +2892,12 @@ create uses the count; a reader resolving an element to its basis uses
 \texttt{pv}   & Control points --- $v$-coordinate (\texttt{NULL} for 1D) & out \\
 \texttt{pw}   & Control points --- $w$-coordinate (\texttt{NULL} for 1D/2D) & out \\
 \texttt{pt}    & Control points --- time coordinate (\texttt{NULL} if $q=0$) & out \\
+\vfour{\texttt{npts}} & \vfour{Number of control points stored by a
+  \texttt{SolutionInterpolation\_t}: the slow axis of its
+  \texttt{LagrangeControlPoints}, hence $N_\mathrm{DOFs}$ for
+  \texttt{ParametricLagrange}.  Not derivable from \texttt{et}, \texttt{os} and
+  \texttt{ot}, which do not distinguish a complete space from a serendipity one
+  (Section~\ref{sec:lagrange-required}).} & \vfour{in/out} \\
 \texttt{dist} & Lagrange control point distribution (\texttt{ControlPointDistribution\_t}) & in/out \\
 \bottomrule
 \end{tabular}
@@ -2769,7 +2983,7 @@ There is no element-side counterpart either: mesh interpolation is nodal only
 \centering
 \small
 \rowcolors{2}{cgnslight!20}{white}
-\begin{tabular}{@{} >{\raggedright\ttfamily\small}p{0.82\linewidth} c @{}}
+\begin{tabular}{@{} >{\raggedright\ttfamily\footnotesize}p{0.80\linewidth} c @{}}
 \toprule
 \textbf{\normalfont Function signature} & \textbf{\normalfont Modes} \\
 \midrule
@@ -2859,6 +3073,7 @@ becomes the Fortran type in the table below, in the same order, with a trailing
 \texttt{integer(c\_int) :: ier}.
 
 \smallskip
+{\footnotesize
 \begin{tabular}{@{} l l l @{}}
 \toprule
 \textbf{C argument} & \textbf{Fortran} & \textbf{Note} \\
@@ -2869,7 +3084,7 @@ becomes the Fortran type in the table below, in the same order, with a trailing
   & \texttt{integer(c\_int), value}      & enumerations pass by value \\
 \texttt{ControlPointDistribution\_t *}
   & \texttt{integer(c\_int)}             & output enumerations by reference \\
-\texttt{int *sz}, \texttt{int *cnt}
+\texttt{int *sz}, \texttt{int *cnt}, \texttt{int *npts}
   & \texttt{integer(c\_int)}             & plain \texttt{integer}, not a sized kind \\
 \texttt{cgsize\_t *pnts}
   & \texttt{integer(cgsize\_t)}          & mesh-scale, build-dependent kind \\
@@ -2879,6 +3094,7 @@ becomes the Fortran type in the table below, in the same order, with a trailing
   & \texttt{character(len=*)}            & trailing-blank trimmed \\
 \bottomrule
 \end{tabular}
+\par}
 
 \smallskip
 \noindent\textbf{Passing \texttt{NULL} for an unused coordinate.}  The C interface
@@ -2886,8 +3102,16 @@ takes \texttt{NULL} for \texttt{pv} on a 1D element, \texttt{pw} on 1D or 2D, an
 \texttt{pt} when $q = 0$.  Fortran has no null array argument, so the bindings
 declare these \texttt{optional}: an omitted actual argument is passed to C as
 \texttt{NULL}.  A caller that has no coordinate to supply omits the argument
-rather than passing a dummy array, which would be indistinguishable from a real
-one and would cause the library to read past the data it has.
+rather than passing a dummy array.
+
+\vfourmark \emph{The reason is expressiveness, not memory safety.}  A surplus
+array is not in fact read: the library takes as many coordinate rows as the
+element dimension calls for, and the temporal row only when $q > 0$, so an extra
+argument is simply ignored.  What the \texttt{optional} form buys is that a
+caller need not fabricate an array of the right length to describe a coordinate
+that does not exist, and that the Fortran and C interfaces then say the same
+thing.  An earlier statement of this rule claimed a dummy array ``would cause the
+library to read past the data it has''; that was wrong, and is corrected here.
 
 \noindent\textbf{The size accessors return a default integer.}  Following the
 change of Section~\ref{sec:family-api}, \texttt{sz} is a plain
@@ -3241,12 +3465,14 @@ be its \texttt{SpatialDegree} and \texttt{TemporalDegree}, and let $d$ be the
 dimension of~$e$.  Then
 
 \smallskip
-\begin{tabular}{@{}>{\ttfamily}l l@{}}
+\begin{tabular}{@{}>{\ttfamily}l >{\raggedright\arraybackslash}p{0.58\linewidth}@{}}
 \toprule
 \normalfont\textbf{\texttt{InterpolationType} of $S$} & \textbf{$N_\mathrm{DOFs}(e)$} \\
 \midrule
 ParametricLagrange        & \texttt{NumberOfPoints}, the slow axis of $S$'s
-                            \texttt{LagrangeControlPoints} \\
+                            \texttt{LagrangeControlPoints}; where that array is
+                            absent, \texttt{cg\_npe\_ho} of the basic tag at
+                            degree~$p$, times $(q+1)$ \\
 ParametricMonomialsPascal & $\binom{p+d}{d}\times(q+1)$ \\
 CartesianMonomialsPascal  & $\binom{p+d}{d}\times(q+1)$ \\
 IsoParametric             & $N_\mathrm{DOFs}$ of the \texttt{ElementInterpolation\_t}
@@ -3258,7 +3484,9 @@ IsoParametric             & $N_\mathrm{DOFs}$ of the \texttt{ElementInterpolatio
 \noindent The \texttt{ParametricLagrange} entry is read off the stored array and
 already carries the $\times(q+1)$ space-time factor
 (Section~\ref{sec:on-disk-layout}); it is not recomputed from $p$, so a serendipity
-or otherwise incomplete space needs no separate rule.  For \texttt{IsoParametric}
+or otherwise incomplete space needs no separate rule.  Only where the array is
+absent is the count computed, and it is then the complete space by definition
+(Section~\ref{sec:lagrange-required}).  For \texttt{IsoParametric}
 the count is that of the resolved mesh node --- the number of points in its
 \texttt{LagrangeControlPoints}, or \texttt{cg\_npe} of the element's own exact
 \texttt{ElementType\_t} tag when that node is itself \texttt{IsoParametric}
@@ -3310,9 +3538,13 @@ where $\mathcal{E}$ is the set of elements covered by the block
 otherwise) and $N_\mathrm{DOFs}(e)$ is the per-element DOF count from the
 matching \texttt{SolutionInterpolation\_t} for element~$e$.
 \vfour{A cell is an element whose dimension equals the base's
-\texttt{CellDimension}; sections holding lower-dimensional elements --- boundary
-faces or edges --- are not part of the location domain and contribute no degrees
-of freedom.}  For a homogeneous block this
+\texttt{CellDimension}; lower-dimensional elements --- boundary faces or edges ---
+are not part of the location domain and contribute no degrees of freedom.  The
+test is per \emph{element}, not per section: a \texttt{MIXED} section may hold
+faces alongside cells, and it applies within such a section as it does between
+sections.  It applies to a listed set as it does to a whole-zone block, so an
+index naming a non-cell contributes nothing; naming one is a writer error, the
+point set under this location being a set of cells.}  For a homogeneous block this
 collapses to $|\mathcal{E}| \cdot N_\mathrm{DOFs}$.  Within the array, the DOFs of
 the first listed element are stored contiguously, followed by all DOFs of the
 second listed element, and so on:
@@ -3379,10 +3611,11 @@ removes the collision instead of documenting it, and leaves \texttt{cg\_nfields}
 meaning what it has always meant.
 
 \paragraph{CharacteristicLength.}
-An \texttt{R8} \texttt{DataArray\_t} child of the \texttt{InterpolationMetadata}
-\texttt{UserDefinedData\_t} node, itself a child of \texttt{FlowSolution\_t},
-holding the per-element coordinate normalisation factors used by Cartesian modal
-interpolation (Section~\ref{sec:cartesian-modal}).  The array rank selects the
+An \texttt{R8} \texttt{DataArray\_t} child of the
+\texttt{UserDefinedData\_t} node named \texttt{Interpolation\-Metadata}, itself a
+child of \texttt{FlowSolution\_t}.  It holds the per-element coordinate
+normalisation factors used by Cartesian modal interpolation
+(Section~\ref{sec:cartesian-modal}).  The array rank selects the
 normalisation:
 rank~1 with shape $[|\mathcal{E}|]$ is isotropic (one factor per element); rank~2 with
 shape $[\texttt{PhysDim}, |\mathcal{E}|]$ is per-axis (\texttt{PhysDim} factors per
@@ -3424,7 +3657,17 @@ A conforming reader must reject:
     files.  A set \emph{larger} than the complete space, by contrast, cannot be
     unisolvent for a degree-$p$ space at all, so it is always an error --- which is
     the case worth catching, since it otherwise surfaces as a mis-sized field array
-    far from its cause;}
+    far from its cause.
+    %
+    \vfourmark On an \texttt{ElementInterpolation\_t} the rule reads differently,
+    because that node carries neither degree: mesh interpolation is spatial only,
+    and the geometric degree is implied by the tag rather than stored.  There the
+    fast axis must equal the element dimension and the slow axis must equal
+    \texttt{cg\_npe} of the node's own \texttt{ElementType\_t} tag ---
+    \emph{exactly}, not as a bound, since the tag itself names the space
+    (\texttt{QUAD\_8} and \texttt{QUAD\_9} are distinct tags) and the count must
+    match the connectivity entry that Section~7.3 requires to be listed in the
+    order of these very points;}
   \item \vfour{any \texttt{DataArray\_t} child of a \texttt{SolutionInterpolation\_t}
     or \texttt{ElementInterpolation\_t} named anything other than
     \texttt{LagrangeControlPoints} --- in particular a \texttt{MonomialCoefficients}
@@ -3434,7 +3677,9 @@ A conforming reader must reject:
   \item \vfour{a \texttt{LagrangeControlPoints} child on a
     \texttt{SolutionInterpolation\_t} whose \texttt{InterpolationType} is
     \texttt{ParametricMonomialsPascal}, \texttt{CartesianMonomialsPascal} or
-    \texttt{IsoParametric}, none of which stores one;}
+    \texttt{IsoParametric}, none of which stores one.  Its \emph{absence} on a
+    \texttt{ParametricLagrange} node is legal and denotes the complete space on
+    the standard lattice (Section~\ref{sec:lagrange-required});}
   \item \texttt{SolutionInterpolation\_t} nodes that do not contain exactly one
     \texttt{InterpolationType\_t} child named \texttt{InterpolationType};
   \item more than one \texttt{ControlPointDistribution\_t} child under a single
@@ -3696,8 +3941,9 @@ element type that has an \texttt{ElementInterpolation\_t}.  A file written befor
 this extension existed remains conformant and reads unchanged under a library that
 implements it.
 
-The two renames this standard has made --- \texttt{SpatialOrder}/\texttt{TemporalOrder}
-to \texttt{SpatialDegree}/\texttt{TemporalDegree}, and the control-point
+The two renames this standard has made ---
+\texttt{SpatialOrder}/\allowbreak\texttt{TemporalOrder} to
+\texttt{SpatialDegree}/\allowbreak\texttt{TemporalDegree}, and the control-point
 distribution enumeration to \texttt{ControlPointDistribution\_t} --- have no
 archival cost, neither name having appeared in a released library or in any file.
 
@@ -3878,7 +4124,9 @@ cg_element_interpolation_distribution_write(fn, B, fam, ei,
 cg_solution_interpolation_write(fn, B, fam, "QUAD_P2_Sol",
                                 QUAD_9, /*os=*/2, /*ot=*/0,
                                 ParametricLagrange, &si);
-cg_solution_interpolation_points_write(fn, B, fam, si, pu, pv, NULL, NULL);
+/* 9 = the control-point count.  It is stated, not derived: (QUAD_4, p=2)
+   covers both the complete space of 9 and the serendipity space of 8. */
+cg_solution_interpolation_points_write(fn, B, fam, si, 9, pu, pv, NULL, NULL);
 cg_solution_interpolation_distribution_write(fn, B, fam, si,
                                              GaussLobattoLegendre);
 
@@ -3991,6 +4239,23 @@ indirection away, and the indirection is exactly what \texttt{IsoParametric} mea
 that needs to know the interpolation type asks for it directly through
 \texttt{cg\_solution\_interpolation\_read}, so nothing is lost by having the points call
 succeed.
+
+\begin{v4block}
+\paragraph{\vfourmark When the reference is ambiguous.}
+Section~\ref{sec:isoparam-resolution} resolves \texttt{IsoParametric} per element,
+by exact tag.  This call has no element: it addresses a
+\texttt{SolutionInterpolation\_t} by index, and the tag that node stores is the
+basic one.  Where the family holds more than one \texttt{ElementInterpolation\_t}
+sharing that basic tag --- \texttt{TETRA\_10} and \texttt{TETRA\_35}, say --- the
+question the call asks has no single answer, and it \emph{must} report
+\texttt{CG\_ERROR} identifying the ambiguity rather than return one of them.
+Picking the first found would make the result depend on child order, which the
+SIDS does not constrain, so two readers of the same file could disagree.  A
+caller that wants a particular geometric order reads that
+\texttt{ElementInterpolation\_t} directly, by its exact tag, where the question is
+well posed.  The call resolves normally when exactly one mesh node shares the
+basic tag, which is the ordinary case.
+\end{v4block}
 
 
 %% ═════════════════════════════════════════════════════════════════════════

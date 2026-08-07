@@ -246,11 +246,13 @@ current spelling would misrepresent what was decided and under what name.
 ## Version 4 scope (recorded here, not in the spec)
 
 v3.0 was adopted 2026-08-04 and tagged `v3.4`. Version 4 is a **corrections**
-amendment: it adds no capability, no node type, no enumerator and no API entry.
-The ten items are in the amendment package at the front of
+amendment: it adds no capability, no node type and no enumerator. It touches the
+API in three places — two entries added and one existing signature changed, in
+items 17 and 21, each argued at its point of use. The twenty-four items are in
+the amendment package at the front of
 `CPEX-0045-high-order-interpolation.tex`.
 
-Items 1–6 came out of implementing v3. **Items 7–10 came out of a later audit
+Items 1–6 came out of implementing v3. **Items 7–19 came out of a later audit
 (2026-08-06)** against `origin/CPEX45_high_order_wip` and the released
 `origin/develop`, and are of one kind: rules the adopted text *uses* without ever
 stating. Three of the four were guessed at by the reference implementation, and
@@ -286,8 +288,90 @@ them to be inferred a second time by someone else.
   formula does not describe simplex nodes); Fekete recorded as `UserDefined`;
   the modal compliance test, whose expected coefficients held only for `h = 1`.
 
+**Items 20–24 came out of a final pre-vote audit (2026-08-07)** that read the
+adopted text against `CPEX45_high_order_wip` line by line rather than reasoning
+about either alone. They are of a third kind: in each the standard and the code
+say different things, and in four of the five it is the *code* that has to
+change.
+
+- **Item 20 — `CartesianMonomialsPascal` requires `CellDimension = PhysDim`.**
+  The modal cardinality counts monomials in the *element* dimension while the
+  basis is built in the physical frame and `CharacteristicLength` carries
+  `PhysDim` factors. On a surface mesh (`CellDim` 2, `PhysDim` 3) the type is
+  ill-posed, not merely ambiguous: three global coordinates restricted to a
+  2-manifold are linearly dependent, so no subset of `C(p+2,2)` monomials spans
+  a determined space.
+- **Item 21 — an absent `LagrangeControlPoints` is given a meaning, and a
+  present one's length is made reachable.** v3 gives the array cardinality `0:1`
+  while defining `N_DOFs` as the array's own slow axis, which absence leaves with
+  nothing to read; v4 states the rule the implementation supplies — absent means
+  the complete space of the declared degree on the standard lattice. (A first
+  draft of this item *required* the array; four existing tests write bare
+  `ParametricLagrange` nodes, which is what showed the absent case to be a real
+  and useful one rather than an oversight. Recorded because the wrong reading was
+  plausible.) And because a
+  solution node is keyed by (basic type, p, q), that key does not distinguish the
+  complete space from the edge-serendipity space of Table 2 — the stored count
+  is the only record of the difference. **The API could express neither**: the
+  writer derived the length from (type, p, q) so it could only ever write a
+  complete space, and the reader *rejected* any node whose count differed.
+  Serendipity solution spaces, which the standard inherits from approved v2 and
+  which item 14's upper-bound check exists to protect, could be neither written
+  nor read. v4 adds an `npts` argument to the writer and a
+  `cg_solution_interpolation_npoints_read` accessor. This is the one item where
+  the corrections/capability line was hard to draw; it falls on the corrections
+  side because the capability is already adopted and what is missing is the means
+  to exercise it.
+
+  **Settled: the API change is not a compatibility question.** Re-verified
+  2026-08-07 — the entire CPEX-0045 API surface (the family-level interpolation
+  calls, the `FlowSolution_t` accessors, the `GridLocation_t` enumerator and both
+  new enumerations) appears **zero** times on `origin/master`, on
+  `origin/develop` and in `release/v4.5.2`. Changing a signature that has never
+  shipped costs nothing outside the reference branch, so items 4, 11, 17 and 21
+  are to be judged on what the API *should* be, not on what it would break. This
+  is the same footing the register has recorded since the v3 deliberations.
+- **Item 22 — the extent rule for `ElementInterpolation_t`.** Item 14's three
+  conditions are written in `p` and `q`, and a mesh node carries neither. The
+  mesh case is the stricter one: fast axis = element dimension, slow axis =
+  `cg_npe` of the exact tag, as an equality.
+- **Item 23 — a family-level `IsoParametric` points read must report ambiguity.**
+  Item 9 resolves per element by exact tag; this call has no element and the
+  stored tag is the basic one, so where a family holds both `TETRA_10` and
+  `TETRA_35` it cannot say which basis is meant. The implementation returned
+  whichever node it met first — a child order the SIDS does not constrain.
+- **Item 24 — two corrections to §Fortran Bindings.** The optional-argument rule
+  it states was not implemented (all four coordinate arguments were mandatory
+  assumed-size arrays), and the justification given for it was wrong: a dummy
+  array is never read, so the argument is about expressiveness, not memory
+  safety.
+
 Plus three new sections: **Parallel I/O**, **Worked example**, **Compatibility**,
 and a Fortran argument-mapping table.
+
+**Implementation divergences fixed in the same pass**, where the adopted text was
+already correct and the code was not — recorded here because they are the
+evidence behind "the reference implementation implements this package":
+
+- **Both enumeration nodes were stored as `I4`**, not as the enumerator's name in
+  `C1` that the File Mapping specifies and that every other CGNS enumeration node
+  uses (`GridLocation_t`, `DataClass_t`, …). This is the one divergence that
+  reached the wire format. It also mattered beyond convention: the document's own
+  argument for why the `GridLocation_t = 9` collision with CPEX-0047 is harmless
+  is that the token is stored as a string, and that argument did not hold for
+  these two.
+- **`Rind_t` under `InterpolationPoints`** was added to the expected field length
+  by both the read and write paths, giving the node the meaning the standard
+  denies it — and disagreeing with `cgnscheck`, which reports its presence. It is
+  now ignored, and its presence disables field-length validation rather than
+  failing the open, on the same reasoning as an unresolvable basis.
+- **The cell-dimension filter was per section, not per element**, so faces inside
+  a `MIXED` section counted as solution DOFs.
+- **`cgi_check_location` accepted `InterpolationPoints` on a `Structured` zone**,
+  which the adopted text forbids.
+- **`cgnscheck` compared the complete-space count** against a buffer only
+  `npts_stored` of which had been filled, and left `dist_ierr` uninitialised on
+  the `IsoParametric` branch of the element path.
 
 **On the reference implementation.** Items 7–9 were derived from the specification
 text, not from a defect report. `CPEX45_high_order_wip` had already arrived at the
