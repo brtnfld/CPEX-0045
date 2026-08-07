@@ -1,6 +1,6 @@
 \documentclass[11pt,letterpaper]{article}
 
-%% ── Packages ──────────────────────────────────────────────────────────────
+%% -- Packages --------------------------------------------------------------
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage[margin=1in,top=1.25in]{geometry}
@@ -29,7 +29,7 @@
 \usepackage{subcaption}
 \usepackage{mdframed}
 
-%% ── Color palette ───────────────────────────────────────────────────────
+%% -- Color palette -------------------------------------------------------
 \definecolor{cgnsblue}{HTML}{1F4E79}
 \definecolor{cgnsteal}{HTML}{2E7D8C}
 \definecolor{cgnslight}{HTML}{D6EAF0}
@@ -38,7 +38,7 @@
 \definecolor{clarifybrown}{HTML}{5D4037}
 \definecolor{cgnssalmon}{HTML}{F4B8B8}
 
-%% ── Node-description table helpers (section 5) ──────────────────────────
+%% -- Node-description table helpers (section 5) --------------------------
 % Two column types: N (wide, ~65%) and M (narrow, ~35%)
 \newcolumntype{N}{>{\hsize=1.3\hsize\raggedright\arraybackslash}X}
 \newcolumntype{M}{>{\hsize=0.7\hsize\raggedright\arraybackslash}X}
@@ -48,7 +48,7 @@
     \linewidth=\hsize\raggedright\arraybackslash}X|}{#1}%
 }
 
-%% ── Hyperlink style ──────────────────────────────────────────────────────
+%% -- Hyperlink style ------------------------------------------------------
 \hypersetup{
   colorlinks=true,
   linkcolor=cgnsblue,
@@ -61,7 +61,7 @@
 %% caption itself rather than let the package warn on every such table.
 \captionsetup{hypcap=false}
 
-%% ── Code listing style ──────────────────────────────────────────────────
+%% -- Code listing style --------------------------------------------------
 \lstset{
   basicstyle=\scriptsize\ttfamily,
   keywordstyle=\bfseries\color{cgnsblue},
@@ -82,7 +82,7 @@
   tabsize=4,
 }
 
-%% ── v2 verbatim-quotation environment ───────────────────────────────────
+%% -- v2 verbatim-quotation environment -----------------------------------
 %% Indented passages reproduced verbatim from CPEX-0045 v2 are wrapped in
 %% this environment so they are visually distinct from the v3 commentary.
 \mdfdefinestyle{v2quotestyle}{
@@ -101,7 +101,7 @@
    \nopagebreak\par\nopagebreak\vspace{0.15em}}
   {\end{v2quoteframe}}
 
-%% ── Motion box environment ───────────────────────────────────────────────
+%% -- Motion box environment -----------------------------------------------
 \mdfdefinestyle{motionstyle}{
   linecolor=cgnsgold,
   linewidth=2pt,
@@ -112,11 +112,11 @@
 }
 \newmdenv[style=motionstyle]{motionbox}
 
-%% ── Amendment change-type labels ─────────────────────────────────────────
+%% -- Amendment change-type labels -----------------------------------------
 \newcommand{\NEW}{\textcolor{newgreen}{\textbf{[NEW]}}}
 \newcommand{\CLARIFY}{\textcolor{clarifybrown}{\textbf{[CLARIFICATION]}}}
 
-%% ── Version 4 draft highlighting ─────────────────────────────────────────
+%% -- Version 4 draft highlighting -----------------------------------------
 %%
 %% Text proposed by the *unadopted* Version 4 amendment is rendered in a
 %% distinct colour so a reviewer can see at a glance what is new relative to
@@ -162,7 +162,7 @@
 % "what changed and why" belongs in the amendment package instead.
 \newcommand{\vfourmark}{\ifvfourdraft\textcolor{v4violet}{\textbf{[v4]}}\ \fi}
 
-%% ── SIDS-style node definition environment ──────────────────────────────
+%% -- SIDS-style node definition environment ------------------------------
 \newenvironment{sidsnode}[1]{%
   \par\vspace{0.8em}%
   \noindent\colorbox{cgnslight!50}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
@@ -172,7 +172,7 @@
   \end{quote}\vspace{0.4em}%
 }
 
-%% ── Math convenience macros ─────────────────────────────────────────────
+%% -- Math convenience macros ---------------------------------------------
 \newcommand{\Lsp}{\mathcal{L}_p}
 \newcommand{\Qtp}{\mathcal{Q}^{2}_p}
 \newcommand{\Qthp}{\mathcal{Q}^{3}_p}
@@ -180,7 +180,7 @@
 \newcommand{\Pthp}{\mathcal{P}^{3}_p}
 \newcommand{\Vpq}{\mathcal{V}_{p,q}}
 
-%% ── Header / Footer ────────────────────────────────────────────────────
+%% -- Header / Footer ----------------------------------------------------
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\color{cgnsblue} CPEX~0045 --- High-Order Polynomial Interpolation}
@@ -190,7 +190,7 @@
 \renewcommand{\headrule}{\hbox to\headwidth{\color{cgnsgold}\leaders\hrule height\headrulewidth\hfill}}
 \renewcommand{\footrulewidth}{0pt}
 
-%% ── Title Formatting ───────────────────────────────────────────────────
+%% -- Title Formatting ---------------------------------------------------
 \titleformat{\section}{\Large\bfseries\color{cgnsblue}}{\thesection}{0.6em}{}[\vspace{0.2em}{\color{cgnsgold}\titlerule[0.8pt]}]
 \titleformat{\subsection}{\large\bfseries\color{cgnsblue!85}}{\thesubsection}{0.6em}{}
 \titleformat{\subsubsection}{\normalsize\bfseries\color{cgnsteal}}{\thesubsubsection}{0.6em}{}
@@ -198,7 +198,7 @@
 %% =====================================================================
 \begin{document}
 
-%% ── Title Block ─────────────────────────────────────────────────────────
+%% -- Title Block ---------------------------------------------------------
 \begin{center}
   \includegraphics[width=0.25\textwidth]{CGNS_logo_1.png}\\[1.2em]
   {\LARGE\bfseries\color{cgnsblue} CGNS Proposal for Extension 0045}\\[0.6em]
@@ -231,7 +231,7 @@ what remains is a single standard with no trace of the amendment history.}}
 
 \vspace{1em}
 
-%% ── Metadata Table ──────────────────────────────────────────────────────
+%% -- Metadata Table ------------------------------------------------------
 \noindent
 \rowcolors{2}{cgnslight!30}{white}
 \begin{tabular}{@{} >{\bfseries\color{cgnsblue}}l >{\raggedright\arraybackslash}p{0.62\linewidth} @{}}
@@ -273,7 +273,7 @@ Sample: text in this style is verbatim or near-verbatim from CPEX-0045 v2.
 
 \newpage
 
-%% ── Amendment Preamble ──────────────────────────────────────────────────
+%% -- Amendment Preamble --------------------------------------------------
 {\sloppy
 
 \begin{center}
@@ -1337,10 +1337,10 @@ meeting date and roll call here, as done for v3 above.\fi}
 \tableofcontents
 \newpage
 
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 \section{Motivation and Scope}
 \label{sec:motivation}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 
 \begin{v2quote}
 The aim is to cater for the large diversity of high-order methods by including a specification of
@@ -1399,10 +1399,10 @@ Section~\ref{sec:modal-order-ceiling} gives the detail.
 \end{v4block}
 
 
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 \section{Rationale}
 \label{sec:rationale}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 
 \begin{v2quote}
 This proposal lifts the limitation of fixing the interpolation functions implicitly by imposing
@@ -1452,9 +1452,9 @@ this section describes.
 \end{v4block}
 
 
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 \section{Extension of the SIDS}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 
 \subsection{Conventions}
 \label{sec:conventions}
@@ -1524,10 +1524,10 @@ and solution.  The basic principles are:
 The following sections describe how interpolations are specified.''
 \end{v2quote}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsubsection{Interpolation Type Enumeration: \texttt{InterpolationType\_t}}
 \label{sec:interpolation-type}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{v2quote}
 ``\texttt{InterpolationType\_t} specifies how the high-order interpolants for the solution are
@@ -1585,10 +1585,10 @@ future extension.  The same gap was closed for the control-point distribution
 enumeration in v3; this closes it for the original.
 \end{v4block}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsubsection{Lagrange Control Point Distribution}
 \label{sec:lagrange-distribution}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 The parametric coordinates of the control points are stored explicitly in
 \texttt{LagrangeControlPoints} (Section~\ref{sec:on-disk-layout}).  Together with the
@@ -1772,10 +1772,10 @@ named families in order to take the better-conditioned path described above, but
 back to the general construction when no family matches within the tolerance
 \vfour{of Section~\ref{sec:wb-determinacy}}.
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsubsection{New \texttt{GridLocation\_t} Value: \texttt{InterpolationPoints}}
 \label{sec:interpolation-points-loc}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 CPEX-0045 adds a new \texttt{GridLocation\_t} enumeration value:
 {\sloppy
@@ -1848,20 +1848,20 @@ on it: SIDS section numbers are prose organisation, not file structure.
 \end{v4block}
 
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{High-Order Parametric Interpolation}
 \label{sec:parametric}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{v2quote}
 \textbf{Scope}: The parametric interpolation conventions can be used for specifying both curved
 elements (thereby superseding the standard conventions) and the solution.
 \end{v2quote}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsubsection{Standard Coordinate Systems for Parametric Interpolation}
 \label{sec:coord-systems}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{v2quote}
 The parametric coordinate system is defined per element following Figure~\ref{fig:coord-systems}.
@@ -1903,10 +1903,10 @@ $\tau$.  The latter corresponds to the physical time slab $[T_n, T_{n+1}]$.
   \label{fig:coord-systems}
 \end{figure}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsubsection{Parametric Interpolation by Specification of Lagrange Control Points}
 \label{sec:lagrange}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{v2quote}
 \textbf{Scope}: Both solution and element shape can be specified using this formulation.  For
@@ -2032,10 +2032,10 @@ giving $5$, $14$, $30$, $55$ for $p=1,2,3,4$ respectively.  These are the values
 \texttt{PYRA\_55}.  The control-point layout convention is the user's responsibility; the
 library does not provide a built-in pyramid layout helper.
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsubsection{Parametric Modal Interpolation}
 \label{sec:parametric-modal}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{v2quote}
 \textbf{Scope}: This type of interpolation only applies to solutions.
@@ -2115,10 +2115,10 @@ Note that this space-time formulation reverts to purely spatial interpolation --
 ordering --- for the (default) temporal order $q=0$.
 \end{v2quote}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsubsection{Practical Order Ceiling of the Monomial Bases}
 \label{sec:modal-order-ceiling}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 Both \texttt{ParametricMonomialsPascal} and \texttt{CartesianMonomialsPascal} use raw
 monomials.  Implementers should be aware that this choice carries an intrinsic
@@ -2141,10 +2141,10 @@ facility such as~\cite{Mathex} is the enabling mechanism.  Writers requiring
 high-order modal data should use \texttt{ParametricLagrange} with an appropriate
 control-point distribution (Section~\ref{sec:lagrange-distribution}) instead.
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Cartesian Modal Interpolation}
 \label{sec:cartesian-modal}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{v2quote}
 \textbf{Scope}: Cartesian modal interpolation only applies to solutions.
@@ -2380,10 +2380,10 @@ for (int h=0; h<=q; h++)
 \end{itemize}
 \end{v2quote}
 
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 \subsection{Overriding the Element Definition and Solution Interpolation}
 \label{sec:override}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 
 \begin{v2quote}
 \textbf{Modifications to the SIDS:}
@@ -2427,9 +2427,9 @@ interpolation nodes and \texttt{FamilyBC\_t} and geometry references at once ---
 they occupy different children and do not interact --- so an existing family can
 be reused rather than duplicated.}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsubsection{Modification of Section~12.6 (\texttt{Family\_t})}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{v2quote}
 On a case-by-case basis, i.e.\ per element type and interpolation order, one can provide
@@ -2447,10 +2447,10 @@ FamilyBC\_t FamilyBC ;                                       \textrm{(o)}\\
 \};
 \end{sidsnode}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsubsection{\texttt{ElementInterpolation\_t} --- New SIDS Section~12.10}
 \label{sec:element-interpolation}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{v2quote}
 The \texttt{ElementInterpolation\_t} specifies the geometric interpolation of an element by
@@ -2522,9 +2522,9 @@ mesh geometry under this version of the standard.  Space-time mesh geometry (e.g
 ALE) is deferred to a future CPEX, which would add a temporal-order attribute to
 \texttt{ElementInterpolation\_t} or introduce a dedicated space-time mesh-interpolation node.
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsubsection{Changes in Section~7.3 (\texttt{Elements\_t})}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{v2quote}
 In case an alternative location for the element control points is specified, the actual elements
@@ -2534,10 +2534,10 @@ the order will correspond to the control point coordinates specified in the corr
 leaves, the standard convention is applied.
 \end{v2quote}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsubsection{\texttt{SolutionInterpolation\_t} --- New SIDS Section~12.11}
 \label{sec:solution-interpolation}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{v2quote}
 The interpolation functions associated to the interpolation on a given element type and order
@@ -2697,10 +2697,10 @@ caller may legitimately present the high-order or the basic tag and the lookup r
 the same node.  The v2 wording predates the normalisation rule stated above and is retained
 here for the historical record only.
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsubsection{Addition to Section~7.7 (\texttt{FlowSolution\_t})}
 \label{sec:flowsolution}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{v2quote}
 In case variable high-order solutions are stored, a separate solution block per interpolation
@@ -2762,9 +2762,9 @@ block.  The \texttt{cgnscheck} ``strict CPEX-0045'' mode flags \texttt{CellCente
 plus \texttt{InterpolationDegrees} as a SIDS conflict.
 
 
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 \section{Extensions to the Mid-Level Library}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 
 \subsection{Helper Functions}
 
@@ -2830,10 +2830,10 @@ it resolves a triplet to an index, applying the basic-tag fallback, and reports
 create uses the count; a reader resolving an element to its basis uses
 \texttt{find}.}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Reading and Writing Interpolation Characteristics via the Family Interface}
 \label{sec:family-api}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{table}[htbp]
 \centering
@@ -2974,10 +2974,10 @@ alone, and obtains its cardinality from \texttt{cg\_solution\_monomial\_size}.
 There is no element-side counterpart either: mesh interpolation is nodal only
 (Section~\ref{sec:element-interpolation}).
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Accessing Data in the \texttt{FlowSolution\_t} Node}
 \label{sec:sol-api}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{table}[htbp]
 \centering
@@ -3053,10 +3053,10 @@ description of the interpolation.
 not used for high-order solutions in v3.  All such \texttt{FlowSolution\_t} nodes use
 \texttt{GridLocation = InterpolationPoints}.
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Fortran Bindings}
 \label{sec:fortran}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 All CPEX-0045 functions are exposed to Fortran via Fortran~2003 \texttt{BIND(C)} interfaces in
 \texttt{cgns\_f.F90}, with the conventional \texttt{\_f} suffix
@@ -3127,10 +3127,10 @@ never handle a pointer.
 
 \newpage
 
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 \section{Extension to the SIDS File Mapping}
 \label{sec:filemap}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 
 \subsection{\texttt{ElementInterpolation\_t}: Child Node of \texttt{Family\_t}}
 
@@ -3191,7 +3191,7 @@ Recommended, not required, when interpolation type is
 }
 
 \newpage
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{\texttt{SolutionInterpolation\_t}: Child Node of \texttt{Family\_t}}
 
 {\small\setlength{\extrarowheight}{2pt}
@@ -3279,7 +3279,7 @@ stores no array (Section~\ref{sec:no-monomial-coeff}).}}} \\
 }
 
 \newpage
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{\texttt{FlowSolution\_t}: Added Child Nodes}
 
 Two child nodes are added to \texttt{FlowSolution\_t}: the
@@ -3343,18 +3343,18 @@ children of \texttt{FlowSolution\_t}.}
 }
 
 
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 \section{Implementation Specification}
 \label{sec:impl-spec}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 
 This section consolidates the formal constraints, on-disk encodings, error semantics, and
 default values that a conforming implementation must observe.  It applies to both readers and
 writers.
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Polynomial Degree and Geometric Order Limits}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{itemize}
   \item \textbf{Geometric order} (encoded via \texttt{ElementType\_t}): bounded by the available
@@ -3391,10 +3391,10 @@ $N_\mathrm{DOFs} = 1 \times (q+1) = q+1$ per element, by the general rule of
 Section~\ref{sec:on-disk-layout}.  Neither the writer nor \texttt{cgnscheck} may reject these
 configurations.
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{On-Disk Layout of Control Points and Coefficients}
 \label{sec:on-disk-layout}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \paragraph{LagrangeControlPoints (purely spatial).}
 The data array is stored as a 2D \texttt{R8} array with shape
@@ -3626,10 +3626,10 @@ otherwise.  Element ordering matches the field-array element ordering above.  Th
 values recorded are those the writer actually applied; readers must not recompute them
 from element geometry.
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Validation Requirements (Reader)}
 \label{sec:validation}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 A conforming reader must reject:
 \begin{itemize}
@@ -3712,9 +3712,9 @@ authoritative (Section~\ref{sec:lagrange-distribution}): a conforming reader mus
 basis from them and should warn about the disagreement, rather than failing the file or
 adopting the named family's nodes.
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Cross-Validation Rules (Writer)}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 {\sloppy
 \begin{itemize}
@@ -3743,9 +3743,9 @@ adopting the named family's nodes.
 \end{itemize}
 \par}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Error-Code Semantics}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 \begin{table}[htbp]
 \centering
@@ -3776,9 +3776,9 @@ type is ever returned for mesh interpolation
 (Section~\ref{sec:element-interpolation}).  For \texttt{SolutionInterpolation\_t}, the type is
 the \texttt{InterpolationType} child read by \texttt{cg\_solution\_interpolation\_read}.
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Default Values}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 {\sloppy
 \begin{itemize}
@@ -3791,10 +3791,10 @@ the \texttt{InterpolationType} child read by \texttt{cg\_solution\_interpolation
 \end{itemize}
 \par}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Coordinate-System Conventions}
 \label{sec:coord-conventions}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 All supported elements use the \emph{bi-unit} reference domain, i.e.\ each parametric
 coordinate ranges over $[-1, 1]$ rather than $[0, 1]$.  These are the standard reference
@@ -3827,9 +3827,9 @@ bi-unit coordinates, so the error cannot be detected after the fact.  The librar
 \emph{not} enforce these ranges on user-supplied control points --- any \texttt{double}
 value is accepted --- which is precisely why conformance is the writer's responsibility.
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Scope of \texttt{InterpolationPoints} Grid Location}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 {\sloppy
 \texttt{GridLocation\_t = InterpolationPoints} is valid only on \texttt{FlowSolution\_t} nodes.
@@ -3852,10 +3852,10 @@ and a conforming writer must not emit one.}
 \par}
 
 \begin{v4block}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 \section{\vfourmark Parallel I/O}
 \label{sec:parallel}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 
 High-order data is exactly the case that makes parallel I/O worth having --- the
 field arrays are the largest objects in the file and grow as $N_\mathrm{DOFs}$ per
@@ -3925,10 +3925,10 @@ simpler call for a serial writer and is unchanged.
 \end{v4block}
 
 \begin{v4block}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 \section{\vfourmark Compatibility}
 \label{sec:compatibility}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 
 \subsection{Backward compatibility: existing files stay valid}
 
@@ -4004,20 +4004,20 @@ nodes as unrecognised; this is expected and is not evidence of a malformed file.
 \end{v4block}
 
 
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 \section{Variable-Order Configurations and IsoParametric Solutions}
 \label{sec:variable-order}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 
 This section describes the three usage patterns that arise when different cells or different
 field variables require different polynomial orders, and the use of \texttt{IsoParametric}
 for solution interpolation.
 
 \begin{v4block}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{\vfourmark A complete worked example}
 \label{sec:worked-example}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 Before the variable-order patterns, one whole file in the simplest configuration,
 with every shape and count written out.
@@ -4144,9 +4144,9 @@ field array from \texttt{InterpolationDegrees} together with the zone's element
 sections, and without it the length $L$ is not yet determined.
 \end{v4block}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Variable Order Per Cell (Disjoint \texttt{PointRange})}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 When different subsets of cells use different polynomial orders, create one
 \texttt{FlowSolution\_t} block per subset using \texttt{cg\_sol\_ptset\_write} with
@@ -4164,9 +4164,9 @@ cg_sol_ptset_write(fn,B,Z,"FS_p3",InterpolationPoints,PointRange,2,range_p3,&S2)
 cg_sol_interpolation_degree_write(fn,B,Z,S2, 3,0);
 \end{lstlisting}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Variable Order Per Cell (\texttt{PointList})}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 Non-contiguous subsets require \texttt{PointList} instead of \texttt{PointRange}:
 
@@ -4179,9 +4179,9 @@ cg_sol_ptset_write(fn,B,Z,"FS_Even",InterpolationPoints,PointList,4,even,&S2);
 cg_sol_interpolation_degree_write(fn,B,Z,S2, 3,0);
 \end{lstlisting}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{Variable Order Per Field Variable}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 When different physical fields use different polynomial orders over the \emph{same} set of
 cells, create one \texttt{FlowSolution\_t} per field variable with the same \texttt{PointRange}
@@ -4200,9 +4200,9 @@ cg_sol_interpolation_degree_write(fn,B,Z,S2, 3,0);
 cg_field_write(fn,B,Z,S2,RealDouble,"VelocityX",velocity,&fld);
 \end{lstlisting}
 
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 \subsection{\texttt{IsoParametric} for \texttt{SolutionInterpolation\_t}}
-% ─────────────────────────────────────────────────────────────────────────
+% -------------------------------------------------------------------------
 
 When \texttt{InterpolationType} is set to \texttt{IsoParametric}, the solution uses the
 same interpolation basis as the mesh.  No \texttt{LagrangeControlPoints} child is
@@ -4258,10 +4258,10 @@ basic tag, which is the ordinary case.
 \end{v4block}
 
 
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 \section{Compliance Tests}
 \label{sec:compliance}
-%% ═════════════════════════════════════════════════════════════════════════
+%% =========================================================================
 
 A conforming implementation must pass the following objective tests.  These are independent
 of any particular library and can be applied directly to a written file.
