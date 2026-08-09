@@ -1984,6 +1984,83 @@ Pyramid & \texttt{PYRA\_5}  & see~\cite{BCD10} & & \\
 \label{tab:spaces}
 \end{v2quote}
 
+\begin{v4block}
+\paragraph{\vfourmark The serendipity columns, and which element tag realises each space.}
+\label{sec:serendipity-tags}
+Table~\ref{tab:spaces} leaves the two serendipity columns blank for every
+three-dimensional type, so neither the cardinalities nor the
+\texttt{ElementType\_t} tag that carries each space is recoverable from the table
+itself.  Both are fixed --- the tags have existed since before this amendment ---
+and are stated here.
+
+Write $c$, $e$ and $f$ for the complete, edge-serendipity and face-serendipity
+cardinalities at degree~$p$.  Edge serendipity keeps the corner and edge nodes
+only; face serendipity keeps everything except the nodes strictly interior to the
+element volume, so $f = c - (\text{volume-interior count})$:
+%
+\begin{align*}
+  \text{\texttt{HEXA}}  &: & c &= (p+1)^3, & e &= 8 + 12(p-1), & f &= c - (p-1)^3 \\
+  \text{\texttt{PENTA}} &: & c &= \tfrac{(p+1)^2(p+2)}{2}, & e &= 6 + 9(p-1),
+      & f &= c - \tfrac{(p-1)(p-2)}{2}\,(p-1) \\
+  \text{\texttt{TETRA}} &: & c &= \tfrac{(p+1)(p+2)(p+3)}{6}, & e &= 4 + 6(p-1),
+      & f &= c - \tfrac{(p-1)(p-2)(p-3)}{6}
+\end{align*}
+%
+\texttt{QUAD} is two-dimensional and has no face-serendipity space; its edge
+cardinality $4p$ is already in the table.  A tag exists for every space that is
+distinct from the others at that degree; where two coincide, no separate tag is
+defined and none is needed.
+
+\smallskip
+\noindent\footnotesize
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+\textbf{Type} & $p$ & \textbf{Complete} & \textbf{Edge serendipity} & \textbf{Face serendipity} \\
+\midrule
+\texttt{HEXA}  & 2 & 27 \texttt{(HEXA\_27)}   & 20 \texttt{(HEXA\_20)}  & 26 --- no tag; see below \\
+\texttt{HEXA}  & 3 & 64 \texttt{(HEXA\_64)}   & 32 \texttt{(HEXA\_32)}  & 56 \texttt{(HEXA\_56)} \\
+\texttt{HEXA}  & 4 & 125 \texttt{(HEXA\_125)} & 44 \texttt{(HEXA\_44)}  & 98 \texttt{(HEXA\_98)} \\
+\texttt{PENTA} & 2 & 18 \texttt{(PENTA\_18)}  & 15 \texttt{(PENTA\_15)} & 18 --- equals complete \\
+\texttt{PENTA} & 3 & 40 \texttt{(PENTA\_40)}  & 24 \texttt{(PENTA\_24)} & 38 \texttt{(PENTA\_38)} \\
+\texttt{PENTA} & 4 & 75 \texttt{(PENTA\_75)}  & 33 \texttt{(PENTA\_33)} & 66 \texttt{(PENTA\_66)} \\
+\texttt{TETRA} & 2 & 10 \texttt{(TETRA\_10)}  & 10 --- equals complete   & 10 --- equals complete \\
+\texttt{TETRA} & 3 & 20 \texttt{(TETRA\_20)}  & 16 \texttt{(TETRA\_16)} & 20 --- equals complete \\
+\texttt{TETRA} & 4 & 35 \texttt{(TETRA\_35)}  & 22 \texttt{(TETRA\_22)} & 34 \texttt{(TETRA\_34)} \\
+\bottomrule
+\end{tabular}
+\normalsize
+
+\smallskip
+\noindent Note in particular that \texttt{HEXA\_56} and \texttt{HEXA\_98} are the
+\emph{face}-serendipity tags at $p=3$ and $p=4$; the edge-serendipity tags at
+those degrees are \texttt{HEXA\_32} and \texttt{HEXA\_44}.  Reading
+\texttt{HEXA\_56} as edge serendipity --- an error the blank table invites ---
+overstates the reduction and mis-sizes the block by 24 control points.
+
+\paragraph{\vfourmark \texttt{HEXA} at $p=2$: the one face-serendipity space with no tag.}
+The table above has a single gap.  Face serendipity on a \texttt{HEXA} at $p=2$
+excludes exactly one node, the single volume-interior point, giving 26 against the
+complete 27; no \texttt{ElementType\_t} value denotes it.  This standard
+\textbf{does not add one}, and the omission is deliberate rather than an oversight.
+
+The saving is $3.7\,\%$ of the control points, against $12.5\,\%$ at $p=3$
+($56$ versus $64$) and $21.6\,\%$ at $p=4$ ($98$ versus $125$).  A serendipity
+space earns its tag by removing a meaningful number of degrees of freedom, and at
+$p=2$ this one does not.  Against that stands a permanent cost: \texttt{ElementType\_t}
+is append-only, its values are written into \texttt{Elements\_t} as \texttt{I4},
+and a file using a newly assigned tag cannot be read by any existing library.  That
+price is not worth one node per element.  The \texttt{PENTA} $p=2$ and \texttt{TETRA}
+$p=2,3$ rows record the same judgement reached for a different reason: where a
+serendipity space is not distinct, it gets no tag.
+
+A writer needing this space on a \texttt{HEXA} at $p=2$ stores the complete
+\texttt{HEXA\_27} and omits nothing, or --- if the interior node must genuinely be
+absent --- writes an explicit \texttt{LagrangeControlPoints} array of 26 points on a
+\texttt{SolutionInterpolation\_t}, whose stored count is normative and is precisely
+the mechanism Section~\ref{sec:lagrange-required} defines for a space the key does
+not determine.  No tag is required for either route.
+\end{v4block}
+
 \begin{v2quote}
 \noindent In which we use direct sums $\oplus$ and products $\otimes$ of the following standard spaces of order $p$:
 
