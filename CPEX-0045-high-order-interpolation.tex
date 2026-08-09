@@ -2745,6 +2745,16 @@ The default value for \texttt{SpatialOrder} depends on the type of interpolation
 for \texttt{TemporalOrder} is~0.
 \end{v2quote}
 
+\noindent The default described here concerns only the \emph{absence} of the
+\texttt{InterpolationDegrees} child itself: a \texttt{FlowSolution\_t} with no such
+child declares no high-order interpolation at all, and standard (constant-per-element)
+interpretation applies --- in the renamed terms of Section~\ref{sec:order-means-degree},
+\texttt{SpatialDegree} and \texttt{TemporalDegree} simply do not apply to it.  This is
+narrower than the v2 wording's \emph{type of interpolation} phrasing suggests, and must
+not be read as a fallback for a high-order block whose declared
+\texttt{SolutionInterpolation\_t} cannot be resolved --- that distinct case is normative
+in Section~\ref{sec:ndofs}, which explicitly forbids assuming any default count there.
+
 \noindent\textbf{Implementation note 1 --- Accessor functions.}
 The \texttt{InterpolationDegrees} child is read and written through
 \texttt{cg\_sol\_interpolation\_degree\_\{read,write\}}, which take \texttt{spatialDegree}
