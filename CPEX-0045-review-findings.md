@@ -180,5 +180,23 @@ One overfull hbox appeared from the new validation bullet's long unbreakable tok
 shortening the sentence to point at Section~\ref{sec:lagrange-distribution} rather than repeating
 all four value names inline.
 
-**Not applied** — still open: M4, M5 (both minute-book sequencing items, not document defects), m1,
-m3, m4, m6, s1–s3.
+**All remaining items now verified resolved** (2026-08-09). The line this replaces recorded M4, M5,
+m1, m3, m4, m6 and s1–s3 as still open; each was re-checked against the current `.tex` and every one
+had in fact been addressed in the intervening v4 drafting passes. Build re-verified from a clean run:
+**0 errors, 0 undefined references, 0 undefined citations, 0 package warnings, 0 overfull boxes**,
+70 pp.
+
+| ID | Where it is now | Evidence |
+|----|-----------------|----------|
+| M4 | `.tex:1827-1838` | "The numeric value is assigned at adoption" states the CPEX-0047 collision on `GridLocation_t`, that whichever adopts second takes 10, and — the point the finding cared about — that nothing on disk depends on it because `GridLocation` is stored as a `C1` string, so the clash is source/ABI only. |
+| M5 | `.tex:1840-1847` | Same block extends the sequencing caution from Chapter 12 to Chapter 4, naming CPEX-0047 and CPEX-0050 as the other inserters and stating that the adoption order is the minutes' to record. |
+| m1 | `.tex:1832-1834` | Folded into M4's paragraph rather than the Implementation Specification, which is a better home: "Implementations must also raise `NofValidGridLocation` to match and append the token to `GridLocationName[]`, since the string-to-enum mapping iterates that table and the value is otherwise unreadable." |
+| m3 | `.tex:1637-1646` | `Equidistant` now defines the simplex case explicitly as the equispaced *barycentric* lattice, with the note that it reduces to `u_i = -1+2i/p` on an edge but is not obtainable from the 1D formula by tensor product — which is why it needed stating separately. |
+| m4 | `.tex:1663-1667` | Fekete nodes are recorded as `ControlPointDistributionUserDefined` or by omission, the two being equivalent in effect since the stored coordinates are authoritative either way. The simplex sentence was also downgraded from a requirement to a conditioning recommendation. |
+| m5 | bibliography | Now fully closed, not partially: all six entries (`CPEX0036`, `CPEX0038`, `HW08`, `Mathex`, `Warburton06`, `BCD10`) are cited, and the build reports 0 undefined citations. The earlier log entry recorded only `HW08`. |
+| m6 | build | A clean `pdflatex` run reports no `caption`/`hyperref` package warnings and no overfull boxes. |
+| s1 | `.tex:3729-3757` | The extent rule is now a reader-rejection rule in three exactly-checkable parts (fast axis vs element dimension, slow axis a positive multiple of `q+1`, spatial count not exceeding the complete space), with the upper-bound-not-equality distinction spelled out so serendipity files are not rejected. The `MonomialCoefficients` half of the finding is moot: that array is withdrawn, and a reader must now reject any `DataArray_t` child other than `LagrangeControlPoints`. |
+| s2 | `.tex:916-917, 1822-1823` | Traversal is anchored to "ascending element index as fixed by the `ElementRange` of each `Elements_t` section --- not in section storage order", matching the correction CPEX-0050 applied to its own §3.8.3. |
+| s3 | `.tex:259-268` | An "Editorial convention" paragraph in the front matter defines the v2 callout, says what is and is not marked, and states that the surrounding unmarked prose is v3 content that formalises or supersedes it. |
+
+Nothing from this review remains open.
