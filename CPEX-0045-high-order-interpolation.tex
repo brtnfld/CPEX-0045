@@ -4013,17 +4013,24 @@ The serial \texttt{cg\_sol\_characteristic\_length\_partial\_write} writes a ran
 too, but through the serial path, and is for a single-process writer; it requires
 the array to exist already and does not create one.
 
-\vfourmark Two implementation constraints are worth recording, because getting
-either wrong is silent rather than diagnosed.  The array must be stored
-\emph{contiguously}: a compact dataset --- the default for anything under
+\vfourmark One implementation constraint is worth recording, because getting it
+wrong is silent rather than diagnosed: the array must be stored
+\emph{contiguously}.  A compact dataset --- the default for anything under
 64\,KiB in the HDF5 mapping --- keeps its data inside the object header, so each
-rank rewrites the whole object instead of its own hyperslab and only the last
-writer's factors survive.  And the range writes must go through the same
-collective-capable path as the field arrays; the serial write path does not
-compose across ranks.  Both were live defects in the reference implementation,
-found by writing a solution field and the factors into one file on four ranks and
-observing that the field was correct while the factors were truncated to a single
-rank's contribution.  Ranges must together cover $[1, |\mathcal{E}|]$: an element left
+rank rewrites the whole object instead of its own hyperslab, and only the last
+writer's factors survive.  This was a live defect in the reference
+implementation, found by writing a solution field and the factors into one file
+on four ranks and observing that the field was correct while the factors were
+truncated to a single rank's contribution: the field arrays already forced
+contiguous storage, and this array did not.
+
+Given contiguous storage, the range writes compose whether they are issued
+through the serial or the parallel path, since HDF5 independent writes to
+disjoint hyperslabs of a contiguous dataset are well defined.  A parallel writer
+should still prefer \texttt{cgp\_sol\_characteristic\_length\_write\_data}, which
+uses the collective-capable path the field arrays use and outperforms
+independent writes at scale, but the choice is one of performance rather than
+correctness.  Ranges must together cover $[1, |\mathcal{E}|]$: an element left
 unwritten has undefined factors, which \texttt{cgnscheck} reports when it
 validates the array, rather than silently reading as zero.
 
