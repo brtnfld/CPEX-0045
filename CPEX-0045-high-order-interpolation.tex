@@ -1193,13 +1193,19 @@ derivation no longer has to be made independently by each implementer.
 \noindent\textit{New sections (no equivalent in v3):}
 \begin{itemize}[nosep,leftmargin=1.5em]
   \item \CLARIFYIV{} \textbf{Parallel I/O} (Section~\ref{sec:parallel}) --- states
-    which calls are collective and which are independent, how a rank's hyperslab
-    follows from the layout, and the one place the present API does not support a
-    distributed writer: \texttt{cg\_sol\_characteristic\_length\_write} takes the
-    whole array, so a parallel writer must gather it to one rank.  High-order data
-    is the case that most needs parallel I/O --- the field arrays grow as
-    $N_\mathrm{DOFs}$ per cell rather than one --- and v3 says nothing about it,
-    although the reference branch carries parallel tests.
+    which calls are collective and which are independent, and how a rank's
+    hyperslab follows from the layout.  Two categories are distinguished, because
+    conflating them is the easy mistake: the interpolation descriptions are
+    \texttt{Family\_t} metadata, one node per element type and degree pair,
+    independent of mesh size and rank count, and are written collectively through
+    the serial calls with identical arguments on every rank --- no distributed
+    writer is wanted or provided for them.  \texttt{CharacteristicLength} is the
+    opposite: per-element data of the same order as a solution field, for which
+    \texttt{cg\_sol\_characteristic\_length\_partial\_write} takes an element
+    range so each rank writes only what it owns.  High-order data is the case that
+    most needs parallel I/O --- the field arrays grow as $N_\mathrm{DOFs}$ per cell
+    rather than one --- and v3 says nothing about it, although the reference branch
+    carries parallel tests.
 
   \item \CLARIFYIV{} \textbf{Worked example} (Section~\ref{sec:worked-example})
     --- one complete file, tree and code, with every shape and count written out,
