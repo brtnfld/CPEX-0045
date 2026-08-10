@@ -3998,17 +3998,32 @@ sense that the interpolation descriptions are.  But
 \texttt{cg\_sol\_characteristic\_length\_write} takes the whole array in one
 call, and no distributed rank holds the whole array.
 
-\texttt{cg\_sol\_characteristic\_length\_partial\_write} exists for this: it takes
-\texttt{rmin} and \texttt{rmax} over the element axis and writes that range only,
-while \texttt{numElements} still declares the full extent so every rank creates
-the same array.  A rank writes the elements it owns and nothing else.  Because
-\texttt{nscale} is the fast-varying axis, an element range is contiguous in
-storage, so a rank holding a contiguous run of elements writes a single
-hyperslab.
+Two calls serve this, and the split between them is not cosmetic.
+\texttt{cg\_sol\_characteristic\_length\_create} declares the array at its full
+extent with its contents unwritten; \texttt{cgp\_sol\_characteristic\_length\_write\_data}
+then writes one rank's range, taking \texttt{rmin} and \texttt{rmax} over the
+element axis.  Because \texttt{nscale} is the fast-varying axis, an element range
+is contiguous in storage, so a rank holding a contiguous run of elements writes a
+single hyperslab.
 
 Node creation is collective, as for any other node; the range writes are
-independent.  A rank that owns no elements of the block still participates in
-the create.  Ranges must together cover $[1, |\mathcal{E}|]$: an element left
+independent.  Every rank calls the create, with identical arguments, including a
+rank that owns no elements of the block, and it must precede any range write.
+The serial \texttt{cg\_sol\_characteristic\_length\_partial\_write} writes a range
+too, but through the serial path, and is for a single-process writer; it requires
+the array to exist already and does not create one.
+
+\vfourmark Two implementation constraints are worth recording, because getting
+either wrong is silent rather than diagnosed.  The array must be stored
+\emph{contiguously}: a compact dataset --- the default for anything under
+64\,KiB in the HDF5 mapping --- keeps its data inside the object header, so each
+rank rewrites the whole object instead of its own hyperslab and only the last
+writer's factors survive.  And the range writes must go through the same
+collective-capable path as the field arrays; the serial write path does not
+compose across ranks.  Both were live defects in the reference implementation,
+found by writing a solution field and the factors into one file on four ranks and
+observing that the field was correct while the factors were truncated to a single
+rank's contribution.  Ranges must together cover $[1, |\mathcal{E}|]$: an element left
 unwritten has undefined factors, which \texttt{cgnscheck} reports when it
 validates the array, rather than silently reading as zero.
 
