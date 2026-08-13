@@ -583,8 +583,6 @@ footing alone.
 \texttt{CharacteristicLength} into a container; the eleventh withdraws the
 \texttt{MonomialCoefficients} array, which also removes two API entries.  Neither
 adds anything, and neither loses data --- the withdrawn array never carried any.
-Both are made now because nothing has been released, and the cost of either rises
-sharply once something has been.
 
 \noindent Items~7 and~9 change no layout the adopted text specifies.  They state
 rules a reader must already have derived in order to size a high-order block at
@@ -656,7 +654,6 @@ derivation no longer has to be made independently by each implementer.
     \texttt{ControlPointDistributionName} and the accessor
     \texttt{cg\_ControlPointDistributionName}.  The four accessor entries of
     Section~\ref{sec:family-api} are unaffected, since none embeds the type name.
-    Nothing has been released, so there is no compatibility cost.
 
   \item \SUPERSEDESIV{} \textbf{The \texttt{GaussLegendre} node count is off by
     one.}  \S Lagrange Control Point Distribution defines the family as the roots
@@ -695,7 +692,7 @@ derivation no longer has to be made independently by each implementer.
     fixed number.  With \texttt{int} the argument is a plain \texttt{integer}.
 
     \textit{Impact:} an API change, but a source-compatible one for callers that
-    pass a matching variable, and nothing has been released.
+    pass a matching variable.
 
   \item \SUPERSEDESIV{} \textbf{\texttt{WarpAndBlend} is not uniquely determined,
     and neither is the comparison tolerance.}
@@ -745,8 +742,7 @@ derivation no longer has to be made independently by each implementer.
     file has to be rewritten and no data is invalidated: the coordinates remain
     authoritative, so the remedy is either to adopt the tabulated $\alpha$ or
     simply to drop the distribution name, which is recommended rather than
-    required.  And nothing has been released, so the population concerned is
-    whatever exists on pre-release branches.  The reach is \emph{not} confined to
+    required.  The reach is \emph{not} confined to
     high-degree solution bases: $\alpha$ is inert only at degrees $\le 2$ for the
     triangle and $\le 3$ for the tetrahedron, and \texttt{ElementType\_t} runs to
     geometric degree~4, so mesh control points on \texttt{TRI\_15} and
@@ -841,8 +837,7 @@ derivation no longer has to be made independently by each implementer.
     and a reader that has never heard of CPEX-0045 sees a solution with the
     fields it expects and one user-defined node it may ignore.  It is a
     wire-format change and is labelled as one: files written under the v3 layout
-    must move the node.  Nothing has been released, so the population is
-    pre-release branches, and this is the last point at which the move is free.
+    must move the node.
 
   \item \CLARIFYIV{} \textbf{$N_\mathrm{DOFs}(e)$ is defined, per interpolation
     type.}  Every sizing rule in the standard --- the field-array length
