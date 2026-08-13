@@ -1,0 +1,21 @@
+CPEX-0045-high-order-interpolation.tex
+  s_d34217f0e11d9e::t_d5fb16d85430fb 722
+  s_d34217f0e11d9e::t_63bdf980231483 817
+  s_d34217f0e11d9e::t_38505f0d5fb4ae 672
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "ca1dbafa934f0e6f963cd3d12674f70eab9f526f",
+  "prompts": {},
+  "sessions": {
+    "s_d34217f0e11d9e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d6efec06-f77b-45a2-b4b2-ccfb9c0b393c",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "M. Scot Breitenfeld <brtnfld@hdfgroup.org>"
+    }
+  }
+}
