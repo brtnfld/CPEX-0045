@@ -555,9 +555,10 @@ no sequence of API calls can produce, so the correction lands on both.
 
 \medskip
 \noindent\textbf{Scope.}  Version 4 is a \emph{corrections} amendment.  It adds
-no capability, no node type and no enumerator.  It touches the API in three
-places --- two entries added and one existing signature changed, all in
-items~17 and~21 and each argued there --- and every other item either fixes
+no capability, no node type and no enumerator.  It touches the API in a bounded
+way --- four entries added (items~17 and~18), two removed (item~11), and four
+existing signatures changed (three in item~4, one in item~18), each argued where
+it appears --- and every other item either fixes
 wording that two conforming implementations could read differently, states a rule
 that v3 relies on without ever writing down, or repairs an adopted provision that
 cannot be implemented without changing the meaning of an established API.  New
@@ -1024,20 +1025,31 @@ derivation no longer has to be made independently by each implementer.
     writer therefore had to gather to one rank and write serially, on the one path
     in this standard that is otherwise fully collective.
 
-    v4 adds \texttt{cg\_sol\_characteristic\_length\_partial\_write}, taking
-    \texttt{rmin} and \texttt{rmax} over the element axis while
-    \texttt{numElements} still declares the full extent, so every rank creates the
-    same array and writes only what it owns.  Since \texttt{nscale} is the
-    fast-varying axis an element range is contiguous, so a rank holding a
-    contiguous run writes one hyperslab (Section~\ref{sec:parallel}).
+    v4 separates \emph{declaring} the array from \emph{filling} it, because the
+    two have different collectivity.
+    \texttt{cg\_sol\_characteristic\_length\_create} declares it at its full
+    extent with its contents unwritten, and is collective: every rank calls it
+    with identical arguments, including a rank that owns none of the block.  The
+    ranged writers then fill it and are independent ---
+    \texttt{cg\_sol\_characteristic\_length\_partial\_write} through the serial
+    path and \texttt{cgp\_sol\_characteristic\_length\_write\_data} through the
+    collective-capable one --- each taking \texttt{rmin} and \texttt{rmax} over
+    the element axis.  Since \texttt{nscale} is the fast-varying axis an element
+    range is contiguous, so a rank holding a contiguous run writes one hyperslab
+    (Section~\ref{sec:parallel}).
 
-    This is the one item in v4 that adds an API entry, so the scope note above is
-    qualified accordingly.  It is in scope for \emph{this} proposal rather than a
-    later one because the node, its encodings and its existing accessors are all
-    defined here: an accessor that cannot be called from the kind of writer this
-    standard is aimed at is an incomplete API for a node this document
-    introduces, not a new capability.  \textit{Impact:} none --- nothing is
-    changed or removed, the whole-array writer is untouched, and the on-disk
+    The split is not cosmetic.  Creating a node is collective, so a ranged writer
+    that created on demand would let a later rank's create discard an earlier
+    rank's range; the ranged writers therefore \emph{require} the array to exist
+    and report an error naming \texttt{create} when it does not.
+
+    These are the three API entries v4 adds, and the scope note above is
+    qualified accordingly.  They are in scope for \emph{this} proposal rather
+    than a later one because the node, its encodings and its existing accessors
+    are all defined here: an accessor that cannot be called from the kind of
+    writer this standard is aimed at is an incomplete API for a node this
+    document introduces, not a new capability.  \textit{Impact:} none --- nothing
+    is changed or removed, the whole-array writer is untouched, and the on-disk
     layout is identical.
 
   \item \CLARIFYIV{} \textbf{Three API shapes are explained rather than left to
@@ -1296,8 +1308,13 @@ and omitted rank and dimension values; (14)~the validation of
 three exactly-checkable conditions, the last an upper bound rather than an
 equality so that the serendipity spaces this standard supports are not rejected;
 (15)~the addition of
-\texttt{cg\_sol\_characteristic\_length\_partial\_write}, taking an element range
-so that a distributed writer need not gather the whole array to one rank;
+\texttt{cg\_sol\_characteristic\_length\_create}, which declares the array
+collectively at its full extent, together with the two ranged writers that then
+fill it independently ---
+\texttt{cg\_sol\_characteristic\_length\_partial\_write} on the serial path and
+\texttt{cgp\_sol\_characteristic\_length\_write\_data} on the collective-capable
+one --- so that a distributed writer need not gather the whole array to one
+rank;
 (16)~three corrections carrying no
 argument --- \texttt{Equidistant} on simplices, Fekete nodes recorded as
 \texttt{UserDefined}, and a modal compliance test whose expected values held only
@@ -1319,7 +1336,7 @@ bindings section, whose optional-argument rule the bindings did not implement an
 whose stated justification for it was wrong.  The amendment adds no new
 capability, no node type and no enumerator; clauses~(6) and~(11) change the
 on-disk layout, (11) alone removes API entries, and (15) and~(18) between them add
-two API entries and change one existing signature --- (15) because the one bulk
+four API entries and change one existing signature --- (15) because the one bulk
 array this standard introduces cannot otherwise be written from a partitioned
 run, and (18) because a capability the standard already grants cannot otherwise
 be exercised at all.
@@ -3084,10 +3101,17 @@ cg\_sol\_interpolation\_degree\_write(fn, bn, zn, sn, spatialDegree, temporalDeg
 \addlinespace
 cg\_sol\_characteristic\_length\_read(fn, bn, zn, sn, *nscale, *numElements, *h\_e) & r{-}{-} \\
 cg\_sol\_characteristic\_length\_write(fn, bn, zn, sn, nscale, numElements, *h\_e) & {-}wm \\
+\vfour{cg\_sol\_characteristic\_length\_create(fn, bn, zn, sn, nscale, numElements)} & \vfour{{-}wm} \\
 \vfour{cg\_sol\_characteristic\_length\_partial\_write(fn, bn, zn, sn, nscale, numElements, rmin, rmax, *h\_e)} & \vfour{{-}wm} \\
+\vfour{cgp\_sol\_characteristic\_length\_write\_data(fn, bn, zn, sn, nscale, rmin, rmax, *h\_e)} & \vfour{{-}wm} \\
 \bottomrule
 \end{tabular}
-\caption{FlowSolution-level interpolation degree and characteristic-length API.}
+\caption{FlowSolution-level interpolation degree and characteristic-length API.
+\vfour{The last three are the distributed-writer path of
+Section~\ref{sec:parallel}: \texttt{create} declares the array collectively,
+then either ranged writer fills it.  \texttt{cgp\_\ldots\_write\_data} is
+declared in \texttt{pcgnslib.h} and takes no \texttt{numElements}, the extent
+having been fixed at creation.}}
 \label{tab:sol-api}
 \end{table}
 
